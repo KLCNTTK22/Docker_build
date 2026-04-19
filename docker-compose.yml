@@ -1,0 +1,36 @@
+services:
+  n8n_core:
+    build: .
+    container_name: thesis_n8n
+    user: root:root
+    ports:
+      - "5678:5678"
+    environment:
+      - N8N_USER_FOLDER=/home/node/
+      - N8N_RESTRICT_FILE_ACCESS_TO=/shared_workspace
+      - N8N_ALLOW_BUILTIN_MODULES=fs
+      - NODES_EXCLUDE=[]
+    volumes:
+      - n8n_data:/home/node/.n8n
+      - ./shared_workspace:/shared_workspace:rw
+    networks:
+      - thesis_net
+
+  web_app:
+    build: ./UI
+    container_name: thesis_web_ui
+    ports:
+      - "80:5000"
+    volumes:
+      - ./shared_workspace:/shared_workspace
+    depends_on:
+      - n8n_core
+    networks:
+      - thesis_net
+
+networks:
+  thesis_net:
+    driver: bridge
+
+volumes:
+  n8n_data:
