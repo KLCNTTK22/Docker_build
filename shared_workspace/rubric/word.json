@@ -1,0 +1,441 @@
+[
+  {
+    "criteria_name": "General Document Formatting: Page Setup",
+    "allocated_points": 0.8,
+    "anchor_locator": {
+      "tag": "w:document"
+    },
+    "rules": [
+      {
+        "description": "Check page width (Letter size)",
+        "relative_offset": 0,
+        "property_path": "section.pageSize.w",
+        "expected_value": 12240,
+        "match_flag": "TOLERANT",
+        "accepted_range": [12140, 12340],
+        "points": 0.1
+      },
+      {
+        "description": "Check page height (Letter size)",
+        "relative_offset": 0,
+        "property_path": "section.pageSize.h",
+        "expected_value": 15840,
+        "match_flag": "TOLERANT",
+        "accepted_range": [15740, 15940],
+        "points": 0.1
+      },
+      {
+        "description": "Check top margin (1 inch)",
+        "relative_offset": 0,
+        "property_path": "section.margin.top",
+        "expected_value": 1440,
+        "match_flag": "TOLERANT",
+        "accepted_range": [1400, 1500],
+        "points": 0.1
+      },
+      {
+        "description": "Check bottom margin (1 inch)",
+        "relative_offset": 0,
+        "property_path": "section.margin.bottom",
+        "expected_value": 1440,
+        "match_flag": "TOLERANT",
+        "accepted_range": [1400, 1500],
+        "points": 0.1
+      },
+      {
+        "description": "Check left margin (1 inch)",
+        "relative_offset": 0,
+        "property_path": "section.margin.left",
+        "expected_value": 1440,
+        "match_flag": "TOLERANT",
+        "accepted_range": [1400, 1500],
+        "points": 0.1
+      },
+      {
+        "description": "Check right margin (1 inch)",
+        "relative_offset": 0,
+        "property_path": "section.margin.right",
+        "expected_value": 1440,
+        "match_flag": "TOLERANT",
+        "accepted_range": [1400, 1500],
+        "points": 0.1
+      },
+      {
+        "description": "Check header margin (0.5 inch)",
+        "relative_offset": 0,
+        "property_path": "section.margin.header",
+        "expected_value": 720,
+        "match_flag": "TOLERANT",
+        "accepted_range": [700, 750],
+        "points": 0.1
+      },
+      {
+        "description": "Check footer margin (0.5 inch)",
+        "relative_offset": 0,
+        "property_path": "section.margin.footer",
+        "expected_value": 720,
+        "match_flag": "TOLERANT",
+        "accepted_range": [700, 750],
+        "points": 0.1
+      }
+    ]
+  },
+  {
+    "criteria_name": "General Document Formatting: Main Title",
+    "allocated_points": 0.6,
+    "anchor_locator": {
+      "tag": "w:p",
+      "text_contains": "QUÁ TRÌNH HỌC TẬP VÀ LÀM VIỆC"
+    },
+    "rules": [
+      {
+        "description": "Main title is bold",
+        "relative_offset": 0,
+        "property_path": "properties.paragraphRunProperties.bold",
+        "expected_value": true,
+        "match_flag": "STRICT",
+        "points": 0.2
+      },
+      {
+        "description": "Main title is center aligned",
+        "relative_offset": 0,
+        "property_path": "layout.alignment",
+        "expected_value": "center",
+        "match_flag": "STRICT",
+        "points": 0.2
+      },
+      {
+        "description": "Main title has correct spacing after",
+        "relative_offset": 0,
+        "property_path": "layout.spacing.afterPt",
+        "expected_value": 18.0,
+        "match_flag": "TOLERANT",
+        "accepted_range": [17.0, 19.0],
+        "points": 0.2
+      }
+    ]
+  },
+  {
+    "criteria_name": "General Document Formatting: Numbered Headings",
+    "allocated_points": 1.0,
+    "anchor_locator": {
+      "tag": "w:p",
+      "text_contains": "Bản thân"
+    },
+    "rules": [
+      {
+        "description": "Heading 'Bản thân' uses 'ListParagraph' style",
+        "relative_offset": 0,
+        "property_path": "properties.pStyle",
+        "expected_value": "ListParagraph",
+        "match_flag": "STRICT",
+        "points": 0.2
+      },
+      {
+        "description": "Heading 'Bản thân' is list level 0",
+        "relative_offset": 0,
+        "property_path": "list.level",
+        "expected_value": "0",
+        "match_flag": "STRICT",
+        "points": 0.2
+      },
+      {
+        "description": "Heading 'Quá trình học tập' uses 'ListParagraph' style",
+        "relative_offset": 5,
+        "property_path": "properties.pStyle",
+        "expected_value": "ListParagraph",
+        "match_flag": "STRICT",
+        "points": 0.2
+      },
+      {
+        "description": "Heading 'Quá trình học tập' is list level 0",
+        "relative_offset": 5,
+        "property_path": "list.level",
+        "expected_value": "0",
+        "match_flag": "STRICT",
+        "points": 0.2
+      },
+      {
+        "description": "Heading 'Lời cam đoan' uses 'ListParagraph' style",
+        "relative_offset": 10,
+        "property_path": "properties.pStyle",
+        "expected_value": "ListParagraph",
+        "match_flag": "STRICT",
+        "points": 0.2
+      }
+    ]
+  },
+  {
+    "criteria_name": "General Document Formatting: Tab Stops with Leader Dots",
+    "allocated_points": 0.4,
+    "anchor_locator": {
+      "tag": "w:p",
+      "text_contains": "Họ và tên"
+    },
+    "rules": [
+      {
+        "description": "First line of personal info has a dot leader tab stop",
+        "relative_offset": 0,
+        "property_path": "layout.tabs.0.leader",
+        "expected_value": "dot",
+        "match_flag": "STRICT",
+        "points": 0.2
+      },
+      {
+        "description": "'Ghi chú:' line has a dot leader tab stop",
+        "relative_offset": 7,
+        "property_path": "children.6.children.0.layout.tabs.0.leader",
+        "expected_value": "dot",
+        "match_flag": "STRICT",
+        "points": 0.2
+      }
+    ]
+  },
+  {
+    "criteria_name": "General Document Formatting: Table 1 Styling",
+    "allocated_points": 0.7,
+    "anchor_locator": {
+      "tag": "w:tbl",
+      "text_contains": "Ngày tháng năm"
+    },
+    "rules": [
+      {
+        "description": "Table 1 uses 'TableGrid' style",
+        "relative_offset": 0,
+        "property_path": "style.tableStyle",
+        "expected_value": "TableGrid",
+        "match_flag": "STRICT",
+        "points": 0.2
+      },
+      {
+        "description": "Table 1 has single line top border",
+        "relative_offset": 0,
+        "property_path": "layout.borders.top.style",
+        "expected_value": "single",
+        "match_flag": "STRICT",
+        "points": 0.2
+      },
+      {
+        "description": "Table 1 header cell 'Ngày tháng năm' has correct shading",
+        "relative_offset": 0,
+        "property_path": "children.0.children.0.layout.shading",
+        "expected_value": "F1A983",
+        "match_flag": "STRICT",
+        "points": 0.3
+      }
+    ]
+  },
+  {
+    "criteria_name": "General Document Formatting: Table 2 Header",
+    "allocated_points": 0.5,
+    "anchor_locator": {
+      "tag": "w:tbl",
+      "text_contains": "BÊN A"
+    },
+    "rules": [
+      {
+        "description": "Table 2 header 'BÊN A' is bold",
+        "relative_offset": 0,
+        "property_path": "children.0.children.1.children.0.children.0.properties.bold",
+        "expected_value": true,
+        "match_flag": "STRICT",
+        "points": 0.25
+      },
+      {
+        "description": "Table 2 header 'BÊN B' is bold",
+        "relative_offset": 0,
+        "property_path": "children.0.children.2.children.0.children.0.properties.bold",
+        "expected_value": true,
+        "match_flag": "STRICT",
+        "points": 0.25
+      }
+    ]
+  },
+  {
+    "criteria_name": "Table of Contents: TOC Field Presence",
+    "allocated_points": 1.0,
+    "anchor_locator": {
+      "tag": "w:document"
+    },
+    "rules": [
+      {
+        "description": "TOC field for headings 1-3 is present",
+        "relative_offset": 0,
+        "property_path": "",
+        "expected_value": null,
+        "match_flag": "PRESENCE_ONLY",
+        "accepted_values": ["\\o \"1-3\""],
+        "points": 1.0
+      }
+    ]
+  },
+  {
+    "criteria_name": "Table of Contents: Heading Style and Alignment",
+    "allocated_points": 0.75,
+    "anchor_locator": {
+      "tag": "w:p",
+      "text_contains": "Danh mục tiêu đề"
+    },
+    "rules": [
+      {
+        "description": "TOC heading uses 'TOCHeading' style",
+        "relative_offset": 0,
+        "property_path": "properties.pStyle",
+        "expected_value": "TOCHeading",
+        "match_flag": "STRICT",
+        "points": 0.5
+      },
+      {
+        "description": "TOC heading is center aligned",
+        "relative_offset": 0,
+        "property_path": "layout.alignment",
+        "expected_value": "center",
+        "match_flag": "STRICT",
+        "points": 0.25
+      }
+    ]
+  },
+  {
+    "criteria_name": "Table of Contents: Entries Formatting",
+    "allocated_points": 1.25,
+    "anchor_locator": {
+      "tag": "w:p",
+      "text_contains": "Bản thân",
+      "type": "hyperlink"
+    },
+    "rules": [
+      {
+        "description": "TOC entry 'Bản thân' uses 'TOC1' style",
+        "relative_offset": -1,
+        "property_path": "properties.pStyle",
+        "expected_value": "TOC1",
+        "match_flag": "STRICT",
+        "points": 0.25
+      },
+      {
+        "description": "TOC entry 'Bản thân' has PAGEREF field",
+        "relative_offset": -1,
+        "property_path": "",
+        "expected_value": null,
+        "match_flag": "PRESENCE_ONLY",
+        "accepted_values": ["PAGEREF _Toc215169377 \\h"],
+        "points": 0.25
+      },
+      {
+        "description": "TOC entry 'Quá trình học tập' uses 'TOC1' style",
+        "relative_offset": 0,
+        "property_path": "properties.pStyle",
+        "expected_value": "TOC1",
+        "match_flag": "STRICT",
+        "points": 0.25
+      },
+      {
+        "description": "TOC entry 'Quá trình học tập' has PAGEREF field",
+        "relative_offset": 0,
+        "property_path": "",
+        "expected_value": null,
+        "match_flag": "PRESENCE_ONLY",
+        "accepted_values": ["PAGEREF _Toc215169378 \\h"],
+        "points": 0.25
+      },
+      {
+        "description": "TOC entry 'Lời cam đoan' uses 'TOC1' style",
+        "relative_offset": 1,
+        "property_path": "properties.pStyle",
+        "expected_value": "TOC1",
+        "match_flag": "STRICT",
+        "points": 0.25
+      }
+    ]
+  },
+  {
+    "criteria_name": "Table Captions: SEQ Bảng Field Presence",
+    "allocated_points": 0.5,
+    "anchor_locator": {
+      "tag": "w:document"
+    },
+    "rules": [
+      {
+        "description": "SEQ Bảng field for table numbering is present",
+        "relative_offset": 0,
+        "property_path": "",
+        "expected_value": null,
+        "match_flag": "PRESENCE_ONLY",
+        "accepted_values": ["SEQ Bảng \\* ARABIC"],
+        "points": 0.5
+      }
+    ]
+  },
+  {
+    "criteria_name": "Table Captions: Table 1 Caption Formatting",
+    "allocated_points": 1.0,
+    "anchor_locator": {
+      "tag": "w:p",
+      "text_contains": "Bảng 1",
+      "pStyle": "Caption"
+    },
+    "rules": [
+      {
+        "description": "Caption for Table 1 uses 'Caption' style",
+        "relative_offset": 0,
+        "property_path": "properties.pStyle",
+        "expected_value": "Caption",
+        "match_flag": "STRICT",
+        "points": 0.5
+      },
+      {
+        "description": "Caption for Table 1 is center aligned",
+        "relative_offset": 0,
+        "property_path": "layout.alignment",
+        "expected_value": "center",
+        "match_flag": "STRICT",
+        "points": 0.5
+      }
+    ]
+  },
+  {
+    "criteria_name": "Table Captions: Table 2 Caption Formatting",
+    "allocated_points": 1.0,
+    "anchor_locator": {
+      "tag": "w:p",
+      "text_contains": "Bảng 2",
+      "pStyle": "Caption"
+    },
+    "rules": [
+      {
+        "description": "Caption for Table 2 uses 'Caption' style",
+        "relative_offset": 0,
+        "property_path": "properties.pStyle",
+        "expected_value": "Caption",
+        "match_flag": "STRICT",
+        "points": 0.5
+      },
+      {
+        "description": "Caption for Table 2 is center aligned",
+        "relative_offset": 0,
+        "property_path": "layout.alignment",
+        "expected_value": "center",
+        "match_flag": "STRICT",
+        "points": 0.5
+      }
+    ]
+  },
+  {
+    "criteria_name": "Table of Figures: TOF Field Presence",
+    "allocated_points": 0.5,
+    "anchor_locator": {
+      "tag": "w:document"
+    },
+    "rules": [
+      {
+        "description": "Table of Figures field for 'Bảng' (tables) is present",
+        "relative_offset": 0,
+        "property_path": "",
+        "expected_value": null,
+        "match_flag": "PRESENCE_ONLY",
+        "accepted_values": ["\\c \"Bảng\""],
+        "points": 0.5
+      }
+    ]
+  }
+]

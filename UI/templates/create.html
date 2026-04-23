@@ -19,7 +19,7 @@
     <div class="card-body">
         <form id="batchForm">
             <div id="groupsWrapper">
-                <!-- Form groups sẽ được tạo tự động qua JavaScript để tránh lỗi mất nút -->
+
             </div>
 
             <div class="d-flex flex-wrap gap-2 mt-4">
@@ -66,36 +66,50 @@
         setTimeout(() => { if (toastEl.parentNode) toastEl.remove(); }, 4000);
     }
 
+    function updateGroupsUI() {
+        const groups = document.querySelectorAll('#groupsWrapper .group-item');
+        groups.forEach((group, index) => {
+            const scoreContainer = group.querySelector('.score-container');
+            let syncBtn = scoreContainer.querySelector('.btn-sync');
+            
+            if (index === 0) {
+                if (!syncBtn) {
+                    syncBtn = document.createElement('button');
+                    syncBtn.className = 'btn btn-info text-white btn-sync';
+                    syncBtn.type = 'button';
+                    syncBtn.onclick = function() { syncScores(this); };
+                    syncBtn.title = 'Đồng bộ điểm này cho toàn bộ các đề bên dưới';
+                    syncBtn.innerHTML = '<i class="bi bi-arrow-down-up"></i> Đồng bộ';
+                    scoreContainer.appendChild(syncBtn);
+                }
+            } else {
+                if (syncBtn) {
+                    syncBtn.remove();
+                }
+            }
+        });
+    }
+
+    function removeGroup(groupId) {
+        const group = document.getElementById(groupId);
+        if (group) {
+            group.remove();
+            updateGroupsUI(); 
+        }
+    }
+
     // Hàm tạo giao diện HTML cho 1 nhóm đề mới
     function addGroupUI(id) {
         const wrapper = document.getElementById('groupsWrapper');
-        
-        // Kiểm tra xem đây có phải là nhóm ĐẦU TIÊN được thêm vào không
-        const isFirst = wrapper.children.length === 0;
-
         const newGroup = document.createElement('div');
         newGroup.className = 'border rounded p-4 mb-4 bg-light shadow-sm position-relative group-item';
         newGroup.id = `group_${id}`;
 
-        // Nếu là nhóm đầu tiên: Ẩn nút xóa. Nếu là nhóm phụ: Hiện nút xóa
-        const deleteBtnHtml = isFirst ? '' : `<button type="button" class="btn btn-sm btn-danger" onclick="document.getElementById('group_${id}').remove()">Xóa</button>`;
-        
-        // Nếu là nhóm đầu tiên: Gắn nút Đồng bộ vào input. Nếu là nhóm phụ: Chỉ để input
-        const scoreHtml = isFirst ? `
-            <div class="input-group">
-                <input type="number" class="form-control" name="diem_${id}" required>
-                <button class="btn btn-info text-white" type="button" onclick="syncScores(this)" title="Đồng bộ điểm này cho toàn bộ các đề bên dưới">
-                    <i class="bi bi-arrow-down-up"></i> Đồng bộ
-                </button>
-            </div>
-        ` : `
-            <input type="number" class="form-control" name="diem_${id}" required>
-        `;
-
+        // Mọi nhóm đều có nút Xóa và có cấu trúc sẵn sàng cho nút Đồng bộ
         newGroup.innerHTML = `
             <div class="d-flex justify-content-between align-items-center mb-3">
                 <h5 class="m-0 text-primary fw-bold" id="title_${id}">Tên đề</h5>
-                ${deleteBtnHtml}
+                <button type="button" class="btn btn-sm btn-danger" onclick="removeGroup('group_${id}')">Xóa</button>
             </div>
             <div class="row g-3">
                 <div class="col-md-6">
@@ -104,7 +118,10 @@
                 </div>
                 <div class="col-md-6">
                     <label class="form-label fw-semibold">Tổng điểm:</label>
-                    ${scoreHtml}
+                    <div class="input-group score-container">
+                        <input type="number" class="form-control" name="diem_${id}" required>
+                        <!-- Nút Đồng bộ sẽ được inject vào đây nếu nó là Nhóm 1 -->
+                    </div>
                 </div>
                 <div class="col-md-6">
                     <label class="form-label fw-semibold">File Đề (PDF/Docx) - Có thể bỏ trống:</label>
@@ -117,6 +134,7 @@
             </div>
         `;
         wrapper.appendChild(newGroup);
+        updateGroupsUI(); 
     }
 
     function addGroup() {
@@ -189,10 +207,10 @@
             if (examFile || refFile) {
                 let targetGroupId;
                 const wrapper = document.getElementById('groupsWrapper');
-                const firstGroup = wrapper.firstElementChild;
                 
                 // Ghi đè vào Nhóm 1 nếu nó đang trống
                 if (wrapper.children.length === 1 && addedCount === 0) {
+                    const firstGroup = wrapper.firstElementChild;
                     const firstTenDe = firstGroup.querySelector('input[name^="ten_de_"]');
                     const firstFileDe = firstGroup.querySelector('input[name^="file_de_"]');
                     const firstFileMau = firstGroup.querySelector('input[name^="file_mau_"]');
@@ -268,10 +286,9 @@
             if(response.ok) { 
                 showToast("Thành công! N8n đang xử lý dữ liệu.", "success"); 
                 
-                // Reset lại toàn bộ form và giao diện
                 document.getElementById('groupsWrapper').innerHTML = '';
                 groupCount = 0;
-                addGroup(); // Nhóm Đề mới tinh sẽ tiếp tục có Nút Đồng bộ, Không có nút Xóa
+                addGroup(); 
             } else { 
                 showToast("Lỗi gửi dữ liệu. Trạng thái HTTP: " + response.status, "danger"); 
             }

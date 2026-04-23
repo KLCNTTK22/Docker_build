@@ -1,0 +1,455 @@
+[
+  {
+    "criteria_name": "Nhập dữ liệu cho bảng tính",
+    "allocated_points": 1,
+    "anchor_locator": {
+      "type": "row",
+      "text_contains": "STT",
+      "sheet_name": "Sheet1"
+    },
+    "rules": [
+      {
+        "description": "Verify header labels in row 1",
+        "action": "VERIFY_VALUE",
+        "points": 0.2,
+        "col_index": 0,
+        "expected": "STT"
+      },
+      {
+        "description": "Verify header labels in row 1",
+        "action": "VERIFY_VALUE",
+        "points": 0.2,
+        "col_index": 1,
+        "expected": "Số chứng từ"
+      },
+      {
+        "description": "Verify header labels in row 1",
+        "action": "VERIFY_VALUE",
+        "points": 0.2,
+        "col_index": 2,
+        "expected": "Tên vật tư"
+      },
+      {
+        "description": "Verify header labels in row 1",
+        "action": "VERIFY_VALUE",
+        "points": 0.2,
+        "col_index": 3,
+        "expected": "Số lượng"
+      },
+      {
+        "description": "Verify header labels in row 1",
+        "action": "VERIFY_VALUE",
+        "points": 0.2,
+        "col_index": 4,
+        "expected": "Đơn giá"
+      },
+      {
+        "description": "Verify header labels in row 1",
+        "action": "VERIFY_VALUE",
+        "points": 0.2,
+        "col_index": 5,
+        "expected": "Tiền giảm"
+      },
+      {
+        "description": "Verify header labels in row 1",
+        "action": "VERIFY_VALUE",
+        "points": 0.2,
+        "col_index": 6,
+        "expected": "Thành tiền"
+      },
+      {
+        "description": "Verify data rows 2-11 existence and first row values",
+        "action": "VERIFY_VALUE",
+        "points": 0.2,
+        "col_index": 0,
+        "expected": "2"
+      }
+    ]
+  },
+  {
+    "criteria_name": "Điền tên vật tư dựa vào ký tự đầu của số chứng từ và bảng giá",
+    "allocated_points": 2,
+    "anchor_locator": {
+      "type": "row",
+      "text_contains": "STT",
+      "sheet_name": "Sheet1"
+    },
+    "rules": [
+      {
+        "description": "Verify VLOOKUP for C2 based on LEFT(B2,1) = X",
+        "action": "VERIFY_FUNCTION_NAME",
+        "points": 0.5,
+        "col_index": 2,
+        "expected_count": 10,
+        "expected_function": "VLOOKUP",
+        "expected_reference": "$A$20:$C$22"
+      },
+      {
+        "description": "Verify VLOOKUP for C3 based on LEFT(B3,1) = D",
+        "action": "VERIFY_FUNCTION_NAME",
+        "points": 0.5,
+        "col_index": 2,
+        "expected_count": 10,
+        "expected_function": "VLOOKUP",
+        "expected_reference": "$A$20:$C$22"
+      },
+      {
+        "description": "Verify VLOOKUP for C4 based on LEFT(B4,1) = D",
+        "action": "VERIFY_FUNCTION_NAME",
+        "points": 0.5,
+        "col_index": 2,
+        "expected_count": 10,
+        "expected_function": "VLOOKUP",
+        "expected_reference": "$A$20:$C$22"
+      },
+      {
+        "description": "Verify VLOOKUP for C5 based on LEFT(B5,1) = X",
+        "action": "VERIFY_FUNCTION_NAME",
+        "points": 0.5,
+        "col_index": 2,
+        "expected_count": 10,
+        "expected_function": "VLOOKUP",
+        "expected_reference": "$A$20:$C$22"
+      },
+      {
+        "description": "Verify VLOOKUP for C6 based on LEFT(B6,1) = N",
+        "action": "VERIFY_FUNCTION_NAME",
+        "points": 0.5,
+        "col_index": 2,
+        "expected_count": 10,
+        "expected_function": "VLOOKUP",
+        "expected_reference": "$A$20:$C$22"
+      },
+      {
+        "description": "Verify VLOOKUP for C7 based on LEFT(B7,1) = N",
+        "action": "VERIFY_FUNCTION_NAME",
+        "points": 0.5,
+        "col_index": 2,
+        "expected_count": 10,
+        "expected_function": "VLOOKUP",
+        "expected_reference": "$A$20:$C$22"
+      },
+      {
+        "description": "Verify VLOOKUP for C8 based on LEFT(B8,1) = D",
+        "action": "VERIFY_FUNCTION_NAME",
+        "points": 0.5,
+        "col_index": 2,
+        "expected_count": 10,
+        "expected_function": "VLOOKUP",
+        "expected_reference": "$A$20:$C$22"
+      },
+      {
+        "description": "Verify VLOOKUP for C9 based on LEFT(B9,1) = N",
+        "action": "VERIFY_FUNCTION_NAME",
+        "points": 0.5,
+        "col_index": 2,
+        "expected_count": 10,
+        "expected_function": "VLOOKUP",
+        "expected_reference": "$A$20:$C$22"
+      },
+      {
+        "description": "Verify VLOOKUP for C10 based on LEFT(B10,1) = X",
+        "action": "VERIFY_FUNCTION_NAME",
+        "points": 0.5,
+        "col_index": 2,
+        "expected_count": 10,
+        "expected_function": "VLOOKUP",
+        "expected_reference": "$A$20:$C$22"
+      },
+      {
+        "description": "Verify VLOOKUP for C11 based on LEFT(B11,1) = X",
+        "action": "VERIFY_FUNCTION_NAME",
+        "points": 0.5,
+        "col_index": 2,
+        "expected_count": 10,
+        "expected_function": "VLOOKUP",
+        "expected_reference": "$A$20:$C$22"
+      }
+    ]
+  },
+  {
+    "criteria_name": "Tính đơn giá dựa vào ký tự đầu của số chứng từ và bảng giá",
+    "allocated_points": 1,
+    "anchor_locator": {
+      "type": "row",
+      "text_contains": "STT",
+      "sheet_name": "Sheet1"
+    },
+    "rules": [
+      {
+        "description": "Verify E2 formula for X (Dầu)",
+        "action": "VERIFY_FUNCTION_NAME",
+        "points": 0.5,
+        "col_index": 4,
+        "expected_count": 10,
+        "expected_function": "VLOOKUP",
+        "expected_reference": "$A$20:$C$22"
+      },
+      {
+        "description": "Verify E3 formula for D (Nhớt)",
+        "action": "VERIFY_FUNCTION_NAME",
+        "points": 0.5,
+        "col_index": 4,
+        "expected_count": 10,
+        "expected_function": "VLOOKUP",
+        "expected_reference": "$A$20:$C$22"
+      },
+      {
+        "description": "Verify E4 formula for D (Nhớt)",
+        "action": "VERIFY_FUNCTION_NAME",
+        "points": 0.5,
+        "col_index": 4,
+        "expected_count": 10,
+        "expected_function": "VLOOKUP",
+        "expected_reference": "$A$20:$C$22"
+      },
+      {
+        "description": "Verify E5 formula for X (Dầu)",
+        "action": "VERIFY_FUNCTION_NAME",
+        "points": 0.5,
+        "col_index": 4,
+        "expected_count": 10,
+        "expected_function": "VLOOKUP",
+        "expected_reference": "$A$20:$C$22"
+      },
+      {
+        "description": "Verify E6 formula for N (Nhớt)",
+        "action": "VERIFY_FUNCTION_NAME",
+        "points": 0.5,
+        "col_index": 4,
+        "expected_count": 10,
+        "expected_function": "VLOOKUP",
+        "expected_reference": "$A$20:$C$22"
+      },
+      {
+        "description": "Verify E7 formula for N (Nhớt)",
+        "action": "VERIFY_FUNCTION_NAME",
+        "points": 0.5,
+        "col_index": 4,
+        "expected_count": 10,
+        "expected_function": "VLOOKUP",
+        "expected_reference": "$A$20:$C$22"
+      },
+      {
+        "description": "Verify E8 formula for D (Dầu)",
+        "action": "VERIFY_FUNCTION_NAME",
+        "points": 0.5,
+        "col_index": 4,
+        "expected_count": 10,
+        "expected_function": "VLOOKUP",
+        "expected_reference": "$A$20:$C$22"
+      },
+      {
+        "description": "Verify E9 formula for N (Nhớt)",
+        "action": "VERIFY_FUNCTION_NAME",
+        "points": 0.5,
+        "col_index": 4,
+        "expected_count": 10,
+        "expected_function": "VLOOKUP",
+        "expected_reference": "$A$20:$C$22"
+      },
+      {
+        "description": "Verify E10 formula for X (Dầu)",
+        "action": "VERIFY_FUNCTION_NAME",
+        "points": 0.5,
+        "col_index": 4,
+        "expected_count": 10,
+        "expected_function": "VLOOKUP",
+        "expected_reference": "$A$20:$C$22"
+      },
+      {
+        "description": "Verify E11 formula for X (Dầu)",
+        "action": "VERIFY_FUNCTION_NAME",
+        "points": 0.5,
+        "col_index": 4,
+        "expected_count": 10,
+        "expected_function": "VLOOKUP",
+        "expected_reference": "$A$20:$C$22"
+      }
+    ]
+  },
+  {
+    "criteria_name": "Tính tiền giảm, thành tiền",
+    "allocated_points": 1,
+    "anchor_locator": {
+      "type": "row",
+      "text_contains": "STT",
+      "sheet_name": "Sheet1"
+    },
+    "rules": [
+      {
+        "description": "Verify F2 formula for D>=100 condition",
+        "action": "VERIFY_FUNCTION_NAME",
+        "points": 0.5,
+        "col_index": 5,
+        "expected_count": 10,
+        "expected_function": "IF",
+        "expected_reference": "D2>=100"
+      },
+      {
+        "description": "Verify G2 formula for Thành tiền",
+        "action": "VERIFY_FUNCTION_NAME",
+        "points": 0.5,
+        "col_index": 6,
+        "expected_count": 10,
+        "expected_function": "D2*E2-F2"
+      },
+      {
+        "description": "Verify F3 formula for D>=100 condition",
+        "action": "VERIFY_FUNCTION_NAME",
+        "points": 0.5,
+        "col_index": 5,
+        "expected_count": 10,
+        "expected_function": "IF",
+        "expected_reference": "D3>=100"
+      },
+      {
+        "description": "Verify G3 formula for Thành tiền",
+        "action": "VERIFY_FUNCTION_NAME",
+        "points": 0.5,
+        "col_index": 6,
+        "expected_count": 10,
+        "expected_function": "D3*E3-F3"
+      }
+    ]
+  },
+  {
+    "criteria_name": "Sắp xếp bảng dữ liệu theo thứ tự Alphabet của tên vật tư",
+    "allocated_points": 1,
+    "anchor_locator": {
+      "type": "worksheet",
+      "text_contains": "Sheet1",
+      "enforce_sheet_name": true
+    },
+    "rules": [
+      {
+        "description": "Verify sort applied to A2:G11 range",
+        "action": "VERIFY_FILTER_EXISTS",
+        "points": 0.5
+      }
+    ]
+  },
+  {
+    "criteria_name": "Tô màu vật tư có số lượng >= 400",
+    "allocated_points": 1,
+    "anchor_locator": {
+      "type": "worksheet",
+      "text_contains": "Sheet1",
+      "enforce_sheet_name": true
+    },
+    "rules": [
+      {
+        "description": "Verify conditional formatting on D2:D11 for >=400",
+        "action": "VERIFY_CONDITIONAL_FORMATTING",
+        "points": 0.5,
+        "expected_value": "399"
+      }
+    ]
+  },
+  {
+    "criteria_name": "Sử dụng Pivot Table thống kê",
+    "allocated_points": 2,
+    "anchor_locator": {
+      "type": "worksheet",
+      "text_contains": "Sheet2",
+      "enforce_sheet_name": true
+    },
+    "rules": [
+      {
+        "description": "Verify pivot table exists referencing row field index 2",
+        "action": "VERIFY_PIVOT_TABLE",
+        "points": 0.5,
+        "field_type": "row",
+        "expected_fld": "2"
+      },
+      {
+        "description": "Verify pivot table data field Sum of Số lượng (fld 3)",
+        "action": "VERIFY_PIVOT_TABLE",
+        "points": 0.5,
+        "field_type": "data",
+        "expected_fld": "3",
+        "expected_subtotal": "sum"
+      },
+      {
+        "description": "Verify pivot table data field Sum of Thành tiền (fld 6)",
+        "action": "VERIFY_PIVOT_TABLE",
+        "points": 0.5,
+        "field_type": "data",
+        "expected_fld": "6",
+        "expected_subtotal": "sum"
+      }
+    ]
+  },
+  {
+    "criteria_name": "Vẽ biểu đồ thể hiện bảng thống kê",
+    "allocated_points": 1,
+    "anchor_locator": {
+      "type": "worksheet",
+      "text_contains": "Sheet2",
+      "enforce_sheet_name": true
+    },
+    "rules": [
+      {
+        "description": "Verify bar chart exists referencing data",
+        "action": "VERIFY_CHART",
+        "points": 0.5,
+        "expected_type": "barChart",
+        "expected_data_ref_contains": "Sheet2"
+      }
+    ]
+  },
+  {
+    "criteria_name": "Trích lọc bảng tính của từng loại vật tư ra sheet riêng",
+    "allocated_points": 1,
+    "anchor_locator": {
+      "type": "worksheet",
+      "text_contains": "Sheet3",
+      "enforce_sheet_name": true
+    },
+    "rules": [
+      {
+        "description": "Verify filtered data for Dầu Diesel in Sheet3",
+        "action": "VERIFY_EXTRACTED_DATA",
+        "points": 0.5,
+        "expected_value": "Dầu Diesel",
+        "forbidden_values": ["Xăng A92", "Nhớt"]
+      }
+    ]
+  },
+  {
+    "criteria_name": "Trích lọc bảng tính của từng loại vật tư ra sheet riêng (Nhớt)",
+    "allocated_points": 1,
+    "anchor_locator": {
+      "type": "worksheet",
+      "text_contains": "Sheet4",
+      "enforce_sheet_name": true
+    },
+    "rules": [
+      {
+        "description": "Verify filtered data for Nhớt in Sheet4",
+        "action": "VERIFY_EXTRACTED_DATA",
+        "points": 0.5,
+        "expected_value": "Nhớt",
+        "forbidden_values": ["Xăng A92", "Dầu Diesel"]
+      }
+    ]
+  },
+  {
+    "criteria_name": "Trích lọc bảng tính của từng loại vật tư ra sheet riêng (Xăng A92)",
+    "allocated_points": 1,
+    "anchor_locator": {
+      "type": "worksheet",
+      "text_contains": "Sheet5",
+      "enforce_sheet_name": true
+    },
+    "rules": [
+      {
+        "description": "Verify filtered data for Xăng A92 in Sheet5",
+        "action": "VERIFY_EXTRACTED_DATA",
+        "points": 0.5,
+        "expected_value": "Xăng A92",
+        "forbidden_values": ["Dầu Diesel", "Nhớt"]
+      }
+    ]
+  }
+]

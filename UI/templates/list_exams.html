@@ -1,0 +1,775 @@
+{% extends "base.html" %}
+
+{% block content %}
+<style>
+    .rubric-card { transition: all 0.2s; cursor: pointer; border: 2px solid transparent; }
+    .rubric-card:hover { transform: translateY(-3px); box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+    .rubric-card.selected { border-color: #198754; background-color: #f0fdf4; } 
+    .checkbox-icon { display: none; font-size: 1.5rem; color: #198754; position: absolute; top: 10px; right: 15px; }
+    .rubric-card.selected .checkbox-icon { display: block; }
+    
+    .drive-link { font-family: monospace; font-size: 0.85rem; color: #0d6efd; text-decoration: none; word-break: break-all; }
+    .drive-link:hover { text-decoration: underline; }
+    .btn-copy { padding: 0 5px; font-size: 0.8rem; color: #6c757d; border: none; background: transparent; }
+    .btn-copy:hover { color: #0d6efd; }
+    
+    /* Style theo Status */
+    .contest-card { border-left: 5px solid #0d6efd; transition: all 0.2s; }
+    .contest-card.status-active { border-left-color: #198754; }
+    .contest-card.status-grading { border-left-color: #ffc107; }
+    .contest-card.status-completed { border-left-color: #6c757d; opacity: 0.85; }
+    .contest-card.status-delete { border-left-color: #dc3545; opacity: 0.6; background-color: #f8f9fa; }
+    
+    /* Filter Bar */
+    .filter-bar { background-color: #f8f9fa; border: 1px solid #dee2e6; border-radius: 8px; padding: 15px; margin-bottom: 20px; }
+</style>
+
+<!-- HEADER ĐIỀU HƯỚNG VIEW -->
+<div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
+    <h3 class="fw-bold text-primary m-0" id="page-title"><i class="bi bi-calendar-check"></i> Quản Lý Cuộc Thi</h3>
+    <button id="btnToggleView" class="btn btn-primary fw-bold" onclick="toggleView()">
+        <i class="bi bi-plus-circle"></i> Thêm Cuộc Thi Mới
+    </button>
+</div>
+
+<!-- ========================================== -->
+<!-- VIEW 1: DANH SÁCH CUỘC THI (MẶC ĐỊNH)       -->
+<!-- ========================================== -->
+<div id="contests-list-view">
+    
+    <!-- THANH TÌM KIẾM & LỌC -->
+    <div class="filter-bar shadow-sm">
+        <div class="row g-3 align-items-center">
+            <div class="col-md-3">
+                <div class="input-group">
+                    <span class="input-group-text bg-white"><i class="bi bi-search text-muted"></i></span>
+                    <input type="text" id="filterSearch" class="form-control" placeholder="Tìm theo tên..." oninput="applyFilters()">
+                </div>
+            </div>
+            <div class="col-md-2">
+                <select id="filterStatus" class="form-select" onchange="applyFilters()">
+                    <option value="ALL">Tất cả trạng thái</option>
+                    <option value="ACTIVE">Đang diễn ra</option>
+                    <option value="GRADING">Đang chấm điểm</option>
+                    <option value="COMPLETED">Đã hoàn thành</option>
+                    <option value="DELETE">Đã bị xóa</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <select id="filterSubject" class="form-select" onchange="applyFilters()">
+                    <option value="ALL">Tất cả đề thi (Môn)</option>
+                    <!-- Tùy chọn sẽ được nạp động từ ngân hàng đề -->
+                </select>
+            </div>
+            <div class="col-md-2">
+                <input type="date" id="filterStartDate" class="form-control" title="Ngày bắt đầu" onchange="applyFilters()">
+            </div>
+            <div class="col-md-2">
+                <input type="date" id="filterEndDate" class="form-control" title="Ngày kết thúc" onchange="applyFilters()">
+            </div>
+            <div class="col-md-1 text-end">
+                 <button class="btn btn-outline-secondary w-100" onclick="loadContestsList()" title="Đồng bộ lại dữ liệu mới nhất từ máy chủ">
+                    <i class="bi bi-arrow-clockwise"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <div id="contests-loading" class="text-center py-5">
+        <span class="spinner-border text-primary"></span>
+        <p class="mt-2 text-muted">Đang tải danh sách cuộc thi...</p>
+    </div>
+    
+    <div class="row g-4" id="contests-grid" style="display: none;">
+        <!-- Card render bằng JS -->
+    </div>
+</div>
+
+<!-- ========================================== -->
+<!-- VIEW 2: FORM TẠO / SỬA CUỘC THI            -->
+<!-- ========================================== -->
+<div class="row" id="exam-form-view" style="display: none;">
+    <!-- CỘT TRÁI: FORM CẤU HÌNH THỜI GIAN -->
+    <div class="col-md-4 mb-4">
+        <div class="card shadow-sm border-0 h-100">
+            <div class="card-header bg-primary text-white fw-bold py-3" id="form-card-title">
+                <i class="bi bi-gear-fill"></i> Cấu Hình Cuộc Thi
+            </div>
+            <div class="card-body">
+                <form id="createExamForm">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Tên Cuộc Thi:</label>
+                        <input type="text" id="exam_name" class="form-control" placeholder="VD: Thi Kết Thúc Học Phần 2..." required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Thời gian Bắt đầu <span class="text-muted small fw-normal">(UTC+7)</span>:</label>
+                        <input type="datetime-local" id="start_time" class="form-control" required>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">Thời gian Kết thúc <span class="text-muted small fw-normal">(UTC+7)</span>:</label>
+                        <input type="datetime-local" id="end_time" class="form-control" required>
+                    </div>
+
+                    <div class="alert alert-info py-2 small">
+                        <i class="bi bi-info-circle-fill"></i> Hãy chọn ít nhất 1 Rubric (Đề thi) ở cột bên phải để tiếp tục.
+                    </div>
+
+                    <button type="submit" class="btn btn-success w-100 fw-bold py-2" id="btnSubmitExam" disabled>
+                        <i class="bi bi-rocket-takeoff"></i> Lưu Cuộc Thi
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- CỘT PHẢI: CHỌN RUBRIC (ĐỀ THI) -->
+    <div class="col-md-8 mb-4">
+        <div class="card shadow-sm border-0 h-100">
+            <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                <span class="fw-bold text-primary"><i class="bi bi-ui-checks-grid"></i> Chọn Đề Thi (Rubrics)</span>
+                <button type="button" class="btn btn-sm btn-outline-secondary" onclick="loadRubricsList()">
+                    <i class="bi bi-arrow-clockwise"></i> Làm mới danh sách
+                </button>
+            </div>
+            <div class="card-body bg-light" style="max-height: 700px; overflow-y: auto;">
+                <div id="loading-state" class="text-center py-5">
+                    <span class="spinner-border text-primary"></span>
+                    <p class="mt-2 text-muted">Đang tải ngân hàng đề từ hệ thống...</p>
+                </div>
+                
+                <!-- Gird chứa các Rubric Card -->
+                <div class="row g-3" id="rubric-grid" style="display: none;">
+                    <!-- Dữ liệu render bằng JS -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const N8N_WEBHOOK_URL = 'http://localhost:5678/webhook-test/getdata';
+    
+    // State Management
+    let globalContestsList = [];
+    let globalRubricsList = [];
+    let selectedRubricsMap = new Map();
+    let currentEditingExamId = null; 
+
+    // ==========================================
+    // UTILS & HELPERS
+    // ==========================================
+    function showToast(message, type = 'success') {
+        let tc = document.getElementById('toast-container');
+        if (!tc) {
+            tc = document.createElement('div'); tc.id = 'toast-container'; tc.className = 'toast-container position-fixed bottom-0 end-0 p-3'; tc.style.zIndex = '1055'; document.body.appendChild(tc);
+        }
+        const bg = type === 'success' ? 'bg-success' : (type === 'danger' ? 'bg-danger' : 'bg-warning');
+        const textClass = type === 'warning' ? 'text-dark' : 'text-white';
+        const toastEl = document.createElement('div');
+        toastEl.className = `toast align-items-center ${bg} ${textClass} border-0 show shadow`;
+        toastEl.innerHTML = `<div class="d-flex"><div class="toast-body fw-medium">${message}</div><button type="button" class="btn-close ${type==='warning'?'':'btn-close-white'} me-2 m-auto" data-bs-dismiss="toast" onclick="this.parentElement.parentElement.remove()"></button></div>`;
+        tc.appendChild(toastEl);
+        setTimeout(() => { if (toastEl.parentNode) toastEl.remove(); }, 4000);
+    }
+
+    function copyToClipboard(text) {
+        if(!text) return;
+        const textArea = document.createElement("textarea");
+        textArea.value = text;
+        document.body.appendChild(textArea);
+        textArea.select();
+        try {
+            document.execCommand('copy');
+            showToast("Đã chép nội dung vào clipboard!", "success");
+        } catch (err) {
+            showToast("Không thể chép. Hãy sao chép thủ công.", "warning");
+        }
+        document.body.removeChild(textArea);
+    }
+
+    // Convert Time
+    function isoToDatetimeLocal(isoStr) {
+        if (!isoStr) return "";
+        const date = new Date(isoStr);
+        const pad = (n) => n.toString().padStart(2, '0');
+        return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+    }
+
+    function formatToUTC7(dateString) {
+        if (!dateString) return "";
+        if (dateString.length === 16) return dateString + ":00+07:00";
+        if (dateString.length === 19) return dateString + "+07:00";
+        return dateString; 
+    }
+
+    function formatDisplayDate(isoStr) {
+        if (!isoStr) return "N/A";
+        const d = new Date(isoStr);
+        return d.toLocaleDateString('vi-VN') + ' ' + d.toLocaleTimeString('vi-VN', {hour: '2-digit', minute:'2-digit'});
+    }
+
+    // Google Drive Links
+    function getGoogleSheetsLink(fileId, sheetId) {
+        let url = `https://docs.google.com/spreadsheets/d/${fileId}/edit`;
+        if (sheetId) url += `#gid=${sheetId}`;
+        return url;
+    }
+    function getDriveFolderLink(id) { return id ? `https://drive.google.com/drive/folders/${id}` : '#'; }
+    function getDriveFileLink(id) { return id ? `https://drive.google.com/file/d/${id}/view` : '#'; }
+
+
+    function getStatusUI(statusStr) {
+        let badgeHtml = '';
+        let cardClass = 'contest-card';
+        const s = (statusStr || '').toUpperCase();
+
+        switch(s) {
+            case 'ACTIVE':
+                badgeHtml = '<span class="badge bg-success"><i class="bi bi-play-fill"></i> Đang Diễn Ra / Sắp Tới</span>';
+                cardClass += ' status-active';
+                break;
+            case 'GRADING':
+                badgeHtml = '<span class="badge bg-warning text-dark"><i class="bi bi-hourglass-split"></i> Đang Chấm Điểm</span>';
+                cardClass += ' status-grading';
+                break;
+            case 'COMPLETED':
+                badgeHtml = '<span class="badge bg-secondary"><i class="bi bi-check2-all"></i> Đã Hoàn Thành</span>';
+                cardClass += ' status-completed';
+                break;
+            case 'DELETE':
+                badgeHtml = '<span class="badge bg-danger"><i class="bi bi-trash3-fill"></i> Đã Xóa</span>';
+                cardClass += ' status-delete';
+                break;
+            default:
+                badgeHtml = '<span class="badge bg-dark">Không xác định</span>';
+        }
+        return { badgeHtml, cardClass };
+    }
+
+    window.toggleRubricDetails = function(detailId) {
+        const el = document.getElementById(detailId);
+        if (el.style.display === 'none') {
+            el.style.display = 'block';
+        } else {
+            el.style.display = 'none';
+        }
+    }
+
+    // ==========================================
+    // TÍNH NĂNG FILTER LỌC DATA TẠI FRONTEND
+    // ==========================================
+    function updateFilterSubjectDropdown() {
+        const selectEl = document.getElementById('filterSubject');
+        selectEl.innerHTML = '<option value="ALL">Tất cả đề thi (Môn)</option>';
+        
+        const uniqueSubjects = new Set();
+        globalContestsList.forEach(contest => {
+            (contest.rubrics || []).forEach(rb => {
+                if(rb.name) uniqueSubjects.add(rb.name);
+            });
+        });
+        
+        Array.from(uniqueSubjects).sort().forEach(sub => {
+            selectEl.add(new Option(sub, sub));
+        });
+    }
+
+    window.applyFilters = function() {
+        const searchText = document.getElementById('filterSearch').value.toLowerCase();
+        const statusFilter = document.getElementById('filterStatus').value;
+        const subjectFilter = document.getElementById('filterSubject').value;
+        const startDateFilter = document.getElementById('filterStartDate').value;
+        const endDateFilter = document.getElementById('filterEndDate').value;
+
+        const cards = document.querySelectorAll('.contest-wrapper-card');
+        let visibleCount = 0;
+
+        cards.forEach((card, index) => {
+            const contestDataStr = card.getAttribute('data-contest');
+            if (!contestDataStr) return;
+            
+            let contestData;
+            try {
+                contestData = JSON.parse(contestDataStr);
+            } catch (e) {
+                return;
+            }
+            
+            let isMatch = true;
+
+            // 1. Lọc theo tên
+            const contestName = (contestData.name || "").toLowerCase();
+            if (searchText && !contestName.includes(searchText)) {
+                isMatch = false;
+            }
+            
+            // 2. Lọc theo Status
+            const contestStatus = (contestData.status || "").toUpperCase();
+            if (statusFilter !== 'ALL' && contestStatus !== statusFilter) {
+                isMatch = false;
+            }
+            
+            // 3. Lọc theo Môn
+            if (subjectFilter !== 'ALL') {
+                const hasSubject = (contestData.rubrics || []).some(rb => rb.name === subjectFilter);
+                if (!hasSubject) {
+                    isMatch = false;
+                }
+            }
+
+            // 4. Lọc theo Thời gian (Ngày bắt đầu và Ngày kết thúc)
+            let contestStartDate = contestData.start ? contestData.start.split('T')[0] : "";
+            let contestEndDate = contestData.end ? contestData.end.split('T')[0] : "";
+
+            if (startDateFilter && !endDateFilter) {
+                // Chỉ chọn ngày bắt đầu: Lọc exam có start trùng ngày
+                if (contestStartDate !== startDateFilter) isMatch = false;
+            } else if (!startDateFilter && endDateFilter) {
+                // Chỉ chọn ngày kết thúc: Lọc exam có end trùng ngày
+                if (contestEndDate !== endDateFilter) isMatch = false;
+            } else if (startDateFilter && endDateFilter) {
+                // Chọn cả 2 ngày: start và end phải nằm hoàn toàn trong khoảng thời gian này
+                if (contestStartDate < startDateFilter || contestEndDate > endDateFilter) {
+                    isMatch = false;
+                }
+            }
+
+            // Hiển thị / Ẩn Card
+            if (isMatch) {
+                card.style.display = ''; 
+                visibleCount++;
+            } else {
+                card.style.display = 'none';
+            }
+        });
+        
+        let noResultMsg = document.getElementById('no-result-msg');
+        if (visibleCount === 0) {
+            if (!noResultMsg) {
+                noResultMsg = document.createElement('div');
+                noResultMsg.id = 'no-result-msg';
+                noResultMsg.className = 'col-12 text-center text-muted py-5 fw-bold';
+                noResultMsg.innerHTML = '<i class="bi bi-search fs-2"></i><br>Không tìm thấy cuộc thi nào phù hợp với điều kiện lọc.';
+                document.getElementById('contests-grid').appendChild(noResultMsg);
+            } else {
+                noResultMsg.style.display = 'block';
+            }
+        } else if (noResultMsg) {
+             noResultMsg.style.display = 'none';
+        }
+    };
+
+
+    // ==========================================
+    // VIEW CONTROLLER
+    // ==========================================
+    function toggleView(targetView = null) {
+        const listView = document.getElementById('contests-list-view');
+        const formView = document.getElementById('exam-form-view');
+        const btnToggle = document.getElementById('btnToggleView');
+        const formTitle = document.getElementById('form-card-title');
+
+        let wantToOpenForm = false;
+        
+        if (targetView === 'form') {
+            wantToOpenForm = true;
+        } else if (targetView === 'list') {
+            wantToOpenForm = false;
+        } else {
+            wantToOpenForm = (listView.style.display !== 'none');
+        }
+
+        if (wantToOpenForm) {
+            listView.style.display = 'none';
+            formView.style.display = 'flex';
+            btnToggle.innerHTML = '<i class="bi bi-arrow-left"></i> Quay Lại Danh Sách';
+            btnToggle.classList.replace('btn-primary', 'btn-outline-secondary');
+            
+            if (!currentEditingExamId) {
+                formTitle.innerHTML = '<i class="bi bi-gear-fill"></i> Tạo Cuộc Thi Mới';
+                document.getElementById('createExamForm').reset();
+                selectedRubricsMap.clear();
+                document.querySelectorAll('.rubric-card.selected').forEach(c => c.classList.remove('selected'));
+                updateSubmitButtonState();
+            } else {
+                formTitle.innerHTML = '<i class="bi bi-pencil-square"></i> Cập Nhật Cuộc Thi';
+            }
+        } else {
+            listView.style.display = 'block';
+            formView.style.display = 'none';
+            btnToggle.innerHTML = '<i class="bi bi-plus-circle"></i> Thêm Cuộc Thi Mới';
+            btnToggle.classList.replace('btn-outline-secondary', 'btn-primary');
+            currentEditingExamId = null;
+        }
+    }
+
+    // ==========================================
+    // 1. TẢI DANH SÁCH CUỘC THI (LOAD)
+    // ==========================================
+    async function loadContestsList() {
+        const grid = document.getElementById('contests-grid');
+        const loading = document.getElementById('contests-loading');
+        
+        grid.style.display = 'none';
+        loading.style.display = 'block';
+
+        // Reset ô tìm kiếm nếu gọi Tải Lại Data
+        document.getElementById('filterSearch').value = '';
+        document.getElementById('filterStartDate').value = '';
+        document.getElementById('filterEndDate').value = '';
+
+        try {
+            const response = await fetch(N8N_WEBHOOK_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ "action": "load_contests", "data": {} })
+            });
+
+            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+            const result = await response.json();
+            
+            globalContestsList = (result && result.length > 0 && result[0].data) ? result[0].data : [];
+            
+            updateFilterSubjectDropdown(); 
+            renderContestsList();
+            
+        } catch (error) {
+            console.error("Lỗi tải cuộc thi:", error);
+            loading.innerHTML = '<div class="text-danger"><i class="bi bi-wifi-off"></i> Lỗi kết nối đến N8n để lấy danh sách cuộc thi.</div>';
+        }
+    }
+
+    function renderContestsList() {
+        const grid = document.getElementById('contests-grid');
+        const loading = document.getElementById('contests-loading');
+        
+        grid.innerHTML = '';
+        loading.style.display = 'none';
+        grid.style.display = 'flex';
+
+        if (globalContestsList.length === 0) {
+            grid.innerHTML = '<div class="col-12 text-center text-muted py-4">Chưa có cuộc thi nào được tạo.</div>';
+            return;
+        }
+
+        globalContestsList.forEach((contest, index) => {
+            const statusInfo = getStatusUI(contest.status);
+            const statusBadge = statusInfo.badgeHtml;
+            const cardClass = statusInfo.cardClass;
+
+            let rubricsHtml = '';
+            (contest.rubrics || []).forEach(rb => {
+                const props = rb.properties || {};
+                const detailId = `detail_${contest.id}_${rb.id}`;
+                
+                // HIỂN THỊ KẾT QUẢ THEO FILE SHEET (GỘP PROPERTIES)
+                let resultLinkHtml = '';
+                if (props.result_file_id) {
+                     const sheetUrl = getGoogleSheetsLink(props.result_file_id, props.result_sheet_id);
+                     resultLinkHtml = `
+                     <div class="small mt-1 text-success d-flex align-items-center bg-light p-1 rounded border border-success-subtle">
+                          <i class="bi bi-file-earmark-spreadsheet-fill fs-5 me-2"></i>
+                          <div class="flex-grow-1">
+                              <span class="text-muted fw-bold">Kết quả chấm (Sheet):</span><br>
+                              <a href="${sheetUrl}" target="_blank" class="drive-link" title="Mở trang tính kết quả">Truy cập File Kết Quả</a>
+                          </div>
+                          <button type="button" class="btn-copy ms-2" onclick="copyToClipboard('${sheetUrl}')" title="Copy Link Sheet"><i class="bi bi-clipboard"></i></button>
+                     </div>
+                     `;
+                }
+
+                rubricsHtml += `
+                    <div class="border rounded p-2 mb-2 bg-white">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="fw-bold text-dark small"><i class="bi bi-file-earmark-ruled"></i> ${rb.name}</span>
+                            <div class="d-flex align-items-center">
+                                <!-- rb.id chính là Folder Gốc của Rubric -->
+                                <span class="badge bg-light text-primary border d-flex align-items-center" title="Link Thư mục Gốc">
+                                    <a href="${getDriveFolderLink(rb.id)}" target="_blank" class="text-decoration-none me-1">
+                                        ID: ${rb.id.substring(0,6)}...
+                                    </a>
+                                    <button type="button" class="btn-copy" onclick="copyToClipboard('${getDriveFolderLink(rb.id)}')" title="Copy Link Thư mục"><i class="bi bi-clipboard"></i></button>
+                                </span>
+                                <button type="button" class="btn btn-sm btn-link p-0 ms-2 text-decoration-none small fw-bold" onclick="toggleRubricDetails('${detailId}')">Chi tiết <i class="bi bi-chevron-down"></i></button>
+                            </div>
+                        </div>
+                        
+                        ${resultLinkHtml}
+                        
+                        <!-- Panel Chi Tiết Thu Gọn -->
+                        <div id="${detailId}" class="small mt-2 pt-2 border-top bg-light p-2 rounded" style="display: none;">
+                            <div class="mb-1 d-flex justify-content-between align-items-center">
+                                <div><span class="text-muted"><i class="bi bi-folder2"></i> Thư mục Gốc:</span> <a href="${getDriveFolderLink(props.folder_id_goc)}" target="_blank" class="drive-link">${props.folder_id_goc ? props.folder_id_goc.substring(0, 15) + '...' : 'N/A'}</a></div>
+                                ${props.folder_id_goc ? `<button type="button" class="btn-copy" onclick="copyToClipboard('${getDriveFolderLink(props.folder_id_goc)}')"><i class="bi bi-clipboard"></i></button>` : ''}
+                            </div>
+                            <div class="mb-1 d-flex justify-content-between align-items-center">
+                                <div><span class="text-muted"><i class="bi bi-file-pdf"></i> File Đề:</span> <a href="${getDriveFileLink(props.file_de_id)}" target="_blank" class="drive-link">${props.file_de_id ? props.file_de_id.substring(0, 15) + '...' : 'N/A'}</a></div>
+                                ${props.file_de_id ? `<button type="button" class="btn-copy" onclick="copyToClipboard('${getDriveFileLink(props.file_de_id)}')"><i class="bi bi-clipboard"></i></button>` : ''}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            // Ẩn nút Edit nếu đã Bị Xóa
+            const btnEditHtml = contest.status !== 'DELETE' ? `
+                <button type="button" class="btn btn-outline-primary w-100 mt-auto fw-bold" onclick="editContest('${contest.id}')">
+                    <i class="bi bi-pencil-square"></i> Chỉnh Sửa
+                </button>
+            ` : `
+                <button type="button" class="btn btn-secondary w-100 mt-auto fw-bold" disabled>
+                    <i class="bi bi-slash-circle"></i> Đã Bị Xóa
+                </button>
+            `;
+
+            const col = document.createElement('div');
+            col.className = 'col-md-6 col-lg-4 contest-wrapper-card';
+            // CHÚ Ý: JSON.stringify trực tiếp, bỏ hàm replace(&quot;) để không làm hỏng cú pháp JSON
+            col.setAttribute('data-contest', JSON.stringify(contest));
+            
+            col.innerHTML = `
+                <div class="card h-100 shadow-sm ${cardClass}">
+                    <div class="card-body d-flex flex-column">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <h5 class="fw-bold text-dark mb-0">${contest.name}</h5>
+                            ${statusBadge}
+                        </div>
+                        
+                        <div class="small mb-3 d-flex align-items-center">
+                            <span class="text-muted me-1">Folder Cuộc thi:</span> 
+                            <a href="${getDriveFolderLink(contest.id)}" target="_blank" class="drive-link me-auto">${contest.id.substring(0,15)}...</a>
+                            <button type="button" class="btn-copy" onclick="copyToClipboard('${getDriveFolderLink(contest.id)}')" title="Copy Link Folder"><i class="bi bi-clipboard"></i></button>
+                        </div>
+
+                        <div class="bg-light rounded p-2 mb-3 small border">
+                            <div class="text-success"><i class="bi bi-play-circle"></i> Bắt đầu: <b>${formatDisplayDate(contest.start)}</b></div>
+                            <div class="text-danger mt-1"><i class="bi bi-stop-circle"></i> Kết thúc: <b>${formatDisplayDate(contest.end)}</b></div>
+                        </div>
+
+                        <div class="mb-3 flex-grow-1">
+                            <div class="text-secondary fw-bold small mb-2"><i class="bi bi-stack"></i> Các Đề Thi (${(contest.rubrics||[]).length}):</div>
+                            ${rubricsHtml}
+                        </div>
+
+                        ${btnEditHtml}
+                    </div>
+                </div>
+            `;
+            grid.appendChild(col);
+        });
+
+        applyFilters(); 
+    }
+
+    // ==========================================
+    // 2. NGHIỆP VỤ SỬA CUỘC THI (EDIT)
+    // ==========================================
+    window.editContest = function(contestId) {
+        const contestObj = globalContestsList.find(c => c.id === contestId);
+        if (!contestObj) {
+            showToast("Lỗi dữ liệu. Vui lòng tải lại trang.", "danger");
+            return;
+        }
+
+        currentEditingExamId = contestObj.id;
+        toggleView('form'); 
+
+        document.getElementById('exam_name').value = contestObj.name || "";
+        document.getElementById('start_time').value = isoToDatetimeLocal(contestObj.start);
+        document.getElementById('end_time').value = isoToDatetimeLocal(contestObj.end);
+
+        selectedRubricsMap.clear();
+        document.querySelectorAll('.rubric-card.selected').forEach(c => c.classList.remove('selected'));
+        
+        if (contestObj.rubrics && Array.isArray(contestObj.rubrics)) {
+            contestObj.rubrics.forEach(rb => {
+                const originalRubricId = rb.properties?.folder_id_goc;
+                if (originalRubricId) {
+                    selectedRubricsMap.set(originalRubricId, rb); 
+                    const card = document.getElementById(`card_${originalRubricId}`);
+                    if (card) {
+                        card.classList.add('selected');
+                    }
+                }
+            });
+        }
+        updateSubmitButtonState();
+    }
+
+
+    // ==========================================
+    // 3. NGHIỆP VỤ LOAD DANH SÁCH RUBRIC ĐỂ CHỌN
+    // ==========================================
+    async function loadRubricsList() {
+        const grid = document.getElementById('rubric-grid');
+        const loading = document.getElementById('loading-state');
+        
+        loading.style.display = 'block';
+        grid.style.display = 'none';
+        grid.innerHTML = '';
+        
+        try {
+            const response = await fetch(N8N_WEBHOOK_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ "action": "load_rubrics", "data": {} })
+            });
+
+            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+            
+            let data = await response.json();
+            globalRubricsList = (data && !Array.isArray(data) && data.id) ? [data] : data;
+
+            if (!Array.isArray(globalRubricsList) || globalRubricsList.length === 0) {
+                loading.innerHTML = '<div class="text-danger"><i class="bi bi-x-circle"></i> Không có Rubric nào trên hệ thống.</div>';
+                return;
+            }
+
+            loading.style.display = 'none';
+            grid.style.display = 'flex';
+
+            globalRubricsList.forEach(rb => {
+                const props = rb.properties || {};
+                const col = document.createElement('div');
+                col.className = 'col-md-6';
+                
+                const isSelected = selectedRubricsMap.has(rb.id) ? 'selected' : '';
+                if (isSelected) selectedRubricsMap.set(rb.id, rb);
+
+                col.innerHTML = `
+                    <div class="card h-100 rubric-card position-relative ${isSelected}" id="card_${rb.id}" onclick="toggleRubricSelection('${rb.id}')">
+                        <i class="bi bi-check-circle-fill checkbox-icon"></i>
+                        <div class="card-body">
+                            <h5 class="card-title text-dark fw-bold mb-1"><i class="bi bi-file-earmark-text"></i> ${rb.name || 'Đề chưa đặt tên'}</h5>
+                            <p class="card-text text-muted small mb-3">ID: ${rb.id.substring(0, 10)}...</p>
+                            
+                            <div class="d-flex justify-content-between align-items-center mt-auto border-top pt-2">
+                                <span class="badge bg-light text-secondary border">File đề: ${props.file_de ? 'Có' : 'Không'}</span>
+                                <button type="button" class="btn btn-sm btn-outline-primary" onclick="viewRubricDetail(event, '${rb.id}')">Chi tiết</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                grid.appendChild(col);
+            });
+            updateSubmitButtonState();
+
+        } catch (error) {
+            console.error("Lỗi tải rubric:", error);
+            loading.innerHTML = '<div class="text-danger"><i class="bi bi-wifi-off"></i> Lỗi kết nối đến N8n.</div>';
+        }
+    }
+
+    function toggleRubricSelection(rubricId) {
+        const card = document.getElementById(`card_${rubricId}`);
+        if (!card) return;
+
+        if (selectedRubricsMap.has(rubricId)) {
+            selectedRubricsMap.delete(rubricId);
+            card.classList.remove('selected');
+        } else {
+            const rb = globalRubricsList.find(r => r.id === rubricId);
+            if (rb) {
+                selectedRubricsMap.set(rubricId, rb);
+                card.classList.add('selected');
+            }
+        }
+        updateSubmitButtonState();
+    }
+
+    function updateSubmitButtonState() {
+        const btn = document.getElementById('btnSubmitExam');
+        btn.disabled = selectedRubricsMap.size === 0;
+        
+        const actionText = currentEditingExamId ? 'Lưu Thay Đổi' : 'Tạo Cuộc Thi';
+        btn.innerHTML = selectedRubricsMap.size > 0 ? 
+            `<i class="bi bi-rocket-takeoff"></i> ${actionText} (${selectedRubricsMap.size} đề)` : 
+            `<i class="bi bi-rocket-takeoff"></i> ${actionText}`;
+    }
+
+    window.viewRubricDetail = function(e, rubricId) {
+        e.stopPropagation(); 
+        window.location.href = '/rubrics?id=' + rubricId; 
+    }
+
+    // ==========================================
+    // 4. GỬI DATA TẠO / SỬA CUỘC THI
+    // ==========================================
+    document.getElementById('createExamForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        if (selectedRubricsMap.size === 0) {
+            showToast("Bạn chưa chọn Rubric (Đề thi) nào!", "warning");
+            return;
+        }
+
+        const btn = document.getElementById('btnSubmitExam');
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Đang xử lý...';
+
+        const examName = document.getElementById('exam_name').value;
+        const startTimeStr = document.getElementById('start_time').value;
+        const endTimeStr = document.getElementById('end_time').value;
+
+        const selectedRubricsArray = [];
+        selectedRubricsMap.forEach((rb, id) => {
+            const props = rb.properties || {};
+            selectedRubricsArray.push({
+                "name": rb.name || "",
+                "folder_id_goc": id, 
+                "file_rubric_id": props.file_rubric || props.file_rubric_id || "",
+                "file_de_id": props.file_de || props.file_de_id || "",
+                "file_de_name": rb.name || "" 
+            });
+        });
+
+        const payload = {
+            "action": currentEditingExamId ? "save_contest" : "create_exam",
+            "data": {
+                "exam_name": examName,
+                "start_time": formatToUTC7(startTimeStr),
+                "end_time": formatToUTC7(endTimeStr),
+                "selected_rubrics": selectedRubricsArray
+            }
+        };
+
+        if (currentEditingExamId) {
+            payload.data.exam_id = currentEditingExamId;
+            payload.data.operation = "update";
+        }
+
+        try {
+            const response = await fetch(N8N_WEBHOOK_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            if (response.ok) {
+                showToast(currentEditingExamId ? "Cập nhật Cuộc Thi thành công!" : "Tạo Cuộc Thi thành công!", "success");
+                
+                await loadContestsList();
+                toggleView('list');
+                
+            } else {
+                showToast("Lỗi hệ thống: HTTP " + response.status, "danger");
+            }
+        } catch (error) {
+            console.error("Lỗi:", error);
+            showToast("Lỗi kết nối tới N8n.", "danger");
+        } finally {
+            updateSubmitButtonState(); 
+        }
+    });
+
+    document.addEventListener('DOMContentLoaded', () => {
+        loadRubricsList();
+        loadContestsList();
+    });
+</script>
+{% endblock %}

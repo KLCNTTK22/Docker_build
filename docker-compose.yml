@@ -10,6 +10,8 @@ services:
       - N8N_RESTRICT_FILE_ACCESS_TO=/shared_workspace
       - N8N_ALLOW_BUILTIN_MODULES=fs
       - NODES_EXCLUDE=[]
+      - TZ=Asia/Ho_Chi_Minh
+      - GENERIC_TIMEZONE=Asia/Ho_Chi_Minh
     volumes:
       - n8n_data:/home/node/.n8n
       - ./shared_workspace:/shared_workspace:rw
@@ -21,6 +23,8 @@ services:
     container_name: thesis_web_ui
     ports:
       - "80:5000"
+    environment:
+      - TZ=Asia/Ho_Chi_Minh
     volumes:
       - ./shared_workspace:/shared_workspace
     depends_on:

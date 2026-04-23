@@ -11,10 +11,9 @@ BASE_DATA_DIR = os.path.join(PROJECT_ROOT, 'shared_workspace')
 os.makedirs(BASE_DATA_DIR, exist_ok=True)
 
 # Hỗ trợ tạo folder theo môn
-SUPPORTED_SUBJECTS = ['word', 'excel', 'powerpoint']
+SUPPORTED_SUBJECTS = ['grade', 'submit', 'rubric', 'tmp', 'grade']
 for sub in SUPPORTED_SUBJECTS:
-    for d in ['rubrics', 'students', 'results']:
-        os.makedirs(os.path.join(BASE_DATA_DIR, sub, d), exist_ok=True)
+        os.makedirs(os.path.join(BASE_DATA_DIR, sub), exist_ok=True)
 
 # ==========================================
 # 1. ROUTES ĐIỀU HƯỚNG GIAO DIỆN (FRONTEND)
@@ -22,22 +21,37 @@ for sub in SUPPORTED_SUBJECTS:
 
 @app.route('/')
 def home():
-    return render_template('home.html', active_page='home', subjects=SUPPORTED_SUBJECTS)
+    return render_template('home.html', active_page='home')
 
 @app.route('/create')
 def create_rubric():
     return render_template('create.html', active_page='create')
 
+# Trang Quản lý Rubric
+@app.route('/rubrics')
+def manage_rubrics():
+    return render_template('rubrics.html', active_page='rubrics')
+
+# Đổi route exams thành Cuộc Thi
 @app.route('/exams')
 def list_exams():
     return render_template('list_exams.html', active_page='exams')
 
-# Cập nhật route động theo môn học để khớp với logic của app.js và home.html
+# Route mới cho chức năng Chấm Local
+@app.route('/grade-local')
+def grade_local():
+    return render_template('grade_local.html', active_page='grade_local')
+
+# Placeholder cho chức năng Chấm AI (làm sau)
+@app.route('/grade-ai')
+def grade_ai():
+    return render_template('grade_ai.html', active_page='grade_ai')
+
+# Route xem Kết Quả (Vẫn giữ cấu trúc cũ cho app.js xử lý sau này)
 @app.route('/subject/<subject_name>')
 def view_results(subject_name):
     if subject_name not in SUPPORTED_SUBJECTS:
         return "Môn học không được hỗ trợ", 404
-    # Truyền biến subject_name sang template để app.js có thể lấy được biến currentSubject
     return render_template('results.html', active_page='results', subject=subject_name)
 
 

@@ -1,0 +1,183 @@
+[
+  {
+    "criteria_name": "Fill Item Name (Tên vật tư) using VLOOKUP",
+    "allocated_points": 1.5,
+    "anchor_locator": {
+      "type": "row",
+      "text_contains": "Số chứng từ",
+      "sheet_name": "Sheet1"
+    },
+    "rules": [
+      {
+        "description": "Verify VLOOKUP function for 'Tên vật tư' column",
+        "action": "VERIFY_FUNCTION_NAME",
+        "points": 1.5,
+        "col_index": 2,
+        "expected_count": 10,
+        "expected_function": "VLOOKUP",
+        "expected_reference": "$A$20:$C$22"
+      }
+    ]
+  },
+  {
+    "criteria_name": "Calculate Unit Price (Đơn giá) using VLOOKUP",
+    "allocated_points": 1.5,
+    "anchor_locator": {
+      "type": "row",
+      "text_contains": "Số chứng từ",
+      "sheet_name": "Sheet1"
+    },
+    "rules": [
+      {
+        "description": "Verify VLOOKUP function for 'Đơn giá' column",
+        "action": "VERIFY_FUNCTION_NAME",
+        "points": 1.5,
+        "col_index": 4,
+        "expected_count": 10,
+        "expected_function": "VLOOKUP",
+        "expected_reference": "$A$20:$C$22"
+      }
+    ]
+  },
+  {
+    "criteria_name": "Calculate Discount (Tiền giảm) using IF",
+    "allocated_points": 1.5,
+    "anchor_locator": {
+      "type": "row",
+      "text_contains": "Số chứng từ",
+      "sheet_name": "Sheet1"
+    },
+    "rules": [
+      {
+        "description": "Verify IF function for 'Tiền giảm' column",
+        "action": "VERIFY_FUNCTION_NAME",
+        "points": 1.5,
+        "col_index": 5,
+        "expected_count": 10,
+        "expected_function": "IF"
+      }
+    ]
+  },
+  {
+    "criteria_name": "Calculate Total Amount (Thành tiền)",
+    "allocated_points": 1.0,
+    "anchor_locator": {
+      "type": "row",
+      "text_contains": "Số chứng từ",
+      "sheet_name": "Sheet1"
+    },
+    "rules": [
+      {
+        "description": "Verify dynamic formula for 'Thành tiền' column",
+        "action": "VERIFY_DYNAMIC_FORMULA",
+        "points": 1.0,
+        "col_index": 6,
+        "expected_count": 10
+      }
+    ]
+  },
+  {
+    "criteria_name": "Sort Data Table by Item Name (Tên vật tư)",
+    "allocated_points": 1.0,
+    "anchor_locator": {
+      "type": "row",
+      "text_contains": "Số chứng từ",
+      "sheet_name": "Sheet1"
+    },
+    "rules": [
+      {
+        "description": "Verify the first item in 'Tên vật tư' column is 'Dầu Diesel' after sorting",
+        "action": "VERIFY_VALUE",
+        "points": 1.0,
+        "col_index": 2,
+        "expected": "Dầu Diesel"
+      }
+    ]
+  },
+  {
+    "criteria_name": "Apply Conditional Formatting for Quantity (Số lượng) >= 400",
+    "allocated_points": 1.0,
+    "anchor_locator": {
+      "type": "row",
+      "text_contains": "Số lượng",
+      "sheet_name": "Sheet1"
+    },
+    "rules": [
+      {
+        "description": "Verify Conditional Formatting rule on 'Số lượng' column",
+        "action": "VERIFY_CONDITIONAL_FORMATTING",
+        "points": 1.0,
+        "expected_value": "399"
+      }
+    ]
+  },
+  {
+    "criteria_name": "Create Pivot Table for Summary",
+    "allocated_points": 1.5,
+    "anchor_locator": {
+      "type": "worksheet",
+      "text_contains": "PivotTable1",
+      "sheet_name": "Sheet2",
+      "enforce_sheet_name": true
+    },
+    "rules": [
+      {
+        "description": "Verify 'Tên vật tư' as Row Field in Pivot Table",
+        "action": "VERIFY_PIVOT_TABLE",
+        "points": 0.5,
+        "field_type": "row",
+        "expected_fld": "2"
+      },
+      {
+        "description": "Verify 'Số lượng' as Sum Data Field in Pivot Table",
+        "action": "VERIFY_PIVOT_TABLE",
+        "points": 0.5,
+        "field_type": "data",
+        "expected_fld": "3",
+        "expected_subtotal": "sum"
+      },
+      {
+        "description": "Verify 'Thành tiền' as Sum Data Field in Pivot Table",
+        "action": "VERIFY_PIVOT_TABLE",
+        "points": 0.5,
+        "field_type": "data",
+        "expected_fld": "6",
+        "expected_subtotal": "sum"
+      }
+    ]
+  },
+  {
+    "criteria_name": "Create Chart from Pivot Table",
+    "allocated_points": 0.5,
+    "anchor_locator": {
+      "type": "global"
+    },
+    "rules": [
+      {
+        "description": "Verify presence of a Bar Chart representing the summary",
+        "action": "VERIFY_CHART",
+        "points": 0.5,
+        "expected_type": "barChart"
+      }
+    ]
+  },
+  {
+    "criteria_name": "Extract Data for 'Xăng A92' to a separate sheet",
+    "allocated_points": 0.5,
+    "anchor_locator": {
+      "type": "worksheet",
+      "text_contains": "STT",
+      "sheet_name": "Sheet3",
+      "enforce_sheet_name": true
+    },
+    "rules": [
+      {
+        "description": "Verify 'Xăng A92' data is correctly extracted to Sheet3",
+        "action": "VERIFY_EXTRACTED_DATA",
+        "points": 0.5,
+        "expected_value": "Xăng A92",
+        "forbidden_values": ["Dầu Diesel", "Nhớt"]
+      }
+    ]
+  }
+]

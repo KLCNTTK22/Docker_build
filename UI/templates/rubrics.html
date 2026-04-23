@@ -1,0 +1,403 @@
+{% extends "base.html" %}
+
+{% block content %}
+<style>
+    .cursor-pointer { cursor: pointer; }
+    .hover-bg-light:hover { background-color: #f8f9fa; }
+    .rubric-node-active { border-left: 4px solid #0d6efd !important; background-color: #f0f7ff !important; }
+    #json-editor:focus { box-shadow: none; outline: 1px solid #0d6efd; }
+    ::selection { background: #0d6efd; color: white; } 
+</style>
+
+<!-- THANH CÔNG CỤ TRÊN CÙNG -->
+<div class="card shadow-sm border-0 mb-4">
+    <div class="card-body d-flex align-items-center gap-3 bg-white rounded">
+        <div class="flex-grow-1">
+            <select id="rubric-select" class="form-select form-select-lg fw-bold text-primary bg-light" onchange="onRubricSelect()">
+                <option value="">-- Đang tải danh sách Rubric... --</option>
+            </select>
+        </div>
+        <button class="btn btn-light border text-secondary" onclick="loadRubricsList()" title="Tải lại danh sách" id="btnRefresh">
+            <i class="bi bi-arrow-clockwise fs-5"></i>
+        </button>
+        <button class="btn btn-light border text-secondary" onclick="showRubricDetails()" title="Xem chi tiết properties" id="btnDetails" disabled>
+            <i class="bi bi-three-dots-vertical fs-5"></i>
+        </button>
+        <button class="btn btn-primary px-4 fw-semibold" id="btnSave" onclick="saveRubric()" disabled>
+            <i class="bi bi-floppy"></i> Lưu Thay Đổi
+        </button>
+    </div>
+</div>
+
+<!-- MÀN HÌNH CHỜ -->
+<div id="empty-state" class="text-center text-muted py-5 mt-5">
+    <i class="bi bi-inboxes fs-1 text-secondary"></i>
+    <p class="mt-3 fs-5" id="empty-state-msg">Đang tải dữ liệu từ hệ thống...</p>
+</div>
+
+<!-- KHÔNG GIAN LÀM VIỆC CHÍNH (Ẩn mặc định) -->
+<div class="row h-100" id="workspace" style="display: none;">
+    <!-- CỘT TRÁI: GIAO DIỆN TRỰC QUAN -->
+    <div class="col-md-5 mb-4">
+        <div class="card shadow-sm border-0 h-100">
+            <div class="card-header bg-white fw-bold text-primary py-3 d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-diagram-3"></i> Cấu Trúc Trực Quan</span>
+                <span class="badge bg-success rounded-pill" id="total-points">0 pts</span>
+            </div>
+            <div class="card-body bg-light overflow-auto" style="max-height: 650px; min-height: 650px;" id="visual-rubric-container">
+                <!-- Nội dung trực quan sẽ được render vào đây -->
+            </div>
+        </div>
+    </div>
+
+    <!-- CỘT PHẢI: JSON EDITOR -->
+    <div class="col-md-7 mb-4">
+        <div class="card shadow-sm border-0 h-100">
+            <div class="card-header bg-dark text-white py-3 d-flex justify-content-between align-items-center rounded-top">
+                <span class="fw-bold"><i class="bi bi-filetype-json text-info"></i> Chỉnh Sửa JSON Toàn Bộ</span>
+                <small class="text-warning"><i class="bi bi-exclamation-triangle"></i> Cẩn thận khi sửa dấu phẩy, ngoặc</small>
+            </div>
+            
+            <div class="card-body p-0 bg-dark" style="height: 650px;">
+                <textarea id="json-editor" class="form-control font-monospace text-light bg-dark border-0 w-100 h-100 p-3" style="font-size: 14px; border-radius: 0; resize: none;" spellcheck="false" placeholder="Dữ liệu JSON sẽ hiển thị ở đây..."></textarea>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL CHI TIẾT (3 CHẤM) -->
+<div class="modal fade" id="detailsModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content border-0 shadow">
+      <div class="modal-header bg-light">
+        <h5 class="modal-title fw-bold text-primary"><i class="bi bi-info-circle"></i> Chi tiết Rubric</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body p-0">
+        <table class="table table-hover mb-0">
+            <tbody id="details-table-body">
+                <!-- Nội dung render qua JS -->
+            </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const N8N_WEBHOOK_URL = 'http://localhost:5678/webhook-test/getdata';
+    let globalRubricsList = [];
+    let currentSelectedRubric = null;
+    let currentFullJson = null;
+
+    // Utils
+    function showToast(message, type = 'success') {
+        let tc = document.getElementById('toast-container');
+        if (!tc) {
+            tc = document.createElement('div'); tc.id = 'toast-container'; tc.className = 'toast-container position-fixed bottom-0 end-0 p-3'; tc.style.zIndex = '1055'; document.body.appendChild(tc);
+        }
+        const bg = type === 'success' ? 'bg-success' : (type === 'danger' ? 'bg-danger' : 'bg-warning');
+        const textClass = type === 'warning' ? 'text-dark' : 'text-white';
+        const toastEl = document.createElement('div');
+        toastEl.className = `toast align-items-center ${bg} ${textClass} border-0 show shadow`;
+        toastEl.innerHTML = `<div class="d-flex"><div class="toast-body fw-medium">${message}</div><button type="button" class="btn-close ${type==='warning'?'':'btn-close-white'} me-2 m-auto" onclick="this.parentElement.parentElement.remove()"></button></div>`;
+        tc.appendChild(toastEl);
+        setTimeout(() => { if (toastEl.parentNode) toastEl.remove(); }, 3000);
+    }
+
+    function formatDate(isoString) {
+        if (!isoString) return 'N/A';
+        const d = new Date(isoString);
+        return d.toLocaleDateString('vi-VN') + ' ' + d.toLocaleTimeString('vi-VN', {hour: '2-digit', minute:'2-digit'});
+    }
+
+    // 1. LOAD DANH SÁCH RUBRIC
+    async function loadRubricsList(preselectId = null) {
+        const selectEl = document.getElementById('rubric-select');
+        const emptyStateMsg = document.getElementById('empty-state-msg');
+        
+        selectEl.innerHTML = '<option value="">-- Đang tải danh sách Rubric... --</option>';
+        selectEl.disabled = true;
+        document.getElementById('btnRefresh').disabled = true;
+        
+        try {
+            const response = await fetch(N8N_WEBHOOK_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ "action": "load_rubrics", "data": {} })
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            let responseData = await response.json();
+            
+            if (responseData && !Array.isArray(responseData) && responseData.id) {
+                globalRubricsList = [responseData];
+            } else {
+                globalRubricsList = responseData;
+            }
+            
+            if (!Array.isArray(globalRubricsList) || globalRubricsList.length === 0) {
+                selectEl.innerHTML = '<option value="">-- Không có Rubric nào --</option>';
+                emptyStateMsg.innerText = "Không tìm thấy dữ liệu Rubric trên hệ thống.";
+                selectEl.disabled = false;
+                document.getElementById('btnRefresh').disabled = false;
+                return;
+            }
+
+            selectEl.innerHTML = '<option value="">-- Chọn một Rubric để chỉnh sửa --</option>';
+            globalRubricsList.forEach(rb => {
+                const timeStr = formatDate(rb.modifiedTime);
+                selectEl.add(new Option(`[${timeStr}] - ${rb.name || 'Không tên'}`, rb.id));
+            });
+            
+            emptyStateMsg.innerText = "Vui lòng chọn một Rubric ở menu phía trên để bắt đầu";
+            
+            // Xử lý nạp tự động (khi từ trang Exams qua)
+            if (preselectId) {
+                selectEl.value = preselectId;
+                onRubricSelect(); // Kích hoạt sự kiện xem chi tiết
+            } else {
+                showToast("Tải danh sách thành công!", "success");
+            }
+
+        } catch (error) {
+            console.error("Lỗi khi tải danh sách Rubric:", error);
+            selectEl.innerHTML = '<option value="">-- Lỗi tải danh sách --</option>';
+            emptyStateMsg.innerHTML = `<span class="text-danger"><i class="bi bi-x-circle"></i> Lỗi kết nối đến N8n Webhook. Vui lòng kiểm tra lại.</span>`;
+            showToast("Lỗi tải danh sách. Xem console để biết chi tiết.", "danger");
+        } finally {
+            selectEl.disabled = false;
+            document.getElementById('btnRefresh').disabled = false;
+        }
+    }
+
+    // 2. KHI CHỌN 1 RUBRIC TỪ DROPDOWN
+    async function onRubricSelect() {
+        const selectEl = document.getElementById('rubric-select');
+        const selectedId = selectEl.value;
+        const btnDetails = document.getElementById('btnDetails');
+        const btnSave = document.getElementById('btnSave');
+        const workspace = document.getElementById('workspace');
+        const emptyState = document.getElementById('empty-state');
+        const visualContainer = document.getElementById('visual-rubric-container');
+
+        if (!selectedId) {
+            btnDetails.disabled = true;
+            btnSave.disabled = true;
+            workspace.style.display = 'none';
+            emptyState.style.display = 'block';
+            currentSelectedRubric = null;
+            return;
+        }
+
+        currentSelectedRubric = globalRubricsList.find(r => r.id === selectedId);
+        btnDetails.disabled = false;
+        
+        const props = currentSelectedRubric.properties || {};
+        const payloadData = {
+            file_de: props.file_de || "",
+            file_rubric: props.file_rubric || "",
+            file_mau: props.file_mau || ""
+        };
+
+        emptyState.style.display = 'none';
+        workspace.style.display = 'flex';
+        btnSave.disabled = true;
+        document.getElementById('json-editor').value = "Đang tải dữ liệu...";
+        visualContainer.innerHTML = '<div class="text-center py-5"><span class="spinner-border text-primary"></span><p class="mt-2 text-muted">Đang phân tích cấu trúc JSON...</p></div>';
+
+        try {
+            const response = await fetch(N8N_WEBHOOK_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ "action": "get_rubric", "data": payloadData })
+            });
+
+            if (!response.ok) {
+                 throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const resData = await response.json();
+            currentFullJson = resData; 
+            
+            btnSave.disabled = false;
+            
+            // Xử lý đổ dữ liệu ra JSON Textarea
+            document.getElementById('json-editor').value = JSON.stringify(currentFullJson, null, 4);
+
+            // Render giao diện trực quan
+            renderVisualTree(currentFullJson);
+            
+        } catch (error) {
+            console.error("Lỗi khi tải chi tiết Rubric:", error);
+            visualContainer.innerHTML = `<div class="text-center text-danger py-5"><i class="bi bi-x-octagon fs-1"></i><p class="mt-3">Lỗi tải dữ liệu chi tiết từ N8n.</p></div>`;
+            showToast("Lỗi tải chi tiết Rubric. Đã xảy ra lỗi mạng.", "danger");
+            document.getElementById('json-editor').value = "Lỗi kết nối...";
+        }
+    }
+
+    // 3. RENDER CÂY TRỰC QUAN (VISUAL TREE)
+    function renderVisualTree(dataArray) {
+        const container = document.getElementById('visual-rubric-container');
+        container.innerHTML = '';
+        
+        if (!Array.isArray(dataArray) || dataArray.length === 0 || !dataArray[0].rubric_content) {
+            container.innerHTML = '<div class="text-center text-danger mt-4">Không tìm thấy trường rubric_content trong dữ liệu trả về.</div>';
+            return;
+        }
+
+        const rubricContent = dataArray[0].rubric_content;
+        let totalScore = 0;
+
+        rubricContent.forEach((criteria, cIdx) => {
+            totalScore += (criteria.allocated_points || 0);
+
+            const card = document.createElement('div');
+            card.className = 'card mb-3 border-secondary shadow-sm';
+            
+            const header = document.createElement('div');
+            header.className = 'card-header bg-white d-flex justify-content-between align-items-center cursor-pointer hover-bg-light';
+            header.innerHTML = `
+                <div class="fw-bold text-dark"><i class="bi bi-caret-right-fill text-secondary me-1"></i> ${criteria.criteria_name || 'Không có tên'}</div>
+                <span class="badge bg-primary rounded-pill fs-6">${criteria.allocated_points || 0} đ</span>
+            `;
+            header.onclick = (e) => {
+                highlightVisualNode(header);
+                if (criteria.criteria_name) highlightInEditor(`"criteria_name": "${criteria.criteria_name}"`);
+            };
+            card.appendChild(header);
+
+            const body = document.createElement('ul');
+            body.className = 'list-group list-group-flush';
+            
+            (criteria.rules || []).forEach((rule, rIdx) => {
+                const li = document.createElement('li');
+                li.className = 'list-group-item list-group-item-action d-flex justify-content-between align-items-center cursor-pointer ps-4';
+                li.innerHTML = `
+                    <div>
+                        <div class="text-dark small fw-medium">${rule.description || 'Chưa mô tả'}</div>
+                        <span class="badge bg-light text-secondary border mt-1">Action: ${rule.action || 'N/A'}</span>
+                    </div>
+                    <span class="text-success fw-bold small">${rule.points || 0} đ</span>
+                `;
+                li.onclick = (e) => {
+                    e.stopPropagation();
+                    highlightVisualNode(li);
+                    if (rule.description) highlightInEditor(`"description": "${rule.description}"`);
+                };
+                body.appendChild(li);
+            });
+
+            card.appendChild(body);
+            container.appendChild(card);
+        });
+
+        document.getElementById('total-points').innerText = `Tổng: ${totalScore} đ`;
+    }
+
+    function highlightVisualNode(element) {
+        document.querySelectorAll('.rubric-node-active').forEach(el => el.classList.remove('rubric-node-active'));
+        element.classList.add('rubric-node-active');
+    }
+
+    function highlightInEditor(searchString) {
+        const editor = document.getElementById('json-editor');
+        const fullText = editor.value;
+        const index = fullText.indexOf(searchString);
+
+        if (index !== -1) {
+            editor.focus();
+            editor.setSelectionRange(index, index + searchString.length);
+            
+            const textUpToIndex = fullText.substring(0, index);
+            const lineNumber = textUpToIndex.split('\n').length;
+            const lineHeight = 21; 
+            
+            editor.scrollTop = Math.max(0, (lineNumber * lineHeight) - (editor.clientHeight / 2));
+        }
+    }
+
+    // 4. HIỂN THỊ MODAL CHI TIẾT 3 CHẤM
+    function showRubricDetails() {
+        if (!currentSelectedRubric) return;
+        
+        const props = currentSelectedRubric.properties || {};
+        const tbody = document.getElementById('details-table-body');
+        tbody.innerHTML = `
+            <tr><td class="text-muted w-25">ID</td><td class="fw-medium font-monospace">${currentSelectedRubric.id}</td></tr>
+            <tr><td class="text-muted">Tên Đề</td><td class="fw-bold">${currentSelectedRubric.name}</td></tr>
+            <tr><td class="text-muted">Ngày Tạo</td><td>${formatDate(currentSelectedRubric.createdTime)}</td></tr>
+            <tr><td class="text-muted">Lần Sửa Cuối</td><td>${formatDate(currentSelectedRubric.modifiedTime)}</td></tr>
+            <tr><td class="text-muted">File Đề (ID)</td><td class="font-monospace text-primary">${props.file_de || 'N/A'}</td></tr>
+            <tr><td class="text-muted">File Mẫu (ID)</td><td class="font-monospace text-primary">${props.file_mau || 'N/A'}</td></tr>
+            <tr><td class="text-muted">File Rubric (ID)</td><td class="font-monospace text-primary">${props.file_rubric || 'N/A'}</td></tr>
+        `;
+        
+        if (typeof bootstrap !== 'undefined') {
+            new bootstrap.Modal(document.getElementById('detailsModal')).show();
+        }
+    }
+
+    // 5. GỌI API LƯU RUBRIC
+    async function saveRubric() {
+        if (!currentSelectedRubric) return;
+        const editor = document.getElementById('json-editor');
+        const btnSave = document.getElementById('btnSave');
+
+        let parsedContent;
+        try {
+            parsedContent = JSON.parse(editor.value);
+        } catch (e) {
+            showToast("Lỗi cú pháp JSON! Vui lòng kiểm tra lại", "danger");
+            return;
+        }
+
+        btnSave.disabled = true;
+        btnSave.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Đang lưu...';
+
+        try {
+            const response = await fetch(N8N_WEBHOOK_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    "action": "save_rubric",
+                    "data": {
+                        "id": currentSelectedRubric.id,
+                        "content": parsedContent
+                    }
+                })
+            });
+
+            if (!response.ok) {
+                 throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            showToast("Lưu cấu trúc Rubric thành công!", "success");
+            currentFullJson = parsedContent;
+            editor.value = JSON.stringify(currentFullJson, null, 4);
+            renderVisualTree(currentFullJson);
+            
+        } catch (error) {
+            console.error("Lỗi khi lưu Rubric:", error);
+            showToast("Lỗi lưu dữ liệu. Vui lòng thử lại sau.", "danger");
+        } finally {
+            btnSave.disabled = false;
+            btnSave.innerHTML = '<i class="bi bi-floppy"></i> Lưu Thay Đổi';
+        }
+    }
+
+    // Khởi chạy khi load xong trang
+    document.addEventListener('DOMContentLoaded', () => {
+        // Kiểm tra xem có ID rubric nào được truyền qua URL không (VD: /rubrics?id=123)
+        const urlParams = new URLSearchParams(window.location.search);
+        const preselectId = urlParams.get('id');
+        
+        loadRubricsList(preselectId);
+    });
+</script>
+{% endblock %}
