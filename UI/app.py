@@ -11,7 +11,7 @@ BASE_DATA_DIR = os.path.join(PROJECT_ROOT, 'shared_workspace')
 os.makedirs(BASE_DATA_DIR, exist_ok=True)
 
 # Hỗ trợ tạo folder theo môn
-SUPPORTED_SUBJECTS = ['grade', 'submit', 'rubric', 'tmp', 'grade']
+SUPPORTED_SUBJECTS = ['grade', 'submit', 'rubric', 'tmp', 'grade', 'grade_ai']
 for sub in SUPPORTED_SUBJECTS:
         os.makedirs(os.path.join(BASE_DATA_DIR, sub), exist_ok=True)
 

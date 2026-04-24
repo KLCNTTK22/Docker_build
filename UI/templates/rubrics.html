@@ -11,21 +11,40 @@
 
 <!-- THANH CÔNG CỤ TRÊN CÙNG -->
 <div class="card shadow-sm border-0 mb-4">
-    <div class="card-body d-flex align-items-center gap-3 bg-white rounded">
-        <div class="flex-grow-1">
-            <select id="rubric-select" class="form-select form-select-lg fw-bold text-primary bg-light" onchange="onRubricSelect()">
-                <option value="">-- Đang tải danh sách Rubric... --</option>
-            </select>
+    <div class="card-body bg-white rounded">
+        <!-- KHU VỰC FILTER -->
+        <div class="row g-2 mb-3 pb-3 border-bottom">
+            <div class="col-md-5">
+                <div class="input-group">
+                    <span class="input-group-text bg-light"><i class="bi bi-search text-muted"></i></span>
+                    <input type="text" id="filterSearch" class="form-control" placeholder="Lọc theo tên Rubric..." oninput="applyFilters()">
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="input-group">
+                    <span class="input-group-text bg-light" title="Ngày tạo"><i class="bi bi-calendar-date text-muted"></i></span>
+                    <input type="date" id="filterDate" class="form-control" onchange="applyFilters()">
+                </div>
+            </div>
         </div>
-        <button class="btn btn-light border text-secondary" onclick="loadRubricsList()" title="Tải lại danh sách" id="btnRefresh">
-            <i class="bi bi-arrow-clockwise fs-5"></i>
-        </button>
-        <button class="btn btn-light border text-secondary" onclick="showRubricDetails()" title="Xem chi tiết properties" id="btnDetails" disabled>
-            <i class="bi bi-three-dots-vertical fs-5"></i>
-        </button>
-        <button class="btn btn-primary px-4 fw-semibold" id="btnSave" onclick="saveRubric()" disabled>
-            <i class="bi bi-floppy"></i> Lưu Thay Đổi
-        </button>
+
+        <!-- KHU VỰC DROPDOWN CHỌN RUBRIC -->
+        <div class="d-flex align-items-center gap-3">
+            <div class="flex-grow-1">
+                <select id="rubric-select" class="form-select form-select-lg fw-bold text-primary bg-light" onchange="onRubricSelect()">
+                    <option value="">-- Đang tải danh sách Rubric... --</option>
+                </select>
+            </div>
+            <button class="btn btn-light border text-secondary" onclick="loadRubricsList()" title="Tải lại danh sách" id="btnRefresh">
+                <i class="bi bi-arrow-clockwise fs-5"></i>
+            </button>
+            <button class="btn btn-light border text-secondary" onclick="showRubricDetails()" title="Xem chi tiết properties" id="btnDetails" disabled>
+                <i class="bi bi-three-dots-vertical fs-5"></i>
+            </button>
+            <button class="btn btn-primary px-4 fw-semibold" id="btnSave" onclick="saveRubric()" disabled>
+                <i class="bi bi-floppy"></i> Lưu Thay Đổi
+            </button>
+        </div>
     </div>
 </div>
 
@@ -87,7 +106,7 @@
 
 {% block scripts %}
 <script>
-    const N8N_WEBHOOK_URL = 'http://localhost:5678/webhook-test/getdata';
+    const N8N_WEBHOOK_URL = 'http://localhost:5678/webhook/getdata';
     let globalRubricsList = [];
     let currentSelectedRubric = null;
     let currentFullJson = null;
@@ -113,6 +132,47 @@
         return d.toLocaleDateString('vi-VN') + ' ' + d.toLocaleTimeString('vi-VN', {hour: '2-digit', minute:'2-digit'});
     }
 
+    // TÍNH NĂNG FILTER LỌC RUBRICS
+    function applyFilters() {
+        const searchText = document.getElementById('filterSearch').value.toLowerCase();
+        const dateFilter = document.getElementById('filterDate').value;
+        const selectEl = document.getElementById('rubric-select');
+        
+        const currentSelectedId = selectEl.value;
+
+        selectEl.innerHTML = '<option value="">-- Chọn một Rubric để chỉnh sửa --</option>';
+        
+        let count = 0;
+        globalRubricsList.forEach(rb => {
+            // Lọc theo Tên
+            if (searchText && !(rb.name || "").toLowerCase().includes(searchText)) return;
+            
+            // Lọc theo Ngày (cắt chuỗi ISO để lấy ngày)
+            if (dateFilter) {
+                const rbDate = rb.createdTime ? rb.createdTime.split('T')[0] : "";
+                if (rbDate !== dateFilter) return;
+            }
+
+            const timeStr = formatDate(rb.modifiedTime);
+            selectEl.add(new Option(`[${timeStr}] - ${rb.name || 'Không tên'}`, rb.id));
+            count++;
+        });
+
+        if (count === 0) {
+            selectEl.options[0].text = '-- Không tìm thấy Rubric nào phù hợp --';
+        }
+
+        // Giữ lại lựa chọn hiện tại nếu nó vẫn thỏa mãn điều kiện lọc
+        if (currentSelectedId) {
+            const exists = Array.from(selectEl.options).some(opt => opt.value === currentSelectedId);
+            if (exists) {
+                selectEl.value = currentSelectedId;
+            } else {
+                onRubricSelect(); // Reset màn hình nếu bị lọc mất
+            }
+        }
+    }
+
     // 1. LOAD DANH SÁCH RUBRIC
     async function loadRubricsList(preselectId = null) {
         const selectEl = document.getElementById('rubric-select');
@@ -121,6 +181,10 @@
         selectEl.innerHTML = '<option value="">-- Đang tải danh sách Rubric... --</option>';
         selectEl.disabled = true;
         document.getElementById('btnRefresh').disabled = true;
+        
+        // Reset ô filter khi tải lại
+        document.getElementById('filterSearch').value = '';
+        document.getElementById('filterDate').value = '';
         
         try {
             const response = await fetch(N8N_WEBHOOK_URL, {
@@ -149,18 +213,15 @@
                 return;
             }
 
-            selectEl.innerHTML = '<option value="">-- Chọn một Rubric để chỉnh sửa --</option>';
-            globalRubricsList.forEach(rb => {
-                const timeStr = formatDate(rb.modifiedTime);
-                selectEl.add(new Option(`[${timeStr}] - ${rb.name || 'Không tên'}`, rb.id));
-            });
+            // Gọi filter để render danh sách vào Dropdown
+            applyFilters();
             
             emptyStateMsg.innerText = "Vui lòng chọn một Rubric ở menu phía trên để bắt đầu";
             
             // Xử lý nạp tự động (khi từ trang Exams qua)
             if (preselectId) {
                 selectEl.value = preselectId;
-                onRubricSelect(); // Kích hoạt sự kiện xem chi tiết
+                onRubricSelect(); 
             } else {
                 showToast("Tải danh sách thành công!", "success");
             }
@@ -393,7 +454,6 @@
 
     // Khởi chạy khi load xong trang
     document.addEventListener('DOMContentLoaded', () => {
-        // Kiểm tra xem có ID rubric nào được truyền qua URL không (VD: /rubrics?id=123)
         const urlParams = new URLSearchParams(window.location.search);
         const preselectId = urlParams.get('id');
         

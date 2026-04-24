@@ -36,7 +36,6 @@
     
     .filter-bar { background-color: #fff; border: 1px solid #dee2e6; border-radius: 8px; padding: 12px; margin-bottom: 15px; }
     
-    /* Styles cho các element click được bên trong Card kéo thả */
     .icon-click { cursor: pointer; transition: color 0.2s; }
     .icon-click:hover { color: #0d6efd !important; }
     .drive-link { font-size: 0.8rem; color: #0d6efd; text-decoration: none; word-break: break-all;}
@@ -59,7 +58,7 @@
                 <span class="badge bg-light text-primary rounded-pill" id="rubric-count">0</span>
             </div>
             
-            <div class="card-body bg-light d-flex flex-column" style="max-height: 700px;">
+            <div class="card-body bg-light d-flex flex-column" style="max-height: 750px;">
                 <!-- Thanh Lọc -->
                 <div class="filter-bar shadow-sm">
                     <div class="row g-2">
@@ -98,7 +97,13 @@
             </div>
             <div class="card-body">
                 <div class="alert alert-primary small border-0 bg-primary-subtle">
-                    <i class="bi bi-info-circle-fill"></i> <b>Hướng dẫn:</b> Hãy kéo thẻ Rubric từ cột bên trái thả vào các ô môn học tương ứng, hoặc dùng menu Dropdown để chọn. Bạn có thể bỏ trống ô nếu không cần chấm môn đó. Bấm <i class="bi bi-grip-vertical"></i> để xem file đính kèm.
+                    <i class="bi bi-info-circle-fill"></i> <b>Hướng dẫn:</b> Kéo thả Rubric vào ô môn học tương ứng. Có thể để trống. Bấm <i class="bi bi-grip-vertical"></i> ở thẻ rubric để xem file đính kèm.
+                </div>
+
+                <!-- Action Name Input -->
+                <div class="mb-4 bg-light p-3 border rounded">
+                    <label class="form-label fw-bold text-dark"><i class="bi bi-tag-fill text-warning"></i> Tên Hành Động / Phiên Chấm (Bắt buộc):</label>
+                    <input type="text" id="grading_action_name" class="form-control border-warning" placeholder="VD: Chấm thi giữa kỳ K22..." required>
                 </div>
 
                 <!-- VÙNG 1: WORD -->
@@ -158,19 +163,19 @@
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-warning border-2">
             <div class="modal-header bg-warning-subtle">
-                <h5 class="modal-title fw-bold text-dark"><i class="bi bi-exclamation-triangle-fill text-warning"></i> Cảnh Báo Trước Khi Chấm</h5>
+                <h5 class="modal-title fw-bold text-dark"><i class="bi bi-exclamation-triangle-fill text-warning"></i> Xác Nhận Bắt Đầu Chấm</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body text-center py-4">
                 <p class="fs-5 mb-3 fw-bold" id="warning-title">Vui lòng kiểm tra lại:</p>
                 <ul class="text-start d-inline-block fw-medium mb-0" id="warning-list">
-                    <!-- Nội dung sẽ được render động bằng JS tùy vào việc có chọn Rubric hay không -->
+                    <!-- Nội dung sẽ được render động bằng JS -->
                 </ul>
             </div>
             <div class="modal-footer bg-light justify-content-center">
                 <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal">Hủy bỏ</button>
                 <button type="button" class="btn btn-warning fw-bold px-4 text-dark" onclick="submitGrading()" id="btnExecuteGrading">
-                    <i class="bi bi-check-circle-fill"></i> Đã Kiểm Tra & Bắt Đầu
+                    <i class="bi bi-check-circle-fill"></i> Đồng Ý & Gửi Lệnh
                 </button>
             </div>
         </div>
@@ -181,7 +186,7 @@
 
 {% block scripts %}
 <script>
-    const GET_DATA_URL = 'http://localhost:5678/webhook-test/getdata';
+    const GET_DATA_URL = 'http://localhost:5678/webhook/getdata';
     const GRADE_LOCAL_URL = 'http://localhost:5678/webhook-test/grade-local';
     
     let globalRubricsList = [];
@@ -216,9 +221,9 @@
     function getDriveFolderLink(id) { return id ? `https://drive.google.com/drive/folders/${id}` : '#'; }
     function getDriveFileLink(id) { return id ? `https://drive.google.com/file/d/${id}/view` : '#'; }
 
-    // Xử lý bật/tắt bảng chi tiết files (Icon Grip)
+    // Bật/tắt chi tiết files (Icon Grip)
     window.toggleDetails = function(targetId, event) {
-        event.stopPropagation(); // Ngăn chặn kích hoạt Drag
+        event.stopPropagation();
         const el = document.getElementById(targetId);
         if(el.style.display === 'none') {
             el.style.display = 'block';
@@ -245,7 +250,9 @@
             });
 
             if (!response.ok) throw new Error("HTTP error " + response.status);
-            globalRubricsList = await response.json();
+            
+            let data = await response.json();
+            globalRubricsList = (data && !Array.isArray(data) && data.id) ? [data] : data;
             
             populateSelectBoxes();
             renderRubricList();
@@ -280,16 +287,15 @@
             count++;
             const props = rb.properties || {};
             
-            // Build HTML các link Drive
             const fileDeLink = props.file_de ? `<a href="${getDriveFileLink(props.file_de)}" target="_blank" class="drive-link" title="${props.file_de}">Link File Đề</a>` : '<span class="text-muted">N/A</span>';
             const fileMauLink = props.file_mau ? `<a href="${getDriveFileLink(props.file_mau)}" target="_blank" class="drive-link" title="${props.file_mau}">Link File Mẫu</a>` : '<span class="text-muted">N/A</span>';
-            const fileRubricLink = props.file_rubric ? `<a href="${getDriveFileLink(props.file_rubric)}" target="_blank" class="drive-link" title="${props.file_rubric}">Link File Rubric JSON</a>` : '<span class="text-muted">N/A</span>';
+            const fileRubricLink = props.file_rubric ? `<a href="${getDriveFileLink(props.file_rubric)}" target="_blank" class="drive-link" title="${props.file_rubric}">Link File Rubric</a>` : '<span class="text-muted">N/A</span>';
 
             const card = document.createElement('div');
             card.className = 'card mb-2 draggable-rubric bg-white';
             card.draggable = true;
-            card.setAttribute('data-rubric', JSON.stringify({ id: rb.id, name: rb.name }));
-            
+            // Lưu thêm file_rubric vào data-rubric
+            card.setAttribute('data-rubric', JSON.stringify({ id: rb.id, name: rb.name, file_rubric: props.file_rubric || '' }));
             card.addEventListener('dragstart', handleDragStart);
 
             card.innerHTML = `
@@ -307,7 +313,6 @@
                         </a>
                     </div>
                     
-                    <!-- Chi tiết các file (Ẩn mặc định) -->
                     <div id="det_${rb.id}" class="mt-2 pt-2 border-top bg-light p-2 rounded" style="display: none; font-size: 12px;">
                         <div class="mb-1"><i class="bi bi-file-earmark-pdf text-danger"></i> <b>File Đề:</b> ${fileDeLink}</div>
                         <div class="mb-1"><i class="bi bi-file-earmark-excel text-success"></i> <b>File Mẫu:</b> ${fileMauLink}</div>
@@ -319,13 +324,12 @@
         });
 
         document.getElementById('rubric-count').innerText = count;
-        
         if(count === 0) {
             listEl.innerHTML = '<div class="text-center text-muted py-3">Không có Rubric nào phù hợp.</div>';
         }
     }
 
-    function applyFilters() {
+    window.applyFilters = function() {
         renderRubricList();
     }
 
@@ -351,16 +355,16 @@
         e.dataTransfer.effectAllowed = 'copy';
     }
 
-    function allowDrop(e) {
+    window.allowDrop = function(e) {
         e.preventDefault(); 
         e.currentTarget.classList.add('drag-over');
     }
 
-    function dragLeave(e) {
+    window.dragLeave = function(e) {
         e.currentTarget.classList.remove('drag-over');
     }
 
-    function drop(e, zoneName) {
+    window.drop = function(e, zoneName) {
         e.preventDefault();
         const dropzone = e.currentTarget;
         dropzone.classList.remove('drag-over');
@@ -370,7 +374,7 @@
 
         try {
             const rubricData = JSON.parse(dataStr);
-            assignRubricToZone(zoneName, rubricData.id, rubricData.name);
+            assignRubricToZone(zoneName, rubricData.id, rubricData.name, rubricData.file_rubric);
         } catch(err) {
             console.error("Lỗi Drop JSON:", err);
         }
@@ -379,7 +383,7 @@
     // ==========================================
     // 3. ĐỒNG BỘ GIAO DIỆN (DROPZONE & SELECT)
     // ==========================================
-    function handleSelectChange(zoneName) {
+    window.handleSelectChange = function(zoneName) {
         const selectEl = document.getElementById(`select-${zoneName}`);
         const selectedId = selectEl.value;
         
@@ -387,15 +391,14 @@
             removeRubricFromZone(zoneName);
         } else {
             const rb = globalRubricsList.find(r => r.id === selectedId);
-            if (rb) assignRubricToZone(zoneName, rb.id, rb.name);
+            if (rb) assignRubricToZone(zoneName, rb.id, rb.name, rb.properties?.file_rubric || '');
         }
     }
 
-    function assignRubricToZone(zoneName, id, name) {
-        selectedZones[zoneName] = { id: id, name: name };
-        
+    function assignRubricToZone(zoneName, id, name, file_rubric) {
+        // Lưu trữ cả id (folder) cho giao diện và file_rubric cho payload
+        selectedZones[zoneName] = { id: id, name: name, file_rubric: file_rubric };
         document.getElementById(`select-${zoneName}`).value = id;
-
         const dz = document.getElementById(`dropzone-${zoneName}`);
         dz.classList.add('filled');
         
@@ -406,7 +409,7 @@
             <div class="d-flex flex-column align-items-center p-3 w-100">
                 <i class="bi ${iconClass} ${iconColor} fs-1 mb-2"></i>
                 <div class="fw-bold text-dark text-center mb-1 w-100 text-truncate px-2" title="${name}">${name}</div>
-                <div class="font-monospace text-muted small mb-2">ID: ${id.substring(0,8)}...</div>
+                <div class="font-monospace text-muted small mb-2" title="Folder Gốc">Folder ID: ${id.substring(0,8)}...</div>
                 <button class="btn btn-sm btn-outline-danger py-0 px-2" onclick="removeRubricFromZone('${zoneName}', event)">
                     <i class="bi bi-x-lg"></i> Xóa
                 </button>
@@ -431,12 +434,18 @@
     // ==========================================
     // 4. GỬI DỮ LIỆU ĐI (SUBMIT)
     // ==========================================
-    function confirmStartGrading() {
+    window.confirmStartGrading = function() {
+        const actionNameInput = document.getElementById('grading_action_name');
+        if (!actionNameInput.value.trim()) {
+            showToast("Vui lòng nhập Tên Hành Động / Phiên Chấm!", "warning");
+            actionNameInput.focus();
+            return;
+        }
+
         const isEmpty = !selectedZones.word && !selectedZones.excel && !selectedZones.ppt;
         const warningList = document.getElementById('warning-list');
         const warningTitle = document.getElementById('warning-title');
         
-        // Thay đổi cảnh báo dựa trên việc có gán Rubric nào hay không
         if (isEmpty) {
             warningTitle.innerHTML = "Trạng thái: <span class='text-danger'>CHƯA CHỌN RUBRIC NÀO</span>";
             warningList.innerHTML = `
@@ -456,18 +465,20 @@
         modal.show();
     }
 
-    async function submitGrading() {
+    window.submitGrading = async function() {
         const btn = document.getElementById('btnExecuteGrading');
         btn.disabled = true;
         btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Đang gửi lệnh...';
 
+        const actionName = document.getElementById('grading_action_name').value.trim();
+
         const payload = {
-            "action": "start_local_grading",
+            "action": actionName,
             "data": {
                 "rubrics": {
-                    "word": selectedZones.word ? { "id": selectedZones.word.id, "name": selectedZones.word.name } : null,
-                    "excel": selectedZones.excel ? { "id": selectedZones.excel.id, "name": selectedZones.excel.name } : null,
-                    "powerpoint": selectedZones.ppt ? { "id": selectedZones.ppt.id, "name": selectedZones.ppt.name } : null
+                    "word": selectedZones.word ? { "id": selectedZones.word.file_rubric, "name": selectedZones.word.name } : null,
+                    "excel": selectedZones.excel ? { "id": selectedZones.excel.file_rubric, "name": selectedZones.excel.name } : null,
+                    "powerpoint": selectedZones.ppt ? { "id": selectedZones.ppt.file_rubric, "name": selectedZones.ppt.name } : null
                 }
             }
         };
@@ -490,7 +501,7 @@
             showToast("Lỗi kết nối tới N8n.", "danger");
         } finally {
             btn.disabled = false;
-            btn.innerHTML = '<i class="bi bi-check-circle-fill"></i> Đã Kiểm Tra & Bắt Đầu';
+            btn.innerHTML = '<i class="bi bi-check-circle-fill"></i> Đồng Ý & Gửi Lệnh';
         }
     }
 

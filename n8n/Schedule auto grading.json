@@ -1,0 +1,1249 @@
+{
+  "name": "Schedule auto grading",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        0,
+        0
+      ],
+      "id": "90163558-48a9-44ba-9745-42fa96ea5947",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1M5YJt8tWeSeNAVO50oyflnNmJim-m0BdxdvPlDIfbnU",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 847817956,
+          "mode": "list",
+          "cachedResultName": "ExamManager",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1M5YJt8tWeSeNAVO50oyflnNmJim-m0BdxdvPlDIfbnU/edit#gid=847817956"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "Status",
+              "lookupValue": "=ACTIVE"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        208,
+        0
+      ],
+      "id": "94904ddf-9799-4a52-b623-9790148b153b",
+      "name": "Get row(s) in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "JoqEuhwfMGOLtHRQ",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "cc528a03-8543-47e9-b809-fea63813212d",
+              "leftValue": "={{ $json.Start_Time }}",
+              "rightValue": "={{ $now }}",
+              "operator": {
+                "type": "dateTime",
+                "operation": "beforeOrEquals"
+              }
+            },
+            {
+              "id": "cf4aa466-2cef-4333-9c82-9bfb7120de41",
+              "leftValue": "={{ $json.End_Time }}",
+              "rightValue": "={{ $now }}",
+              "operator": {
+                "type": "dateTime",
+                "operation": "afterOrEquals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.3,
+      "position": [
+        416,
+        0
+      ],
+      "id": "f46b9439-7026-4f0d-8b3a-755f09f72978",
+      "name": "Filter"
+    },
+    {
+      "parameters": {
+        "resource": "fileFolder",
+        "returnAll": true,
+        "filter": {
+          "driveId": {
+            "mode": "list",
+            "value": "My Drive"
+          },
+          "folderId": {
+            "__rl": true,
+            "value": "={{ $('Loop Exams').item.json.Folder_ID }}",
+            "mode": "id"
+          },
+          "whatToSearch": "folders"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        1600,
+        0
+      ],
+      "id": "f1450734-d38b-45f0-b767-8527d9989bcd",
+      "name": "Search files and folders",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "3koIW4NPYJpAmfn1",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        624,
+        0
+      ],
+      "id": "9e829eeb-729c-46aa-be81-066468825220",
+      "name": "Loop Exams",
+      "alwaysOutputData": false
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        1888,
+        192
+      ],
+      "id": "f81b07b9-eae5-410a-9448-cd1a85a3abbc",
+      "name": "Loop Rubrics"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        3072,
+        288
+      ],
+      "id": "012e6c72-b3af-436d-8771-88f8257f84bf",
+      "name": "Loop Submissions"
+    },
+    {
+      "parameters": {
+        "url": "=https://www.googleapis.com/drive/v3/files/{{ $json.Folder_ID }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleDriveOAuth2Api",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "fields",
+              "value": "id, name, properties"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        832,
+        0
+      ],
+      "id": "cfb2680a-63bd-4a9f-8ce0-489ecf5f6847",
+      "name": "HTTP Request",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "3koIW4NPYJpAmfn1",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "1M5YJt8tWeSeNAVO50oyflnNmJim-m0BdxdvPlDIfbnU"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "id",
+          "value": 847817956
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Folder_ID": "={{ $('Loop Exams').item.json.Folder_ID }}",
+            "Last_Checked": "={{$now}}",
+            "Status": "GRADING"
+          },
+          "matchingColumns": [
+            "Folder_ID"
+          ],
+          "schema": [
+            {
+              "id": "Create_At",
+              "displayName": "Create_At",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Exam_Name",
+              "displayName": "Exam_Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Folder_ID",
+              "displayName": "Folder_ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Start_Time",
+              "displayName": "Start_Time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "End_Time",
+              "displayName": "End_Time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Last_Checked",
+              "displayName": "Last_Checked",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Result",
+              "displayName": "Result",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1040,
+        0
+      ],
+      "id": "10698795-3597-48fc-bbd7-2c215c534f37",
+      "name": "Update row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "JoqEuhwfMGOLtHRQ",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "=https://www.googleapis.com/drive/v3/files/{{ $json.id }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleDriveOAuth2Api",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "fields",
+              "value": "id, name, properties"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        2096,
+        208
+      ],
+      "id": "5e6e7af7-1047-457d-b96f-46283fc5d4b3",
+      "name": "HTTP Request1",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "3koIW4NPYJpAmfn1",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "fileFolder",
+        "searchMethod": "=query",
+        "queryString": "='{{ $('Loop Rubrics').item.json.id }}' in parents and not name contains '[GRADING]' and not name contains '[GRADED]' and mimeType != 'application/vnd.google-apps.folder'",
+        "returnAll": true,
+        "filter": {
+          "driveId": {
+            "mode": "list",
+            "value": "My Drive"
+          },
+          "folderId": {
+            "__rl": true,
+            "value": "={{ $('Loop Rubrics').item.json.id }}",
+            "mode": "id"
+          },
+          "whatToSearch": "files"
+        },
+        "options": {
+          "fields": [
+            "*"
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        2848,
+        208
+      ],
+      "id": "2843308f-1563-435a-870b-2bf0b00065ec",
+      "name": "Search files submit",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "3koIW4NPYJpAmfn1",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "destinationFieldName": "students",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        1376,
+        0
+      ],
+      "id": "88bf0b82-0a0b-4a0f-b84b-31c851f1db16",
+      "name": "Aggregate"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "={{ $('HTTP Request').item.json.properties.student_file_id }}",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "={{ $('HTTP Request').item.json.properties.student_sheet_id }}",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1216,
+        0
+      ],
+      "id": "0c52c0c3-4c71-4ffb-b65b-70892accfc76",
+      "name": "Get students",
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "JoqEuhwfMGOLtHRQ",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $json.properties.file_rubric_id }}",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        2320,
+        208
+      ],
+      "id": "e4d0f7a6-188d-456a-98d9-cc8fa764ae66",
+      "name": "Download rubric",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "3koIW4NPYJpAmfn1",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $json.id }}",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        3280,
+        336
+      ],
+      "id": "02ba8054-e819-4ccc-bf3b-65ca305ca69f",
+      "name": "Download file",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "3koIW4NPYJpAmfn1",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "={{ $('HTTP Request1').item.json.properties.result_file_id }}",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "={{ $('HTTP Request1').item.json.properties.result_sheet_id }}",
+          "mode": "id"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "File": "=https://drive.google.com/file/d/{{ $('Loop Submissions').item.json.id }}/view",
+            "created by": "={{ $('Loop Submissions').item.json.owners[0].emailAddress }}",
+            "updated by": "={{ $('Loop Submissions').item.json.lastModifyingUser.emailAddress }}",
+            "MSSV": "={{ $json.MSSV }}",
+            "Họ tên": "={{ $json.Ho_Ten }}",
+            "Email": "={{ $json.Email }}",
+            "SĐT": "={{ $json.SDT }}",
+            "Kết quả": "={{ $('Code in JavaScript1').item.json.final_score }}",
+            "Chi tiết": "=https://drive.google.com/file/d/{{ $('Upload file').item.json.id }}/view"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "File",
+              "displayName": "File",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "created by",
+              "displayName": "created by",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "updated by",
+              "displayName": "updated by",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "MSSV",
+              "displayName": "MSSV",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Họ tên",
+              "displayName": "Họ tên",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Email",
+              "displayName": "Email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "SĐT",
+              "displayName": "SĐT",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Kết quả",
+              "displayName": "Kết quả",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Nhận xét",
+              "displayName": "Nhận xét",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Chi tiết",
+              "displayName": "Chi tiết",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        4912,
+        352
+      ],
+      "id": "ace3beae-f371-4612-b2c9-a984f4883dc4",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "JoqEuhwfMGOLtHRQ",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "command": "=python n8n_bridge.py grade \"{{ $('Write Files student').item.json.fileName }}\" \"{{$('Write Files rubric').item.json.fileName}}\""
+      },
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        3904,
+        352
+      ],
+      "id": "8b5c7580-8fdd-4e5b-bcf1-34c3c22d8781",
+      "name": "Execute Grade"
+    },
+    {
+      "parameters": {
+        "command": "=rm -f \"{{ $('Write Files student').item.json.fileName }}\" \"{{ $('Write Files rubric').item.json.fileName }}\""
+      },
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        5360,
+        352
+      ],
+      "id": "82688ede-2136-4ffd-9eb9-11ebaa472cb6",
+      "name": "Remove file"
+    },
+    {
+      "parameters": {
+        "name": "={{ $json.fileName }}",
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "={{ $('HTTP Request1').item.json.properties.result_id }}",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        4512,
+        352
+      ],
+      "id": "424e0f10-a7ee-434d-a179-72c6bc2b317a",
+      "name": "Upload file",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "3koIW4NPYJpAmfn1",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $('Loop Submissions').item.json.id }}",
+          "mode": "id"
+        },
+        "newUpdatedFileName": "=[GRADING]{{ $('Loop Submissions').item.json.name }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        3696,
+        352
+      ],
+      "id": "2ccf313c-8565-4760-ae41-c34dafc780c5",
+      "name": "Update file GRADING",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "3koIW4NPYJpAmfn1",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $('Loop Submissions').item.json.id }}",
+          "mode": "id"
+        },
+        "newUpdatedFileName": "=[GRADED]{{ $('Loop Submissions').item.json.name }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        5568,
+        352
+      ],
+      "id": "88de7742-f6b5-41fe-9d73-6b78b090c4d3",
+      "name": "Update file GRADED",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "3koIW4NPYJpAmfn1",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "write",
+        "fileName": "=/shared_workspace/grade/{{ $binary.data.fileName }}.{{ $binary.data.fileExtension }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1.1,
+      "position": [
+        3488,
+        336
+      ],
+      "id": "e7fb51f4-cd5c-4bb6-bc3f-2fd9de41e258",
+      "name": "Write Files student"
+    },
+    {
+      "parameters": {
+        "operation": "write",
+        "fileName": "=/shared_workspace/grade/rubric{{$now.toMillis()}}.json",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1.1,
+      "position": [
+        2512,
+        208
+      ],
+      "id": "f1395b8c-5336-46b0-93ad-ded1c1a14cb3",
+      "name": "Write Files rubric"
+    },
+    {
+      "parameters": {
+        "fileSelector": "={{ $json.file_path }}",
+        "options": {
+          "dataPropertyName": "data"
+        }
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1.1,
+      "position": [
+        4320,
+        352
+      ],
+      "id": "1866e5dc-98fb-460a-80b7-8a0e1708f6fd",
+      "name": "Read Files result"
+    },
+    {
+      "parameters": {
+        "jsCode": "const fileName = $('Loop Submissions').first().json.name;\nconst studentsList = $('Get students').all().map(item => item.json);\n\nconst matchedStudent = studentsList.find(student => {\n    return fileName.includes(String(student.MSSV));\n});\n\nif (matchedStudent) {\n    return {\n        json: {\n            MSSV: matchedStudent.MSSV,\n            Ho_Ten: matchedStudent[\"Họ tên\"],\n            Email: matchedStudent.Email,\n            SDT: matchedStudent[\"SĐT\"],\n            row_number: matchedStudent.row_number, \n            file_name_goc: fileName,\n            is_matched: true\n        }\n    };\n} else {\n    return {\n        json: {\n            MSSV: \"UNKNOWN\",\n            Ho_Ten: \"Không xác định\",\n            Email: \"\",\n            SDT: \"\",\n            row_number: null,\n            file_name_goc: fileName,\n            is_matched: false\n        }\n    };\n}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4720,
+        352
+      ],
+      "id": "ee07769b-b115-44ec-a9fd-e61b9e9cac04",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "fromEmail": "quanglamtest.tma@gmail.com",
+        "toEmail": "={{ $('Code in JavaScript').item.json.Email }}",
+        "subject": "=Kết quả {{ $('HTTP Request1').item.json.name }} của {{ $('HTTP Request').item.json.name }}",
+        "emailFormat": "text",
+        "text": "={{ $json.data }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        5936,
+        352
+      ],
+      "id": "35c7e9f6-5102-42dd-92b2-b8980679e536",
+      "name": "Send an Email",
+      "webhookId": "f8e53c46-1f7b-4f79-aeee-61286272cc56",
+      "credentials": {
+        "smtp": {
+          "id": "WPwIrshtCCUSRgHp",
+          "name": "SMTP account"
+        }
+      },
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "jsCode": "return $input.all().map(item => {\n    try {\n        const parsedData = JSON.parse(item.json.stdout);\n        return { json: parsedData };\n    } catch (error) {\n        return { json: item.json }; \n    }\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4112,
+        352
+      ],
+      "id": "5a181d7e-710d-4941-bddc-563137d4c48a",
+      "name": "Code in JavaScript1"
+    },
+    {
+      "parameters": {
+        "operation": "share",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $('Upload file').item.json.id }}",
+          "mode": "id"
+        },
+        "permissionsUi": {
+          "permissionsValues": {
+            "role": "reader",
+            "type": "anyone"
+          }
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        5120,
+        352
+      ],
+      "id": "2cbdd400-014b-4c4c-b4c5-5cb491ae497c",
+      "name": "Share file",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "3koIW4NPYJpAmfn1",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "fromJson",
+        "binaryPropertyName": "={{ $('Read Files result').item.binary.data }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1.1,
+      "position": [
+        5776,
+        352
+      ],
+      "id": "7f7426dd-519b-44b2-b11b-692203a9631a",
+      "name": "Extract from File"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet": {
+      "main": [
+        [
+          {
+            "node": "Filter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter": {
+      "main": [
+        [
+          {
+            "node": "Loop Exams",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search files and folders": {
+      "main": [
+        [
+          {
+            "node": "Loop Rubrics",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Exams": {
+      "main": [
+        [],
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Rubrics": {
+      "main": [
+        [
+          {
+            "node": "Loop Exams",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "HTTP Request1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Submissions": {
+      "main": [
+        [
+          {
+            "node": "Loop Rubrics",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Download file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Update row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update row in sheet": {
+      "main": [
+        [
+          {
+            "node": "Get students",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request1": {
+      "main": [
+        [
+          {
+            "node": "Download rubric",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search files submit": {
+      "main": [
+        [
+          {
+            "node": "Loop Submissions",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate": {
+      "main": [
+        [
+          {
+            "node": "Search files and folders",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get students": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download rubric": {
+      "main": [
+        [
+          {
+            "node": "Write Files rubric",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download file": {
+      "main": [
+        [
+          {
+            "node": "Write Files student",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append row in sheet": {
+      "main": [
+        [
+          {
+            "node": "Share file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute Grade": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Remove file": {
+      "main": [
+        [
+          {
+            "node": "Update file GRADED",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload file": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update file GRADING": {
+      "main": [
+        [
+          {
+            "node": "Execute Grade",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update file GRADED": {
+      "main": [
+        [
+          {
+            "node": "Extract from File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Write Files student": {
+      "main": [
+        [
+          {
+            "node": "Update file GRADING",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Write Files rubric": {
+      "main": [
+        [
+          {
+            "node": "Search files submit",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Files result": {
+      "main": [
+        [
+          {
+            "node": "Upload file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send an Email": {
+      "main": [
+        [
+          {
+            "node": "Loop Submissions",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript1": {
+      "main": [
+        [
+          {
+            "node": "Read Files result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Share file": {
+      "main": [
+        [
+          {
+            "node": "Remove file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from File": {
+      "main": [
+        [
+          {
+            "node": "Send an Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "632c5cfb-bd54-4831-831d-460b4eb0c7ea",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "264eee9997d405837064f09bc5528de2d01a8a71d5749d9d52ee810b8f3aea85"
+  },
+  "id": "Cjc04ejxSgxybS7U",
+  "tags": []
+}

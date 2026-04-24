@@ -1,0 +1,3969 @@
+{
+  "name": "Load_file",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "getdata",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        64
+      ],
+      "id": "430f0e9c-f746-4286-a86d-159a53428e08",
+      "name": "Webhook",
+      "webhookId": "1dc8e70d-f9cb-41b9-b938-4844016cea4f"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.body.action }}",
+                    "rightValue": "load_rubrics",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "7254225a-4b7c-4cbb-8400-f8899407876f"
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "2eb6961e-e5b6-40ed-ac91-6c52ff035fbd",
+                    "leftValue": "={{ $json.body.action }}",
+                    "rightValue": "get_rubric",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "4bb9936f-6ce8-4b4d-98db-58d98b36c0b9",
+                    "leftValue": "={{ $json.body.action }}",
+                    "rightValue": "save_rubric",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "99ac0b20-dec8-49e7-8aa8-920317f5eb3e",
+                    "leftValue": "={{ $json.body.action }}",
+                    "rightValue": "load_contests",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "ff4a1acd-5a8a-4b67-9879-eca06a1055a0",
+                    "leftValue": "={{ $json.body.action }}",
+                    "rightValue": "save_contest",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "a4229a88-4694-404a-879a-4a92a7475b1a",
+                    "leftValue": "={{ $json.body.action }}",
+                    "rightValue": "load_results",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "dc60e4ec-6182-4768-a0c3-8be4c4c62582",
+                    "leftValue": "={{ $json.body.action }}",
+                    "rightValue": "create_exam",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        208,
+        0
+      ],
+      "id": "bf8ab509-a764-479c-8365-252a4dff5732",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "05a42db5-182e-4af4-ab3a-2d03b9290d79",
+              "name": "status",
+              "value": "success",
+              "type": "string"
+            },
+            {
+              "id": "42f6d23d-5e8d-4120-bdd3-c043d240c276",
+              "name": "rubric_content",
+              "value": "={{ $json.data }}",
+              "type": "array"
+            },
+            {
+              "id": "f64c34c7-c5ca-4e19-94b2-b6802ec2f87d",
+              "name": "link_file_de",
+              "value": "=https://drive.google.com/file/d/{{ $('Switch').item.json.body.data.file_de }}/view",
+              "type": "string"
+            },
+            {
+              "id": "c8d593da-e3d7-4dcb-ac30-38f1e7adc48e",
+              "name": "link_file_mau",
+              "value": "=https://drive.google.com/file/d/{{ $('Switch').item.json.body.data.file_rubric }}/view",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2000,
+        -1152
+      ],
+      "id": "1cfa1651-9a35-4c5e-b0a4-f8166c364817",
+      "name": "Edit Fields1"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "9287b44e-024e-4fa3-ba52-af20cd2f410c",
+              "name": "status",
+              "value": "success",
+              "type": "string"
+            },
+            {
+              "id": "76ea0966-72be-4ed9-9c15-b12ce7769f3e",
+              "name": "message",
+              "value": "=Đã cập nhật thành công rubric: {{ $json.name }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2832,
+        -944
+      ],
+      "id": "cc218386-9333-4844-9d74-9e22ca7929c6",
+      "name": "Edit Fields2"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "9287b44e-024e-4fa3-ba52-af20cd2f410c",
+              "name": "status",
+              "value": "success",
+              "type": "string"
+            },
+            {
+              "id": "6b74d295-f313-4c47-96d4-50ab12c1e4f6",
+              "name": "data",
+              "value": "={{ $json.data }}",
+              "type": "array"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2832,
+        -784
+      ],
+      "id": "657999c9-7a13-434b-9264-93c2777d0a14",
+      "name": "Edit Fields3"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "9287b44e-024e-4fa3-ba52-af20cd2f410c",
+              "name": "status",
+              "value": "success",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        4096,
+        384
+      ],
+      "id": "32638df9-3885-44af-a960-a79cfa29a2d2",
+      "name": "Edit Fields4"
+    },
+    {
+      "parameters": {
+        "respondWith": "allIncomingItems",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        5680,
+        16
+      ],
+      "id": "0d9445f7-d86b-41c9-9659-ba9229f61d29",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "resource": "fileFolder",
+        "returnAll": true,
+        "filter": {
+          "driveId": {
+            "mode": "list",
+            "value": "My Drive"
+          },
+          "folderId": {
+            "__rl": true,
+            "mode": "id",
+            "value": "1bibvrapDbtbTm7wXIlpSBe8h1OaNOqve"
+          },
+          "whatToSearch": "folders"
+        },
+        "options": {
+          "fields": [
+            "*"
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        1024,
+        -1296
+      ],
+      "id": "cbfc4e94-99c8-4c3a-9a3f-23ed467857d6",
+      "name": "Search files and folders",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "3koIW4NPYJpAmfn1",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "eaf6b972-f0f0-4dbb-899d-c0d1b573a3b9",
+              "name": "status",
+              "value": "success",
+              "type": "string"
+            },
+            {
+              "id": "5b3b7172-00e9-4580-b8aa-e2b71c26c7a1",
+              "name": "id",
+              "value": "={{ $json.id }}",
+              "type": "string"
+            },
+            {
+              "id": "107119fd-899e-47c5-8e24-70a7f3451ccd",
+              "name": "name",
+              "value": "={{ $json.name }}",
+              "type": "string"
+            },
+            {
+              "id": "997ae76f-6dd3-435c-bab4-63afd0dda61e",
+              "name": "properties",
+              "value": "={{ $json.properties }}",
+              "type": "object"
+            },
+            {
+              "id": "6d69aa62-c110-451e-90e8-36c10fadd9c6",
+              "name": "createdTime",
+              "value": "={{ $json.createdTime }}",
+              "type": "string"
+            },
+            {
+              "id": "0cad662a-7c1f-44ea-be94-f12b14959100",
+              "name": "modifiedTime",
+              "value": "={{ $json.modifiedTime }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2000,
+        -1296
+      ],
+      "id": "5eba30e2-76ca-4359-a9fd-ec774141a45d",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $json.body.data.file_rubric }}",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        1024,
+        -1120
+      ],
+      "id": "ac647a27-2a23-48cb-acfa-7841e7cf3360",
+      "name": "Download file",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "3koIW4NPYJpAmfn1",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "fromJson",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1.1,
+      "position": [
+        1312,
+        -1152
+      ],
+      "id": "02588a2c-f61e-4617-bc25-1de9ed93f5d2",
+      "name": "Extract from File"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $json.body.data.id }}",
+          "mode": "id"
+        },
+        "newUpdatedFileName": "={{$now.format('dd-LL-yyyy[HH:mm:ss]')}}.txt",
+        "options": {
+          "fields": [
+            "*"
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        1024,
+        -944
+      ],
+      "id": "b4a6d467-14aa-4eb0-955f-3ad284ba6044",
+      "name": "Update file",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "3koIW4NPYJpAmfn1",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const rawContent = $('Switch').first().json.body.data.content;\nconst stringContent = typeof rawContent === 'string' ? rawContent : JSON.stringify(rawContent, null, 2);\n\nreturn {\n    json: { \n        fileName: \"rubric.json\",\n        parentFolderId: $input.first().json.parents[0]\n    },\n    binary: {\n        data: {\n            data: Buffer.from(stringContent, 'utf-8').toString('base64'),\n            mimeType: 'application/json',\n            fileName: \"rubric.json\",\n            fileExtension: 'json'\n        }\n    }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1648,
+        -944
+      ],
+      "id": "2f59c5bd-efb7-4435-908c-9f2c9156fa40",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "name": "rubric.json",
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "={{ $json.parentFolderId }}",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        1856,
+        -944
+      ],
+      "id": "9751b690-1e51-4081-bd4b-531fcbff6b70",
+      "name": "Upload file",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "3koIW4NPYJpAmfn1",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $json.parents[0] }}",
+          "mode": "id"
+        },
+        "options": {
+          "propertiesUi": {
+            "propertyValues": [
+              {
+                "key": "file_rubric",
+                "value": "={{ $json.id }}"
+              }
+            ]
+          }
+        }
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        2064,
+        -944
+      ],
+      "id": "0d7870c7-12f8-4ed1-9747-36962e8ab6d0",
+      "name": "Update file1",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "3koIW4NPYJpAmfn1",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        1504,
+        736
+      ],
+      "id": "0b57e5c5-9efe-42ea-a870-7e7ab72f0a13",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {
+        "jsCode": "const rubrics =$('Switch').first().json.body.data.selected_rubrics;\nreturn rubrics.map(rubric => ({ json: rubric }));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1280,
+        736
+      ],
+      "id": "969ac036-0d76-41be-9f14-d3b3217922e8",
+      "name": "Code in JavaScript1"
+    },
+    {
+      "parameters": {
+        "operation": "copy",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $('Loop Over Items').item.json.file_de_id }}",
+          "mode": "id"
+        },
+        "name": "={{ $('Loop Over Items').item.json.file_de_name }}",
+        "sameFolder": false,
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "={{ $('Create folder exam').item.json.id }}",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        2768,
+        912
+      ],
+      "id": "150f0fd3-a1c4-44ae-b6fe-6a1502a3f053",
+      "name": "Copy file",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "3koIW4NPYJpAmfn1",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "share",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $('Copy file').item.json.id }}",
+          "mode": "id"
+        },
+        "permissionsUi": {
+          "permissionsValues": {
+            "role": "reader",
+            "type": "anyone"
+          }
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        3504,
+        912
+      ],
+      "id": "c531c8a2-7972-4fca-a7a6-ae79c37a66e9",
+      "name": "Share file",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "3koIW4NPYJpAmfn1",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "folder",
+        "operation": "share",
+        "folderNoRootId": {
+          "__rl": true,
+          "value": "={{ $('Create folder submit').item.json.id }}",
+          "mode": "id"
+        },
+        "permissionsUi": {
+          "permissionsValues": {
+            "role": "writer",
+            "type": "anyone"
+          }
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        3680,
+        912
+      ],
+      "id": "26283c23-12df-41e5-bcf5-1bb98e0d3639",
+      "name": "Share folder",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "3koIW4NPYJpAmfn1",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "={{ $('Create student_file').item.json.spreadsheetId }}",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "={{ $('Create student_file').item.json.sheets[0].properties.sheetId }}",
+          "mode": "id"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        2592,
+        736
+      ],
+      "id": "544c462d-efeb-4358-8e5e-8d287ba289f5",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "JoqEuhwfMGOLtHRQ",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "\nreturn [\n  {\n    json: {\n      \"MSSV\": \"\",\n      \"Họ tên\": \"\",\n      \"Email\": \"\",\n      \"SĐT\": \"\"\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2224,
+        736
+      ],
+      "id": "94bcd7eb-5614-4dec-8218-40d7c35e8bfc",
+      "name": "Code in JavaScript2"
+    },
+    {
+      "parameters": {
+        "operation": "move",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $('Create student_file').item.json.spreadsheetId }}",
+          "mode": "id"
+        },
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "={{ $('Create folder exam').item.json.id }}",
+          "mode": "id"
+        }
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        2768,
+        736
+      ],
+      "id": "93e68af9-2462-402e-9654-f740f02f2d6b",
+      "name": "Move file",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "3koIW4NPYJpAmfn1",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "folder",
+        "name": "={{ $json.body.data.exam_name }}",
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "1clSeV5OCKRia6yDHeyxehzSfGDwjD01h"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        416,
+        736
+      ],
+      "id": "b92bb2c6-a318-4417-adfd-7881316fcd96",
+      "name": "Create folder exam",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "3koIW4NPYJpAmfn1",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "folder",
+        "name": "={{ $('Loop Over Items').item.json.name }}",
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "={{ $('Create folder exam').item.json.id }}",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        2944,
+        912
+      ],
+      "id": "47bcfaa6-b521-46b9-a353-3d3d1fcc66e5",
+      "name": "Create folder submit",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "3koIW4NPYJpAmfn1",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "b9bcbaa3-6a07-41cb-9379-eb18d5726cbe",
+              "name": "status",
+              "value": "success",
+              "type": "string"
+            },
+            {
+              "id": "e5a0139f-61bc-4265-8bea-d8c0cdbb1f23",
+              "name": "id",
+              "value": "={{ $('Create folder exam').item.json.id }}",
+              "type": "string"
+            },
+            {
+              "id": "c017757e-192f-4432-aaa8-2dcdebd8f7e3",
+              "name": "student_file",
+              "value": "={{ $('Create student_file').item.json.spreadsheetUrl }}",
+              "type": "string"
+            },
+            {
+              "id": "bd76fc0c-adaa-4031-9292-ddcc487f9070",
+              "name": "rubrics",
+              "value": "={{ $('Aggregate').item.json.data }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        3472,
+        736
+      ],
+      "id": "d7a94b61-92ca-4b7d-aa6f-65577a55f992",
+      "name": "Edit Fields6"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1M5YJt8tWeSeNAVO50oyflnNmJim-m0BdxdvPlDIfbnU",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "id",
+          "value": 847817956
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Create_At": "={{ $now }}",
+            "Exam_Name": "={{ $('Switch').item.json.body.data.exam_name }}",
+            "Folder_ID": "={{ $('Create folder exam').item.json.id }}",
+            "Start_Time": "={{ $('Switch').item.json.body.data.start_time }}",
+            "End_Time": "={{ $('Switch').item.json.body.data.end_time }}",
+            "Status": "ACTIVE",
+            "Result": "=https://drive.google.com/drive/folders/{{ $('Create folder result').item.json.id }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Create_At",
+              "displayName": "Create_At",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Exam_Name",
+              "displayName": "Exam_Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Folder_ID",
+              "displayName": "Folder_ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Start_Time",
+              "displayName": "Start_Time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "End_Time",
+              "displayName": "End_Time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Last_Checked",
+              "displayName": "Last_Checked",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Result",
+              "displayName": "Result",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        3120,
+        736
+      ],
+      "id": "70d33022-df5e-482b-af20-d152ae07a052",
+      "name": "Append row ExamManager",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "JoqEuhwfMGOLtHRQ",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "fileFolder",
+        "returnAll": true,
+        "filter": {
+          "driveId": {
+            "mode": "list",
+            "value": "My Drive"
+          },
+          "folderId": {
+            "__rl": true,
+            "mode": "id",
+            "value": "1clSeV5OCKRia6yDHeyxehzSfGDwjD01h"
+          },
+          "whatToSearch": "folders"
+        },
+        "options": {
+          "fields": [
+            "*"
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        1424,
+        -816
+      ],
+      "id": "486a8f33-5883-4aa0-834f-d2eb4888e243",
+      "name": "Search files and folders1",
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "3koIW4NPYJpAmfn1",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $('Switch update/delete').item.json.body.data.exam_id }}",
+          "mode": "id"
+        },
+        "newUpdatedFileName": "={{ $('Switch update/delete').item.json.body.data.exam_name }}",
+        "options": {
+          "propertiesUi": {
+            "propertyValues": [
+              {
+                "key": "start_time",
+                "value": "={{ $('Switch update/delete').item.json.body.data.start_time }}"
+              },
+              {
+                "key": "end_time",
+                "value": "={{ $('Switch update/delete').item.json.body.data.end_time }}"
+              }
+            ]
+          }
+        }
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        3104,
+        64
+      ],
+      "id": "a1f64b0d-9c31-4079-9323-d77939dc4fa6",
+      "name": "Update file2",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "3koIW4NPYJpAmfn1",
+          "name": "Google Drive account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1M5YJt8tWeSeNAVO50oyflnNmJim-m0BdxdvPlDIfbnU",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "id",
+          "value": 847817956
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Folder_ID": "={{ $('Switch update/delete').item.json.body.data.exam_id }}",
+            "Create_At": "={{ $now }}",
+            "Exam_Name": "={{ $('Switch update/delete').item.json.body.data.exam_name }}",
+            "Start_Time": "={{ $('Switch update/delete').item.json.body.data.start_time }}",
+            "End_Time": "={{ $('Switch update/delete').item.json.body.data.end_time }}",
+            "Status": "ACTIVE"
+          },
+          "matchingColumns": [
+            "Folder_ID"
+          ],
+          "schema": [
+            {
+              "id": "Create_At",
+              "displayName": "Create_At",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Exam_Name",
+              "displayName": "Exam_Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Folder_ID",
+              "displayName": "Folder_ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Start_Time",
+              "displayName": "Start_Time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "End_Time",
+              "displayName": "End_Time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Last_Checked",
+              "displayName": "Last_Checked",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        3424,
+        96
+      ],
+      "id": "2858e0fb-0ce5-45a4-8c38-6a2685cfdbf3",
+      "name": "Update row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "JoqEuhwfMGOLtHRQ",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "ffa4aed6-ece2-4760-b412-b74a79e4da3e",
+              "name": "status",
+              "value": "success",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        3040,
+        -560
+      ],
+      "id": "1594d84b-07c6-4fc2-9b16-75f8a5e6a138",
+      "name": "Edit Fields7"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1M5YJt8tWeSeNAVO50oyflnNmJim-m0BdxdvPlDIfbnU",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "id",
+          "value": 847817956
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Folder_ID": "={{ $('Switch update/delete').item.json.body.data.exam_id }}",
+            "Status": "DELETED",
+            "Last_Checked": "={{$now}}"
+          },
+          "matchingColumns": [
+            "Folder_ID"
+          ],
+          "schema": [
+            {
+              "id": "Create_At",
+              "displayName": "Create_At",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Exam_Name",
+              "displayName": "Exam_Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Folder_ID",
+              "displayName": "Folder_ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Start_Time",
+              "displayName": "Start_Time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "End_Time",
+              "displayName": "End_Time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Last_Checked",
+              "displayName": "Last_Checked",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1568,
+        -576
+      ],
+      "id": "acd39da0-8724-4d87-9182-55ebd62a5809",
+      "name": "Update row in sheet1",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "JoqEuhwfMGOLtHRQ",
+          "name": "Google Sheets account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "resource": "folder",
+        "operation": "deleteFolder",
+        "folderNoRootId": {
+          "__rl": true,
+          "value": "={{ $json.body.data.exam_id }}",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        1040,
+        -560
+      ],
+      "id": "6b12997a-ffaf-4fa8-9455-3331373d3bb6",
+      "name": "Delete folder",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "3koIW4NPYJpAmfn1",
+          "name": "Google Drive account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "resource": "fileFolder",
+        "returnAll": true,
+        "filter": {
+          "driveId": {
+            "mode": "list",
+            "value": "My Drive"
+          },
+          "folderId": {
+            "__rl": true,
+            "value": "={{ $json.body.data.exam_id }}",
+            "mode": "id"
+          },
+          "whatToSearch": "folders"
+        },
+        "options": {
+          "fields": [
+            "*"
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        1040,
+        -80
+      ],
+      "id": "dbc2b33b-73d3-43df-be63-fdbc1818f8a2",
+      "name": "Search rubric in exam",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "3koIW4NPYJpAmfn1",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const clientRubrics =  $('Switch update/delete').first().json.body.data.selected_rubrics|| [];\nconst driveFolders = $input.all().map(item => ({\n    folder_id: item.json.id,\n    rubric_id: item.json.properties ? item.json.properties.file_rubric_id : null,\n    de_id: item.json.properties ? item.json.properties.file_de_id : null\n}));\n\n// 1. Tìm các đề CẦN THÊM MỚI (Có trên Client nhưng chưa có trên Drive)\nconst toAdd = clientRubrics.filter(client => \n    !driveFolders.some(drive => drive.rubric_id === client.file_rubric_id)\n);\n\n// 2. Tìm các đề CẦN XÓA (Có trên Drive nhưng Client đã bỏ check)\nconst toDelete = driveFolders.filter(drive => \n    !clientRubrics.some(client => client.file_rubric_id === drive.rubric_id)\n);\n\nreturn {\n    json: {\n        has_add: toAdd.length > 0,\n        has_delete: toDelete.length > 0,\n        to_add: toAdd,\n        to_delete: toDelete\n    }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1200,
+        -80
+      ],
+      "id": "60d6c0e1-7cf2-4730-91ac-69121a1a92a7",
+      "name": "Code in JavaScript3"
+    },
+    {
+      "parameters": {
+        "jsCode": "\nconst toArray = $('Code in JavaScript3').first().json.to_add || [];\n\n\nreturn toArray.map(item => {\n    return {\n        json: item\n    };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1968,
+        -448
+      ],
+      "id": "cc03b7eb-1ac5-44b2-ab13-56ce1b8d7007",
+      "name": "Code in JavaScript4"
+    },
+    {
+      "parameters": {
+        "jsCode": "\nconst toArray = $input.first().json.to_delete || [];\n\n\nreturn toArray.map(item => {\n    return {\n        json: item\n    };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1920,
+        224
+      ],
+      "id": "13ba083e-dd86-48bd-8683-fc49456446f7",
+      "name": "Code in JavaScript5"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        2176,
+        -448
+      ],
+      "id": "a3198a17-216b-4547-bae6-7f56f335c321",
+      "name": "Loop Over Items1"
+    },
+    {
+      "parameters": {
+        "resource": "folder",
+        "name": "={{ $('Loop Over Items1').item.json.name }}",
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "={{ $('Switch update/delete').item.json.body.data.exam_id }}",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        3520,
+        -160
+      ],
+      "id": "2170c9cf-a0f8-4a5f-8001-033c8e009576",
+      "name": "Create folder",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "3koIW4NPYJpAmfn1",
+          "name": "Google Drive account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $json.id }}",
+          "mode": "id"
+        },
+        "newUpdatedFileName": "={{ $json.name }}",
+        "options": {
+          "propertiesUi": {
+            "propertyValues": [
+              {
+                "key": "=folder_id_goc",
+                "value": "={{ $('Loop Over Items1').item.json.folder_id_goc }}"
+              },
+              {
+                "key": "file_rubric_id",
+                "value": "={{ $('Loop Over Items1').item.json.file_rubric_id }}"
+              },
+              {
+                "key": "file_de_id",
+                "value": "={{ $('Loop Over Items1').item.json.file_de_id }}"
+              },
+              {
+                "key": "result_id",
+                "value": "={{ $('Create folder1').item.json.id }}"
+              },
+              {
+                "key": "result_file_id",
+                "value": "={{ $('Create spreadsheet').item.json.spreadsheetId }}"
+              },
+              {
+                "key": "result_sheet_id",
+                "value": "={{ $('Create spreadsheet').item.json.sheets[0].properties.sheetId }}"
+              }
+            ]
+          }
+        }
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        3744,
+        -128
+      ],
+      "id": "61b524ef-482d-4077-b9bd-2fa4838d1c91",
+      "name": "Update folder",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "3koIW4NPYJpAmfn1",
+          "name": "Google Drive account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "copy",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $('Loop Over Items1').item.json.file_de_id }}",
+          "mode": "id"
+        },
+        "name": "={{ $('Loop Over Items1').item.json.file_de_name }}",
+        "sameFolder": false,
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "={{ $('Switch update/delete').item.json.body.data.exam_id }}",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        3920,
+        -96
+      ],
+      "id": "acf0a0f6-d65e-48c6-a6d4-98b17687dc0f",
+      "name": "Copy file1",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "3koIW4NPYJpAmfn1",
+          "name": "Google Drive account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "share",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $json.id }}",
+          "mode": "id"
+        },
+        "permissionsUi": {
+          "permissionsValues": {
+            "role": "reader",
+            "type": "anyone"
+          }
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        4112,
+        -64
+      ],
+      "id": "945f55b9-3678-48ff-b7c1-477d05585572",
+      "name": "Share file1",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "3koIW4NPYJpAmfn1",
+          "name": "Google Drive account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "resource": "folder",
+        "operation": "share",
+        "folderNoRootId": {
+          "__rl": true,
+          "value": "={{ $('Create folder').item.json.id }}",
+          "mode": "id"
+        },
+        "permissionsUi": {
+          "permissionsValues": {
+            "role": "writer",
+            "type": "anyone"
+          }
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        4384,
+        -16
+      ],
+      "id": "88db669d-77de-41a2-a908-f2a52ee73377",
+      "name": "Share folder1",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "3koIW4NPYJpAmfn1",
+          "name": "Google Drive account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        2144,
+        224
+      ],
+      "id": "4c0541e6-694a-400f-839f-0e5ba110691d",
+      "name": "Loop Over Items2"
+    },
+    {
+      "parameters": {
+        "operation": "share",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $json.id }}",
+          "mode": "id"
+        },
+        "permissionsUi": {
+          "permissionsValues": {
+            "role": "writer",
+            "type": "anyone"
+          }
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        2944,
+        736
+      ],
+      "id": "326bdfd9-a45a-4a72-beb8-02fe416236c1",
+      "name": "Share sheet",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "3koIW4NPYJpAmfn1",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "e6da85f6-c7d2-47da-8741-39d4444867fb",
+              "name": "name",
+              "value": "={{ $('Create folder submit').item.json.name }}",
+              "type": "string"
+            },
+            {
+              "id": "c042aeb0-cbdf-4dbd-8b28-261f7f60a696",
+              "name": "id",
+              "value": "={{ $('Create folder submit').item.json.id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        3872,
+        912
+      ],
+      "id": "4c80d0cc-4a20-4386-b088-34300123ecf6",
+      "name": "Edit Fields8"
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        1920,
+        736
+      ],
+      "id": "124534a3-019e-4b1a-949a-ce637c8b620a",
+      "name": "Aggregate"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.body.data.operation }}",
+                    "rightValue": "delete",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "1ef31f0e-2196-42a4-b411-fe103b668bcc"
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "a29a2c0c-4d07-4f39-a804-389bc6207857",
+                    "leftValue": "={{ $json.body.data.operation }}",
+                    "rightValue": "update",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        688,
+        -80
+      ],
+      "id": "faf82a3a-34a4-43f9-96e2-1896afe0709e",
+      "name": "Switch update/delete"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "0e071ddf-b96d-446d-9da5-98c442c21356",
+              "leftValue": "={{ $json.has_delete }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1360,
+        -64
+      ],
+      "id": "c6271500-aad8-451b-bfff-648c164f3419",
+      "name": "If delete"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "88a23975-fc99-49b6-96b6-699fb7a3350f",
+              "leftValue": "={{ $('Code in JavaScript3').item.json.has_add }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1808,
+        -304
+      ],
+      "id": "1e05d107-07a7-4016-85e5-b35cd6fc7152",
+      "name": "If add"
+    },
+    {
+      "parameters": {
+        "resource": "folder",
+        "operation": "deleteFolder",
+        "folderNoRootId": {
+          "__rl": true,
+          "value": "={{ $json.folder_id }}",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        2560,
+        304
+      ],
+      "id": "1a087ea5-c1eb-463d-b789-1ffb471d410d",
+      "name": "Delete folder1",
+      "retryOnFail": false,
+      "alwaysOutputData": false,
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "3koIW4NPYJpAmfn1",
+          "name": "Google Drive account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "deleteFile",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $('Loop Over Items2').item.json.de_id }}",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        2768,
+        304
+      ],
+      "id": "fd2a82d3-f18c-48ea-86ae-6835e64439b9",
+      "name": "Delete a file",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "3koIW4NPYJpAmfn1",
+          "name": "Google Drive account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        1744,
+        -816
+      ],
+      "id": "e61ab108-e9b0-4e26-b5f8-e236ae195a8c",
+      "name": "Loop Over Items3"
+    },
+    {
+      "parameters": {
+        "resource": "fileFolder",
+        "returnAll": true,
+        "filter": {
+          "driveId": {
+            "mode": "list",
+            "value": "My Drive"
+          },
+          "folderId": {
+            "__rl": true,
+            "value": "={{ $json.id }}",
+            "mode": "id"
+          },
+          "whatToSearch": "folders"
+        },
+        "options": {
+          "fields": [
+            "*"
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        1984,
+        -768
+      ],
+      "id": "d0ca233c-3aa3-4bbd-b7fd-0fdab3f3fb61",
+      "name": "Search files and folders2",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "3koIW4NPYJpAmfn1",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "fbbdde29-de08-4988-96a3-2a652d2c051c",
+              "name": "id",
+              "value": "={{ $json.id }}",
+              "type": "string"
+            },
+            {
+              "id": "98268069-ec5e-4ea1-8679-6cf2ebd65aa4",
+              "name": "name",
+              "value": "={{ $json.name }}",
+              "type": "string"
+            },
+            {
+              "id": "06ccd225-55d2-4c66-83fc-b3822eccfd80",
+              "name": "properties",
+              "value": "={{ $json.properties }}",
+              "type": "object"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2176,
+        -768
+      ],
+      "id": "399d811d-726e-47a4-b92d-c8a5b6569c41",
+      "name": "Edit Fields9"
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        2512,
+        -848
+      ],
+      "id": "333b227f-fb52-4a72-81c1-443b76cd7336",
+      "name": "Aggregate1"
+    },
+    {
+      "parameters": {
+        "jsCode": "const currentExam = $('Loop Over Items3').first().json;\nconst folderId = currentExam.id || currentExam.Folder_ID;\n\nconst allRows = $('Get row(s) in sheet').all();\nconst matchedRow = allRows.find(row => row.json.Folder_ID === folderId);\n\nconst currentStatus = matchedRow ? matchedRow.json.Status : \"NOT_FOUND\";\nconst startTime = matchedRow ? matchedRow.json.Start_Time : null;\nconst endTime = matchedRow ? matchedRow.json.End_Time : null;\n\nconst rubricsData = $input.all().map(item => {\n    return item.json; \n});\n\n\nconst resultFolderId = $('Loop Over Items3').first().json.properties.result_id|| null;\n\nreturn {\n    json: {\n        id: folderId,\n        name: currentExam.Exam_Name || currentExam.name, \n        start: startTime,\n        end: endTime,\n        status: currentStatus,\n        result_id: resultFolderId,\n        rubrics: rubricsData\n    }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2368,
+        -768
+      ],
+      "id": "6787279c-a8bc-4761-86f2-759eb14319c2",
+      "name": "Code in JavaScript6"
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        3792,
+        400
+      ],
+      "id": "11b50304-a28a-4511-96a1-ecd8bd1d23cf",
+      "name": "Aggregate2"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1M5YJt8tWeSeNAVO50oyflnNmJim-m0BdxdvPlDIfbnU",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "id",
+          "value": 847817956
+        },
+        "filtersUI": {
+          "values": []
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1056,
+        -816
+      ],
+      "id": "cc13d55c-36b8-4ad0-abca-5d4b2cc34fcc",
+      "name": "Get row(s) in sheet",
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "JoqEuhwfMGOLtHRQ",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        1264,
+        -816
+      ],
+      "id": "2ae3866b-aca8-49d5-83e6-b71beaebeb9d",
+      "name": "Aggregate3"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $json.id }}",
+          "mode": "id"
+        },
+        "newUpdatedFileName": "={{ $json.name }}",
+        "options": {
+          "propertiesUi": {
+            "propertyValues": [
+              {
+                "key": "folder_id_goc",
+                "value": "={{ $('Loop Over Items').item.json.folder_id_goc }}"
+              },
+              {
+                "key": "file_rubric_id",
+                "value": "={{ $('Loop Over Items').item.json.file_rubric_id }}"
+              },
+              {
+                "key": "file_de_id",
+                "value": "={{ $('Copy file').item.json.id }}"
+              },
+              {
+                "key": "result_id",
+                "value": "={{ $('Create folder result rubric').item.json.id }}"
+              },
+              {
+                "key": "result_file_id",
+                "value": "={{ $('Create sheet result').item.json.spreadsheetId }}"
+              },
+              {
+                "key": "result_sheet_id",
+                "value": "={{ $('Create sheet result').item.json.sheets[0].properties.sheetId }}"
+              }
+            ]
+          }
+        }
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        3120,
+        912
+      ],
+      "id": "2238f764-9d00-46d5-967a-dd93e5d69040",
+      "name": "Update folder submit",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "3koIW4NPYJpAmfn1",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "fileId": {
+          "__rl": true,
+          "value": "={{$json.id}}",
+          "mode": "id"
+        },
+        "newUpdatedFileName": "={{ $('Switch').item.json.body.data.exam_name }}_result",
+        "options": {
+          "propertiesUi": {
+            "propertyValues": [
+              {
+                "key": "exam_id",
+                "value": "={{ $('Create folder exam').item.json.id }}"
+              }
+            ]
+          }
+        }
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        768,
+        736
+      ],
+      "id": "55144cce-3a6e-4e71-a3ff-6a83f2f97103",
+      "name": "Update result folder",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "3koIW4NPYJpAmfn1",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "folder",
+        "name": "={{ $('Switch').item.json.body.data.exam_name }}_result",
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "1vDOTX0-RpzVOEEyGpb6fR0eaPKYRpMb1",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        592,
+        736
+      ],
+      "id": "572d84e8-ffe7-4a28-9f06-34d6761a58fc",
+      "name": "Create folder result",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "3koIW4NPYJpAmfn1",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "folder",
+        "name": "={{ $('Loop Over Items').item.json.name }}_result",
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "={{ $('Create folder result').item.json.id }}",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        1776,
+        912
+      ],
+      "id": "ed858a11-bfb5-419e-b710-bca223cfa533",
+      "name": "Create folder result rubric",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "3koIW4NPYJpAmfn1",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $('Create folder result rubric').item.json.id }}",
+          "mode": "id"
+        },
+        "newUpdatedFileName": "={{ $('Create folder result rubric').item.json.name }}",
+        "options": {
+          "propertiesUi": {
+            "propertyValues": [
+              {
+                "key": "exam_folder",
+                "value": "={{ $('Create folder submit').item.json.id }}"
+              },
+              {
+                "key": "file_rubric_id",
+                "value": "={{ $('Loop Over Items').item.json.file_rubric_id }}"
+              }
+            ]
+          }
+        }
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        3328,
+        912
+      ],
+      "id": "2c2c5922-0a2d-484f-a526-80d78329f8ea",
+      "name": "Update folder result rubric",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "3koIW4NPYJpAmfn1",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "spreadsheet",
+        "title": "={{ $('Loop Over Items').item.json.name }}_results",
+        "sheetsUi": {
+          "sheetValues": [
+            {
+              "title": "Result"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1968,
+        912
+      ],
+      "id": "aebb7d24-1b9b-4479-b3ac-bbc21118523b",
+      "name": "Create sheet result",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "JoqEuhwfMGOLtHRQ",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "\nreturn [\n  {\n    json: {\n      \"File\":\"\",\n      \"created by\": \"\",\n      \"updated by\": \"\",\n      \"MSSV\": \"\",\n      \"Họ tên\": \"\",\n      \"Email\": \"\",\n      \"SĐT\": \"\",\n      \"Kết quả\": \"\",\n      \"Nhận xét\": \"\",\n      \"Chi tiết\": \"\"\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2128,
+        912
+      ],
+      "id": "c47de8d0-27e1-4f2f-a53a-3204ead61ef3",
+      "name": "Code in JavaScript7"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "={{ $('Create sheet result').item.json.spreadsheetId }}",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "={{ $('Create sheet result').item.json.sheets[0].properties.sheetId }}",
+          "mode": "id"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "File",
+              "displayName": "File",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "created by",
+              "displayName": "created by",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "updated by",
+              "displayName": "updated by",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "MSSV",
+              "displayName": "MSSV",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Họ tên",
+              "displayName": "Họ tên",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Email",
+              "displayName": "Email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "SĐT",
+              "displayName": "SĐT",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Kết quả",
+              "displayName": "Kết quả",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Nhận xét",
+              "displayName": "Nhận xét",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Chi tiết",
+              "displayName": "Chi tiết",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        2304,
+        912
+      ],
+      "id": "22f858b7-fa0f-44c6-86f1-049e34e38aca",
+      "name": "Append row in sheet1",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "JoqEuhwfMGOLtHRQ",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $('Create folder exam').item.json.id }}",
+          "mode": "id"
+        },
+        "newUpdatedFileName": "={{ $('Create folder exam').item.json.name }}",
+        "options": {
+          "propertiesUi": {
+            "propertyValues": [
+              {
+                "key": "result_id",
+                "value": "={{ $('Create folder result').item.json.id }}"
+              },
+              {
+                "key": "student_file_id",
+                "value": "={{ $('Create student_file').item.json.spreadsheetId }}"
+              },
+              {
+                "key": "student_sheet_id",
+                "value": "={{ $('Create student_file').item.json.sheets[0].properties.sheetId }}"
+              }
+            ]
+          }
+        }
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        3296,
+        736
+      ],
+      "id": "a1a6a5e6-9764-49ab-8c33-c7f654eccf1a",
+      "name": "Update exam folder",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "3koIW4NPYJpAmfn1",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "spreadsheet",
+        "title": "student_file",
+        "sheetsUi": {
+          "sheetValues": [
+            {
+              "title": "Thông tin sinh viên"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        2064,
+        736
+      ],
+      "id": "bc8b36a0-ba71-41b9-80b2-bb8afb96452f",
+      "name": "Create student_file",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "JoqEuhwfMGOLtHRQ",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        2352,
+        176
+      ],
+      "id": "0eeafadc-b876-4213-b0a0-f46fcba907fb",
+      "name": "Aggregate4"
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        2304,
+        -96
+      ],
+      "id": "172386f7-060a-40fa-a2cb-84afcf830266",
+      "name": "Aggregate5"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "bca273a8-8daa-4455-8321-65c9c4deb881",
+              "leftValue": "={{$json}}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1568,
+        -784
+      ],
+      "id": "0e52a182-4926-4334-bafc-bda4206148b7",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "resource": "folder",
+        "name": "={{ $('Loop Over Items1').item.json.name }}_result",
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "={{ $json.properties.result_id }}",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        2624,
+        -368
+      ],
+      "id": "551b5dc2-006f-4094-ad35-07a03be52247",
+      "name": "Create folder1",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "3koIW4NPYJpAmfn1",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "=https://www.googleapis.com/drive/v3/files/{{ $('Search rubric in exam').item.json.parents[0] }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleDriveOAuth2Api",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "fields",
+              "value": "id, name, properties"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        2432,
+        -400
+      ],
+      "id": "8a7ca101-3914-422a-99eb-6281bec459b4",
+      "name": "HTTP Request",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "3koIW4NPYJpAmfn1",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "spreadsheet",
+        "title": "={{ $('Loop Over Items1').item.json.name }}_results",
+        "sheetsUi": {
+          "sheetValues": [
+            {
+              "title": "Result"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        2816,
+        -368
+      ],
+      "id": "a38456a3-6e07-4571-8e35-56f495cb0927",
+      "name": "Create spreadsheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "JoqEuhwfMGOLtHRQ",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "move",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $('Create sheet result').item.json.spreadsheetId }}",
+          "mode": "id"
+        },
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "={{ $('Create folder result rubric').item.json.id }}",
+          "mode": "id"
+        }
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        2464,
+        912
+      ],
+      "id": "ba42399a-2416-43a5-a980-9ad6641d0c5a",
+      "name": "Move file1",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "3koIW4NPYJpAmfn1",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "\nreturn [\n  {\n    json: {\n      \"File\":\"\",\n      \"created by\": \"\",\n      \"updated by\": \"\",\n      \"MSSV\": \"\",\n      \"Họ tên\": \"\",\n      \"Email\": \"\",\n      \"SĐT\": \"\",\n      \"Kết quả\": \"\",\n      \"Nhận xét\": \"\",\n      \"Chi tiết\": \"\"\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2992,
+        -352
+      ],
+      "id": "138923e2-118b-4279-8995-6df8f234dbd9",
+      "name": "Code in JavaScript8"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "={{ $('Create spreadsheet').item.json.spreadsheetId }}",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "={{ $('Create spreadsheet').item.json.sheets[0].properties.sheetId }}",
+          "mode": "id"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        3136,
+        -304
+      ],
+      "id": "ccccdee6-567c-43a2-a545-3f7dd61ab479",
+      "name": "Append row in sheet2",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "JoqEuhwfMGOLtHRQ",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "move",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $('Create spreadsheet').item.json.spreadsheetId }}",
+          "mode": "id"
+        },
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "={{ $('Create folder1').item.json.id }}",
+          "mode": "id"
+        }
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        3344,
+        -192
+      ],
+      "id": "b40047e0-d1bb-4238-8f9b-caa3f7d65303",
+      "name": "Move file2",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "3koIW4NPYJpAmfn1",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $('Create folder1').item.json.id }}",
+          "mode": "id"
+        },
+        "newUpdatedFileName": "={{ $('Create folder1').item.json.name }}",
+        "options": {
+          "propertiesUi": {
+            "propertyValues": [
+              {
+                "key": "exam_folder",
+                "value": "={{ $('Create folder').item.json.id }}"
+              },
+              {
+                "key": "file_rubric_id",
+                "value": "={{ $('Copy file1').item.json.id }}"
+              }
+            ]
+          }
+        }
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        4592,
+        -16
+      ],
+      "id": "76ea47e7-59f0-4103-a9be-28e959286054",
+      "name": "Update file3",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "3koIW4NPYJpAmfn1",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "fileFolder",
+        "searchMethod": "query",
+        "queryString": "=",
+        "returnAll": true,
+        "filter": {
+          "driveId": {
+            "mode": "list",
+            "value": "My Drive"
+          },
+          "folderId": {
+            "__rl": true,
+            "value": "1vDOTX0-RpzVOEEyGpb6fR0eaPKYRpMb1",
+            "mode": "id"
+          },
+          "whatToSearch": "folders"
+        },
+        "options": {
+          "fields": [
+            "*"
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        624,
+        144
+      ],
+      "id": "14e0fd0e-17ff-4845-ae3c-1830b10d8694",
+      "name": "Search folder results",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "3koIW4NPYJpAmfn1",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "f1256b0b-7711-4781-a0e4-6a4b41c24c03",
+              "name": "status",
+              "value": "success",
+              "type": "string"
+            },
+            {
+              "id": "d8121b75-f380-46b4-8ce9-15b99bf73501",
+              "name": "=data",
+              "value": "={{ $json }}",
+              "type": "object"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1152,
+        144
+      ],
+      "id": "6dee8a8c-cbd6-4a8c-a514-c9cdda169411",
+      "name": "Edit Fields5"
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        944,
+        144
+      ],
+      "id": "eddc2e30-ba4e-4d3d-bb3b-11575a559f02",
+      "name": "Aggregate6"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Search files and folders",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Download file",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Update file",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Switch update/delete",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Search folder results",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Create folder exam",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields1": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields2": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields3": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields4": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search files and folders": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download file": {
+      "main": [
+        [
+          {
+            "node": "Extract from File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from File": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update file": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Upload file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload file": {
+      "main": [
+        [
+          {
+            "node": "Update file1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update file1": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Respond to Webhook": {
+      "main": [
+        []
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Create folder result rubric",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript1": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Copy file": {
+      "main": [
+        [
+          {
+            "node": "Create folder submit",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Share file": {
+      "main": [
+        [
+          {
+            "node": "Share folder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Share folder": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields8",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript2": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append row in sheet": {
+      "main": [
+        [
+          {
+            "node": "Move file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create folder exam": {
+      "main": [
+        [
+          {
+            "node": "Create folder result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create folder submit": {
+      "main": [
+        [
+          {
+            "node": "Update folder submit",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Move file": {
+      "main": [
+        [
+          {
+            "node": "Share sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields6": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append row ExamManager": {
+      "main": [
+        [
+          {
+            "node": "Update exam folder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search files and folders1": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update file2": {
+      "main": [
+        [
+          {
+            "node": "Update row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update row in sheet": {
+      "main": [
+        [
+          {
+            "node": "Aggregate2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields7": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update row in sheet1": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields7",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "Delete folder": {
+      "main": [
+        [
+          {
+            "node": "Update row in sheet1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "Search rubric in exam": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript3": {
+      "main": [
+        [
+          {
+            "node": "If delete",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript4": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items1": {
+      "main": [
+        [
+          {
+            "node": "Aggregate5",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create folder": {
+      "main": [
+        [
+          {
+            "node": "Update folder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update folder": {
+      "main": [
+        [
+          {
+            "node": "Copy file1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Copy file1": {
+      "main": [
+        [
+          {
+            "node": "Share file1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Share file1": {
+      "main": [
+        [
+          {
+            "node": "Share folder1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Share folder1": {
+      "main": [
+        [
+          {
+            "node": "Update file3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript5": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items2": {
+      "main": [
+        [
+          {
+            "node": "Aggregate4",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Delete folder1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Share sheet": {
+      "main": [
+        [
+          {
+            "node": "Append row ExamManager",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields8": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate": {
+      "main": [
+        [
+          {
+            "node": "Create student_file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch update/delete": {
+      "main": [
+        [
+          {
+            "node": "Delete folder",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Search rubric in exam",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If delete": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript5",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "If add",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If add": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript4",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Aggregate2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Delete folder1": {
+      "main": [
+        [
+          {
+            "node": "Delete a file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Delete a file": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items3": {
+      "main": [
+        [
+          {
+            "node": "Aggregate1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Search files and folders2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search files and folders2": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields9",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields9": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript6",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate1": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript6": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate2": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet": {
+      "main": [
+        [
+          {
+            "node": "Aggregate3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate3": {
+      "main": [
+        [
+          {
+            "node": "Search files and folders1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update folder submit": {
+      "main": [
+        [
+          {
+            "node": "Update folder result rubric",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update result folder": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create folder result": {
+      "main": [
+        [
+          {
+            "node": "Update result folder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create folder result rubric": {
+      "main": [
+        [
+          {
+            "node": "Create sheet result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update folder result rubric": {
+      "main": [
+        [
+          {
+            "node": "Share file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create sheet result": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript7",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript7": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append row in sheet1": {
+      "main": [
+        [
+          {
+            "node": "Move file1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update exam folder": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields6",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create student_file": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate4": {
+      "main": [
+        [
+          {
+            "node": "If add",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate5": {
+      "main": [
+        [
+          {
+            "node": "Update file2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items3",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create folder1": {
+      "main": [
+        [
+          {
+            "node": "Create spreadsheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Create folder1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create spreadsheet": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript8",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Move file1": {
+      "main": [
+        [
+          {
+            "node": "Copy file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript8": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append row in sheet2": {
+      "main": [
+        [
+          {
+            "node": "Move file2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Move file2": {
+      "main": [
+        [
+          {
+            "node": "Create folder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update file3": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search folder results": {
+      "main": [
+        [
+          {
+            "node": "Aggregate6",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields5": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate6": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "1ef60df0-40d4-4795-b487-7a2d39e868ca",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "264eee9997d405837064f09bc5528de2d01a8a71d5749d9d52ee810b8f3aea85"
+  },
+  "id": "MgqvuBOe6vlbhgtP",
+  "tags": []
+}

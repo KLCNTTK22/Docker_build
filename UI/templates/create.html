@@ -279,7 +279,7 @@
         btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Đang gửi...';
         
         try {
-            const response = await fetch('http://localhost:5678/webhook-test/create-rubrics', {
+            const response = await fetch('http://localhost:5678/webhook/create-rubrics', {
                 method: 'POST', 
                 body: new FormData(e.target)
             });

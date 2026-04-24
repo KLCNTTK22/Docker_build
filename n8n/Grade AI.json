@@ -1,0 +1,921 @@
+{
+  "name": "Grade AI",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "rubric-ai",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "8fc44fd6-74e5-4727-8713-8c3124dcc1b8",
+      "name": "Webhook",
+      "webhookId": "96ea6f03-388b-4b3a-9d7a-d2a4e571191f"
+    },
+    {
+      "parameters": {
+        "operation": "write",
+        "fileName": "=/shared_workspace/grade_ai/{{ $binary.file.fileName }}",
+        "dataPropertyName": "file",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1.1,
+      "position": [
+        208,
+        0
+      ],
+      "id": "3e859377-d3ed-40e6-a904-aabcb3053dc5",
+      "name": "Write Files toDisk"
+    },
+    {
+      "parameters": {
+        "command": "=python n8n_bridge.py extract_text '{{ $json.fileName }}' && rm -f \"{{ $json.fileName }}\""
+      },
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        416,
+        0
+      ],
+      "id": "e0a71a38-f897-4138-bf97-3fc3eaa413f0",
+      "name": "Execute Command"
+    },
+    {
+      "parameters": {
+        "jsCode": "try {\n    const pythonResult = JSON.parse($input.first().json.stdout);\n    return { json: pythonResult };\n\n} catch (error) {\n    return { \n        json: { \n            \"error\": \"Lỗi không xác định từ Python: \" + $input.first().json.stdout\n        } \n    };\n}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        624,
+        0
+      ],
+      "id": "bb2195e3-c4d1-453a-aa05-6b4f66beb5f0",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "3d26dbae-74d5-44d9-aeba-5795bfa63739",
+              "leftValue": "={{ $json.error }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        800,
+        0
+      ],
+      "id": "3e5cd901-48ed-4323-b7f9-0f3a1aef5176",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        1168,
+        -272
+      ],
+      "id": "e6a2132d-f5b5-4c87-9823-350fcec65300",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "d78fde06-8742-426a-96f0-2136e0940d84",
+              "name": "status",
+              "value": "error",
+              "type": "string"
+            },
+            {
+              "id": "2e985571-53c9-4c48-81b8-d8547b060826",
+              "name": "error",
+              "value": "={{ $json.error }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        992,
+        -272
+      ],
+      "id": "1c7dc46b-9477-4599-83f9-540bf3c57556",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Please generate a JSON rubric for the following General Informatics exam prompt:\n{{ $('If').item.json.text }}",
+        "hasOutputParser": true,
+        "needsFallback": true,
+        "options": {
+          "systemMessage": "You are an Expert Instructional Designer and Educational Assessment Specialist. Your task is to analyze an assignment prompt of ANY type (e.g., essays, research reports, presentations, coding projects, or general tasks) and generate a highly structured, objective JSON Rubric for automated or standardized grading.\n\nCRITICAL INSTRUCTION: You MUST respond with ONLY a valid JSON object. Do not include any conversational text, explanations, or markdown formatting outside of the JSON structure.\nJSON SCHEMA REQUIREMENT:\n{\n  \"exam_name\": \"Name of the assignment or exam\",\n  \"total_max_score\": 10.0,\n  \"criteria\": [\n    {\n      \"id\": \"c1\",\n      \"name\": \"Criterion Name (e.g., Content Accuracy, Argumentation, Code Quality, Formatting)\",\n      \"max_score\": 2.0,\n      \"description\": \"Clear, objective description of what constitutes a perfect score for this specific criterion.\",\n      \"penalties\": [\n        {\n          \"condition\": \"Specific mistake or shortcoming (e.g., Missing citations, syntax errors, poor logic)\",\n          \"minus\": 0.5\n        }\n      ]\n    }\n  ]\n}\n\nGRADING & GENERATION RULES:\n1. ADAPTABILITY: Identify the core dimensions of the submitted assignment type and create relevant `criteria`. (e.g., For an essay: Introduction, Argument, Grammar. For code: Functionality, Efficiency, Style).\n2. SCORE VALIDATION: The sum of `max_score` across all `criteria` MUST exactly equal the `total_max_score`. If the input does not specify a total, default to 10.0 and distribute the points logically based on the importance of each criterion.\n3. OBJECTIVITY: Ensure descriptions are clear and measurable to minimize grading bias.\n4. PENALTY LOGIC: Generate realistic and granular `penalties` (e.g., 0.25, 0.5, 1.0) for common mistakes related to each criterion. The value of `minus` MUST be a positive float. The maximum deduction in the `penalties` array must not exceed the `max_score` of that criterion."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        1168,
+        16
+      ],
+      "id": "35854742-f322-443d-ae32-d0ddcccac9c5",
+      "name": "AI Agent",
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 3600,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "modelName": "=muy",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        1168,
+        304
+      ],
+      "id": "d95ec481-0293-49aa-898d-47f4bf995b98",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "sFP4OUuRvFTBJTQD",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": "=inclusionai",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        1296,
+        288
+      ],
+      "id": "218ae362-f376-406a-89f4-4e801e478c49",
+      "name": "OpenRouter Chat Model",
+      "credentials": {
+        "openRouterApi": {
+          "id": "cnxNi6ldDIvSTiuA",
+          "name": "OpenRouter account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "d2b8da54-862b-4f76-92de-b0d3666bc8c2",
+              "name": "status",
+              "value": "error",
+              "type": "string"
+            },
+            {
+              "id": "d988934b-3925-4d2d-bb71-4f638ecafaee",
+              "name": "error",
+              "value": "={{ $json.error }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1600,
+        272
+      ],
+      "id": "fb339530-97d6-4e1e-b73e-35e610f06d45",
+      "name": "Edit Fields1"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        1808,
+        272
+      ],
+      "id": "f06bc7c6-1c02-4437-a56b-683ad21396e3",
+      "name": "Respond to Webhook1"
+    },
+    {
+      "parameters": {
+        "operation": "toJson",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.1,
+      "position": [
+        1520,
+        -80
+      ],
+      "id": "af76aaed-c354-4fac-a68a-652e3436ad1b",
+      "name": "Convert to File"
+    },
+    {
+      "parameters": {
+        "name": "={{ $('Webhook').item.json.body.name }}",
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "root",
+          "cachedResultName": "/ (Root folder)"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        1728,
+        -80
+      ],
+      "id": "9b6aaeff-efb0-4ea3-9a33-aa6806b0dc95",
+      "name": "Upload file",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "3koIW4NPYJpAmfn1",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        2160,
+        -64
+      ],
+      "id": "cbc8b3ed-b4ee-4e85-aafa-0cc209003156",
+      "name": "Respond to Webhook2"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "980b26e6-8d24-4217-b821-7174e5b644f2",
+              "name": "status",
+              "value": "successs",
+              "type": "string"
+            },
+            {
+              "id": "b519083e-90c7-4636-b966-7ffec143f20d",
+              "name": "rubric",
+              "value": "",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1936,
+        -80
+      ],
+      "id": "5451b85d-206e-4101-aabc-c1547140c122",
+      "name": "Edit Fields2"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "grade-ai",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        32,
+        544
+      ],
+      "id": "bd13b0ef-44d9-4b8f-af5d-285be73e7968",
+      "name": "Webhook1",
+      "webhookId": "5cba0358-d614-49f7-b64e-fbff5e6d3cbc"
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $json.body.rubric_id }}",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        240,
+        544
+      ],
+      "id": "047424b3-9cf0-470d-a3dd-a2b37a7c075b",
+      "name": "Download file",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "3koIW4NPYJpAmfn1",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "fromJson",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1.1,
+      "position": [
+        448,
+        544
+      ],
+      "id": "4ad0bbde-3588-4f19-979c-2094e45c1e3a",
+      "name": "Extract from File"
+    },
+    {
+      "parameters": {
+        "resource": "fileFolder",
+        "returnAll": true,
+        "filter": {
+          "driveId": {
+            "mode": "list",
+            "value": "My Drive"
+          },
+          "folderId": {
+            "__rl": true,
+            "value": "={{ $('Webhook1').item.json.body.folder_id }}",
+            "mode": "id"
+          },
+          "whatToSearch": "files"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        656,
+        544
+      ],
+      "id": "fb1bb7db-740a-4c89-8740-2824acba2a0c",
+      "name": "Search files and folders",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "3koIW4NPYJpAmfn1",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        864,
+        544
+      ],
+      "id": "b36ba216-2a22-4098-aa46-5d252d6f06eb",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "mode": "list",
+          "value": ""
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        1088,
+        608
+      ],
+      "id": "2d2cb0da-4a7b-4e93-b44e-c14a87022850",
+      "name": "Download file1",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "3koIW4NPYJpAmfn1",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {
+          "systemMessage": "You are an expert examiner. Your task is to grade the attached student submission based STRICTLY on the provided JSON Rubric. \n\nRUBRIC TO FOLLOW:\n{{ $('Node Sinh Rubric').item.json.content }}\n\nCRITICAL INSTRUCTIONS:\n1. You MUST respond with ONLY a valid JSON object. Do not explain your grading outside of the JSON.\n2. Evaluate the student's submission against each criterion in the Rubric.\n3. Apply penalties ONLY if the student violated the conditions specified in the Rubric.\n4. Calculate the `final_score` by summing the achieved scores for all criteria.\n\nJSON OUTPUT SCHEMA:\n{\n  \"student_id\": \"Extract from filename or document content\",\n  \"final_score\": 8.5,\n  \"criteria_results\": [\n    {\n      \"criterion_id\": \"c1\",\n      \"achieved_score\": 1.5,\n      \"applied_penalties\": [\n        {\n          \"reason\": \"Explain why points were deducted based on the rubric\",\n          \"minus\": 0.5\n        }\n      ]\n    }\n  ],\n  \"general_feedback\": \"A short, constructive overall feedback for the student.\"\n}"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        1312,
+        672
+      ],
+      "id": "e1691b63-8297-40e0-8362-9ae56511ba3f",
+      "name": "AI Agent1",
+      "retryOnFail": true,
+      "waitBetweenTries": 5000,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        1312,
+        848
+      ],
+      "id": "ec724152-7071-4f90-b960-787fff572be1",
+      "name": "Google Gemini Chat Model1",
+      "notesInFlow": false,
+      "credentials": {
+        "googlePalmApi": {
+          "id": "sFP4OUuRvFTBJTQD",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "amount": 60
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1840,
+        432
+      ],
+      "id": "29e8eced-fbc9-4748-a819-10ba39a447de",
+      "name": "Wait",
+      "webhookId": "8f975c26-86ed-4bc7-9c7f-f8af8500d192"
+    },
+    {
+      "parameters": {
+        "operation": "toJson",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.1,
+      "position": [
+        1808,
+        816
+      ],
+      "id": "1ec6feb7-5589-483f-ad38-e7270cc405ef",
+      "name": "Convert to File1"
+    },
+    {
+      "parameters": {
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "={{ $('Webhook1').item.json.body.folder_id }}",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        2016,
+        816
+      ],
+      "id": "8a729259-95a6-4d73-9f81-787e435e7c05",
+      "name": "Upload file1",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "3koIW4NPYJpAmfn1",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "share",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $json.id }}",
+          "mode": "id"
+        },
+        "permissionsUi": {
+          "permissionsValues": {
+            "role": "reader",
+            "type": "anyone"
+          }
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        2224,
+        816
+      ],
+      "id": "3d233f11-ab60-4668-b2e3-aa7ebb4856ae",
+      "name": "Share file",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "3koIW4NPYJpAmfn1",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "amount": 60
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        2432,
+        816
+      ],
+      "id": "2b138b60-e6ee-4a3f-b027-6a4a3889840c",
+      "name": "Wait1",
+      "webhookId": "f7be8f1a-7ce7-4c28-9e7b-85f22ff5bd97"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Write Files toDisk",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Write Files toDisk": {
+      "main": [
+        [
+          {
+            "node": "Execute Command",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute Command": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenRouter Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Convert to File",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields1": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert to File": {
+      "main": [
+        [
+          {
+            "node": "Upload file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload file": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields2": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook1": {
+      "main": [
+        [
+          {
+            "node": "Download file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download file": {
+      "main": [
+        [
+          {
+            "node": "Extract from File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from File": {
+      "main": [
+        [
+          {
+            "node": "Search files and folders",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search files and folders": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Download file1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download file1": {
+      "main": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent1": {
+      "main": [
+        [
+          {
+            "node": "Convert to File1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "Download file1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert to File1": {
+      "main": [
+        [
+          {
+            "node": "Upload file1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload file1": {
+      "main": [
+        [
+          {
+            "node": "Share file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Share file": {
+      "main": [
+        [
+          {
+            "node": "Wait1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait1": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "35192199-ada9-445c-b7db-8e319707a8a4",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "264eee9997d405837064f09bc5528de2d01a8a71d5749d9d52ee810b8f3aea85"
+  },
+  "id": "nAovPgaPychPI6Rk",
+  "tags": []
+}
