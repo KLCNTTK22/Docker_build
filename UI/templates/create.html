@@ -294,7 +294,7 @@
             }
 
             // 3. Gửi dữ liệu đã làm sạch
-            const response = await fetch('http://localhost:5678/webhook/create-rubrics', {
+            const response = await fetch('/api/create-rubrics', {
                 method: 'POST',
                 body: formData
             });

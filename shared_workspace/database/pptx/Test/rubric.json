@@ -1,0 +1,560 @@
+[
+    {
+        "criteria_name": "Định dạng Slide Master",
+        "allocated_points": 2.0000000000000004,
+        "anchor_locator": {
+            "type": "slide_master",
+            "tag": "p:sldMaster"
+        },
+        "rules": [
+            {
+                "description": "Sử dụng đúng Theme",
+                "property_to_check": "properties.app_properties.Template",
+                "expected_value": "Facet",
+                "action": "VERIFY_PROPERTY",
+                "match_type": "EXACT",
+                "points": 0.12
+            }
+        ],
+        "sub_criteria": [
+            {
+                "criteria_name": "Tiêu đề (Cấp 1)",
+                "allocated_points": 0.12,
+                "anchor_locator": {
+                    "type": "master_style",
+                    "style_type": "titleStyle",
+                    "level": 1
+                },
+                "rules": [
+                    {
+                        "description": "Kiểm tra Font chữ",
+                        "property_to_check": "properties.text_styles.titleStyle.lvl1pPr.font_name",
+                        "expected_value": "Times New Roman",
+                        "action": "VERIFY_PROPERTY",
+                        "match_type": "EXACT",
+                        "points": 0.06,
+                        "level": 1
+                    },
+                    {
+                        "description": "Kiểm tra Cỡ chữ",
+                        "property_to_check": "properties.text_styles.titleStyle.lvl1pPr.sz",
+                        "expected_value": "4000",
+                        "action": "VERIFY_PROPERTY",
+                        "match_type": "EXACT",
+                        "points": 0.06,
+                        "level": 1
+                    }
+                ]
+            },
+            {
+                "criteria_name": "Nội dung (Cấp 1)",
+                "allocated_points": 0.12,
+                "anchor_locator": {
+                    "type": "master_style",
+                    "style_type": "bodyStyle",
+                    "level": 1
+                },
+                "rules": [
+                    {
+                        "description": "Kiểm tra Font chữ",
+                        "property_to_check": "properties.text_styles.bodyStyle.lvl1pPr.font_name",
+                        "expected_value": "Times New Roman",
+                        "action": "VERIFY_PROPERTY",
+                        "match_type": "EXACT",
+                        "points": 0.06,
+                        "level": 1
+                    },
+                    {
+                        "description": "Kiểm tra Cỡ chữ",
+                        "property_to_check": "properties.text_styles.bodyStyle.lvl1pPr.sz",
+                        "expected_value": "3600",
+                        "action": "VERIFY_PROPERTY",
+                        "match_type": "EXACT",
+                        "points": 0.06,
+                        "level": 1
+                    }
+                ]
+            },
+            {
+                "criteria_name": "Nội dung (Cấp 2)",
+                "allocated_points": 0.12,
+                "anchor_locator": {
+                    "type": "master_style",
+                    "style_type": "bodyStyle",
+                    "level": 2
+                },
+                "rules": [
+                    {
+                        "description": "Kiểm tra Font chữ",
+                        "property_to_check": "properties.text_styles.bodyStyle.lvl2pPr.font_name",
+                        "expected_value": "Times New Roman",
+                        "action": "VERIFY_PROPERTY",
+                        "match_type": "EXACT",
+                        "points": 0.06,
+                        "level": 2
+                    },
+                    {
+                        "description": "Kiểm tra Cỡ chữ",
+                        "property_to_check": "properties.text_styles.bodyStyle.lvl2pPr.sz",
+                        "expected_value": "3200",
+                        "action": "VERIFY_PROPERTY",
+                        "match_type": "EXACT",
+                        "points": 0.06,
+                        "level": 2
+                    }
+                ]
+            },
+            {
+                "criteria_name": "Nội dung (Cấp 3)",
+                "allocated_points": 0.12,
+                "anchor_locator": {
+                    "type": "master_style",
+                    "style_type": "bodyStyle",
+                    "level": 3
+                },
+                "rules": [
+                    {
+                        "description": "Kiểm tra Font chữ",
+                        "property_to_check": "properties.text_styles.bodyStyle.lvl3pPr.font_name",
+                        "expected_value": "Times New Roman",
+                        "action": "VERIFY_PROPERTY",
+                        "match_type": "EXACT",
+                        "points": 0.06,
+                        "level": 3
+                    },
+                    {
+                        "description": "Kiểm tra Cỡ chữ",
+                        "property_to_check": "properties.text_styles.bodyStyle.lvl3pPr.sz",
+                        "expected_value": "2800",
+                        "action": "VERIFY_PROPERTY",
+                        "match_type": "EXACT",
+                        "points": 0.06,
+                        "level": 3
+                    }
+                ]
+            },
+            {
+                "criteria_name": "Nội dung (Cấp 4)",
+                "allocated_points": 0.12,
+                "anchor_locator": {
+                    "type": "master_style",
+                    "style_type": "bodyStyle",
+                    "level": 4
+                },
+                "rules": [
+                    {
+                        "description": "Kiểm tra Font chữ",
+                        "property_to_check": "properties.text_styles.bodyStyle.lvl4pPr.font_name",
+                        "expected_value": "Times New Roman",
+                        "action": "VERIFY_PROPERTY",
+                        "match_type": "EXACT",
+                        "points": 0.06,
+                        "level": 4
+                    },
+                    {
+                        "description": "Kiểm tra Cỡ chữ",
+                        "property_to_check": "properties.text_styles.bodyStyle.lvl4pPr.sz",
+                        "expected_value": "2400",
+                        "action": "VERIFY_PROPERTY",
+                        "match_type": "EXACT",
+                        "points": 0.06,
+                        "level": 4
+                    }
+                ]
+            },
+            {
+                "criteria_name": "Nội dung (Cấp 5)",
+                "allocated_points": 0.12,
+                "anchor_locator": {
+                    "type": "master_style",
+                    "style_type": "bodyStyle",
+                    "level": 5
+                },
+                "rules": [
+                    {
+                        "description": "Kiểm tra Font chữ",
+                        "property_to_check": "properties.text_styles.bodyStyle.lvl5pPr.font_name",
+                        "expected_value": "Aptos",
+                        "action": "VERIFY_PROPERTY",
+                        "match_type": "EXACT",
+                        "points": 0.06,
+                        "level": 5
+                    },
+                    {
+                        "description": "Kiểm tra Cỡ chữ",
+                        "property_to_check": "properties.text_styles.bodyStyle.lvl5pPr.sz",
+                        "expected_value": "1200",
+                        "action": "VERIFY_PROPERTY",
+                        "match_type": "EXACT",
+                        "points": 0.06,
+                        "level": 5
+                    }
+                ]
+            },
+            {
+                "criteria_name": "Khác (Cấp 1)",
+                "allocated_points": 0.12,
+                "anchor_locator": {
+                    "type": "master_style",
+                    "style_type": "otherStyle",
+                    "level": 1
+                },
+                "rules": [
+                    {
+                        "description": "Kiểm tra Font chữ",
+                        "property_to_check": "properties.text_styles.otherStyle.lvl1pPr.font_name",
+                        "expected_value": "Aptos",
+                        "action": "VERIFY_PROPERTY",
+                        "match_type": "EXACT",
+                        "points": 0.06,
+                        "level": 1
+                    },
+                    {
+                        "description": "Kiểm tra Cỡ chữ",
+                        "property_to_check": "properties.text_styles.otherStyle.lvl1pPr.sz",
+                        "expected_value": "1800",
+                        "action": "VERIFY_PROPERTY",
+                        "match_type": "EXACT",
+                        "points": 0.06,
+                        "level": 1
+                    }
+                ]
+            },
+            {
+                "criteria_name": "Khác (Cấp 2)",
+                "allocated_points": 0.12,
+                "anchor_locator": {
+                    "type": "master_style",
+                    "style_type": "otherStyle",
+                    "level": 2
+                },
+                "rules": [
+                    {
+                        "description": "Kiểm tra Font chữ",
+                        "property_to_check": "properties.text_styles.otherStyle.lvl2pPr.font_name",
+                        "expected_value": "Aptos",
+                        "action": "VERIFY_PROPERTY",
+                        "match_type": "EXACT",
+                        "points": 0.06,
+                        "level": 2
+                    },
+                    {
+                        "description": "Kiểm tra Cỡ chữ",
+                        "property_to_check": "properties.text_styles.otherStyle.lvl2pPr.sz",
+                        "expected_value": "1800",
+                        "action": "VERIFY_PROPERTY",
+                        "match_type": "EXACT",
+                        "points": 0.06,
+                        "level": 2
+                    }
+                ]
+            },
+            {
+                "criteria_name": "Khác (Cấp 3)",
+                "allocated_points": 0.12,
+                "anchor_locator": {
+                    "type": "master_style",
+                    "style_type": "otherStyle",
+                    "level": 3
+                },
+                "rules": [
+                    {
+                        "description": "Kiểm tra Font chữ",
+                        "property_to_check": "properties.text_styles.otherStyle.lvl3pPr.font_name",
+                        "expected_value": "Aptos",
+                        "action": "VERIFY_PROPERTY",
+                        "match_type": "EXACT",
+                        "points": 0.06,
+                        "level": 3
+                    },
+                    {
+                        "description": "Kiểm tra Cỡ chữ",
+                        "property_to_check": "properties.text_styles.otherStyle.lvl3pPr.sz",
+                        "expected_value": "1800",
+                        "action": "VERIFY_PROPERTY",
+                        "match_type": "EXACT",
+                        "points": 0.06,
+                        "level": 3
+                    }
+                ]
+            },
+            {
+                "criteria_name": "Khác (Cấp 4)",
+                "allocated_points": 0.12,
+                "anchor_locator": {
+                    "type": "master_style",
+                    "style_type": "otherStyle",
+                    "level": 4
+                },
+                "rules": [
+                    {
+                        "description": "Kiểm tra Font chữ",
+                        "property_to_check": "properties.text_styles.otherStyle.lvl4pPr.font_name",
+                        "expected_value": "Aptos",
+                        "action": "VERIFY_PROPERTY",
+                        "match_type": "EXACT",
+                        "points": 0.06,
+                        "level": 4
+                    },
+                    {
+                        "description": "Kiểm tra Cỡ chữ",
+                        "property_to_check": "properties.text_styles.otherStyle.lvl4pPr.sz",
+                        "expected_value": "1800",
+                        "action": "VERIFY_PROPERTY",
+                        "match_type": "EXACT",
+                        "points": 0.06,
+                        "level": 4
+                    }
+                ]
+            },
+            {
+                "criteria_name": "Khác (Cấp 5)",
+                "allocated_points": 0.12,
+                "anchor_locator": {
+                    "type": "master_style",
+                    "style_type": "otherStyle",
+                    "level": 5
+                },
+                "rules": [
+                    {
+                        "description": "Kiểm tra Font chữ",
+                        "property_to_check": "properties.text_styles.otherStyle.lvl5pPr.font_name",
+                        "expected_value": "Aptos",
+                        "action": "VERIFY_PROPERTY",
+                        "match_type": "EXACT",
+                        "points": 0.06,
+                        "level": 5
+                    },
+                    {
+                        "description": "Kiểm tra Cỡ chữ",
+                        "property_to_check": "properties.text_styles.otherStyle.lvl5pPr.sz",
+                        "expected_value": "1800",
+                        "action": "VERIFY_PROPERTY",
+                        "match_type": "EXACT",
+                        "points": 0.06,
+                        "level": 5
+                    }
+                ]
+            },
+            {
+                "criteria_name": "Khối: \"Click to edit Master...\"",
+                "allocated_points": 0.12,
+                "anchor_locator": {
+                    "type": "shape",
+                    "tag": "p:sp",
+                    "text_contains": "Click to edit M"
+                },
+                "rules": [
+                    {
+                        "description": "Vị trí bố cục tự động (CENTER_X_TOP)",
+                        "property_to_check": "layout",
+                        "expected_value": "CENTER_X_TOP",
+                        "action": "VERIFY_LAYOUT",
+                        "match_type": "EXACT",
+                        "points": 0.04
+                    },
+                    {
+                        "description": "Cấu trúc hình khối (Geometry)",
+                        "property_to_check": "properties.geometry_type",
+                        "expected_value": "rect",
+                        "action": "VERIFY_PROPERTY",
+                        "match_type": "EXACT",
+                        "points": 0.04
+                    },
+                    {
+                        "description": "Nội dung chữ: \"Click to edit M...\"",
+                        "property_to_check": "children.0.children.0.text",
+                        "expected_value": "Click to edit Master title style",
+                        "action": "VERIFY_PROPERTY",
+                        "match_type": "CONTAINS",
+                        "points": 0.04
+                    }
+                ]
+            },
+            {
+                "criteria_name": "Khối: \"Click to edit Master...\"",
+                "allocated_points": 0.10999999999999999,
+                "anchor_locator": {
+                    "type": "shape",
+                    "tag": "p:sp",
+                    "text_contains": "Click to edit M"
+                },
+                "rules": [
+                    {
+                        "description": "Vị trí bố cục tự động (CENTER_X_CENTER_Y)",
+                        "property_to_check": "layout",
+                        "expected_value": "CENTER_X_CENTER_Y",
+                        "action": "VERIFY_LAYOUT",
+                        "match_type": "EXACT",
+                        "points": 0.02
+                    },
+                    {
+                        "description": "Cấu trúc hình khối (Geometry)",
+                        "property_to_check": "properties.geometry_type",
+                        "expected_value": "rect",
+                        "action": "VERIFY_PROPERTY",
+                        "match_type": "EXACT",
+                        "points": 0.02
+                    },
+                    {
+                        "description": "Nội dung chữ: \"Click to edit M...\"",
+                        "property_to_check": "children.0.children.0.text",
+                        "expected_value": "Click to edit Master text styles",
+                        "action": "VERIFY_PROPERTY",
+                        "match_type": "CONTAINS",
+                        "points": 0.02
+                    },
+                    {
+                        "description": "Nội dung chữ: \"Second level...\"",
+                        "property_to_check": "children.1.children.0.text",
+                        "expected_value": "Second level",
+                        "action": "VERIFY_PROPERTY",
+                        "match_type": "CONTAINS",
+                        "points": 0.02
+                    },
+                    {
+                        "description": "Nội dung chữ: \"Third level...\"",
+                        "property_to_check": "children.2.children.0.text",
+                        "expected_value": "Third level",
+                        "action": "VERIFY_PROPERTY",
+                        "match_type": "CONTAINS",
+                        "points": 0.01
+                    },
+                    {
+                        "description": "Nội dung chữ: \"Fourth level...\"",
+                        "property_to_check": "children.3.children.0.text",
+                        "expected_value": "Fourth level",
+                        "action": "VERIFY_PROPERTY",
+                        "match_type": "CONTAINS",
+                        "points": 0.01
+                    },
+                    {
+                        "description": "Nội dung chữ: \"Fifth level...\"",
+                        "property_to_check": "children.4.children.0.text",
+                        "expected_value": "Fifth level",
+                        "action": "VERIFY_PROPERTY",
+                        "match_type": "CONTAINS",
+                        "points": 0.01
+                    }
+                ]
+            },
+            {
+                "criteria_name": "Đối tượng: shape",
+                "allocated_points": 0.11,
+                "anchor_locator": {
+                    "type": "shape",
+                    "tag": "p:sp",
+                    "properties": {
+                        "placeholder": {
+                            "type": "dt"
+                        }
+                    }
+                },
+                "rules": [
+                    {
+                        "description": "Vị trí bố cục tự động (CENTER_X_BOTTOM)",
+                        "property_to_check": "layout",
+                        "expected_value": "CENTER_X_BOTTOM",
+                        "action": "VERIFY_LAYOUT",
+                        "match_type": "EXACT",
+                        "points": 0.04
+                    },
+                    {
+                        "description": "Cấu trúc hình khối (Geometry)",
+                        "property_to_check": "properties.geometry_type",
+                        "expected_value": "rect",
+                        "action": "VERIFY_PROPERTY",
+                        "match_type": "EXACT",
+                        "points": 0.04
+                    },
+                    {
+                        "description": "Định dạng khối tự động: dt",
+                        "property_to_check": "properties.placeholder.type",
+                        "expected_value": "dt",
+                        "action": "VERIFY_PROPERTY",
+                        "match_type": "EXACT",
+                        "points": 0.03
+                    }
+                ]
+            },
+            {
+                "criteria_name": "Đối tượng: shape",
+                "allocated_points": 0.11,
+                "anchor_locator": {
+                    "type": "shape",
+                    "tag": "p:sp",
+                    "properties": {
+                        "placeholder": {
+                            "type": "ftr"
+                        }
+                    }
+                },
+                "rules": [
+                    {
+                        "description": "Vị trí bố cục tự động (LEFT_BOTTOM)",
+                        "property_to_check": "layout",
+                        "expected_value": "LEFT_BOTTOM",
+                        "action": "VERIFY_LAYOUT",
+                        "match_type": "EXACT",
+                        "points": 0.04
+                    },
+                    {
+                        "description": "Cấu trúc hình khối (Geometry)",
+                        "property_to_check": "properties.geometry_type",
+                        "expected_value": "rect",
+                        "action": "VERIFY_PROPERTY",
+                        "match_type": "EXACT",
+                        "points": 0.04
+                    },
+                    {
+                        "description": "Định dạng khối tự động: ftr",
+                        "property_to_check": "properties.placeholder.type",
+                        "expected_value": "ftr",
+                        "action": "VERIFY_PROPERTY",
+                        "match_type": "EXACT",
+                        "points": 0.03
+                    }
+                ]
+            },
+            {
+                "criteria_name": "Đối tượng: shape",
+                "allocated_points": 0.11,
+                "anchor_locator": {
+                    "type": "shape",
+                    "tag": "p:sp",
+                    "properties": {
+                        "placeholder": {
+                            "type": "sldNum"
+                        }
+                    }
+                },
+                "rules": [
+                    {
+                        "description": "Vị trí bố cục tự động (RIGHT_BOTTOM)",
+                        "property_to_check": "layout",
+                        "expected_value": "RIGHT_BOTTOM",
+                        "action": "VERIFY_LAYOUT",
+                        "match_type": "EXACT",
+                        "points": 0.04
+                    },
+                    {
+                        "description": "Cấu trúc hình khối (Geometry)",
+                        "property_to_check": "properties.geometry_type",
+                        "expected_value": "rect",
+                        "action": "VERIFY_PROPERTY",
+                        "match_type": "EXACT",
+                        "points": 0.04
+                    },
+                    {
+                        "description": "Định dạng khối tự động: sldNum",
+                        "property_to_check": "properties.placeholder.type",
+                        "expected_value": "sldNum",
+                        "action": "VERIFY_PROPERTY",
+                        "match_type": "EXACT",
+                        "points": 0.03
+                    }
+                ]
+            }
+        ]
+    }
+]

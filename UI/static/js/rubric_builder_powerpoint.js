@@ -887,7 +887,7 @@ const PPTRubricBuilder = (function () {
                 formData.append("rubricFile", rubricFile);
 
                 const response = await fetch(
-                    "http://localhost:5678/webhook/save-rubric",
+                    "/api/save-rubric",
                     {
                         method: "POST",
                         body: formData

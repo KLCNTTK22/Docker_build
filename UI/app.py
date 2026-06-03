@@ -147,7 +147,7 @@ def api_save_rubric(subject_name):
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 500
 
-@app.route('/api/<path:webhook>', methods=['GET', 'POST'])
+@app.route('/api/<path:webhook>', methods=['GET', 'POST', 'DELETE'])
 def proxy_n8n(webhook):
     """
     Chuyển tiếp request từ UI sang n8n
