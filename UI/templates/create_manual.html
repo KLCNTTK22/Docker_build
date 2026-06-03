@@ -210,7 +210,8 @@
 <script src="/static/js/rubric_builder_excel.js"></script>
 
 <script>
-    const PARSER_WEBHOOK_URL = 'http://localhost:5678/webhook/parser_file';
+    const PARSER_WEBHOOK_URL = '/api/parser_file';
+    const CHECK_RUBRIC_URL = '/api/check_rurbic';
     let currentAST = null;
 
     // Toast Notification
@@ -364,7 +365,7 @@
         formData.append('rubric', JSON.stringify(rubricData));
 
         try {
-            const response = await fetch('http://localhost:5678/webhook/check_rurbic', {
+            const response = await fetch(CHECK_RUBRIC_URL, {
                 method: 'POST',
                 body: formData
             });

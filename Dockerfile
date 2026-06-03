@@ -20,7 +20,7 @@ RUN apk add --no-cache \
 WORKDIR /data/PythonN8n
 
 COPY requirements.txt .
-RUN pip3 install --no-cache-dir -r requirements.txt --break-system-packages
+RUN pip3 install --no-cache-dir -r requirements.txt
 
 COPY . /data/PythonN8n
 RUN chown -R node:node /data/PythonN8n

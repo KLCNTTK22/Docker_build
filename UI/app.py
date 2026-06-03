@@ -1,17 +1,18 @@
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, Response
 import os
 import json
+import requests
 
 app = Flask(__name__)
 app.config['JSON_AS_ASCII'] = False
 
 # Đường dẫn dùng chung (Shared Volume với n8n)
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-BASE_DATA_DIR = os.path.join(PROJECT_ROOT, 'shared_workspace')
+BASE_DATA_DIR = "/shared_workspace"
 os.makedirs(BASE_DATA_DIR, exist_ok=True)
 
 # Hỗ trợ tạo folder theo môn
-SUPPORTED_SUBJECTS = ['grade', 'submit', 'rubric', 'tmp', 'grade', 'grade_ai', 'students', 'database', 'database/docx', 'database/xlsx', 'database/pptx']
+SUPPORTED_SUBJECTS = ['grade', 'submit', 'rubric', 'tmp', 'grade_ai', 'students', 'database', 'database/docx', 'database/xlsx', 'database/pptx']
 for sub in SUPPORTED_SUBJECTS:
         os.makedirs(os.path.join(BASE_DATA_DIR, sub), exist_ok=True)
 
@@ -146,5 +147,81 @@ def api_save_rubric(subject_name):
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 500
 
+@app.route('/api/<path:webhook>', methods=['GET', 'POST'])
+def proxy_n8n(webhook):
+    """
+    Chuyển tiếp request từ UI sang n8n
+    /api/parser_file -> n8n_core:5678/webhook/parser_file
+    """
+
+    url = f"http://n8n_core:5678/webhook/{webhook}"
+
+    try:
+
+        if request.method == 'GET':
+            r = requests.get(
+                url,
+                params=request.args,
+                timeout=300
+            )
+
+        else:
+            # multipart/form-data (upload file)
+            if request.files:
+                files = {
+                    key: (
+                        file.filename,
+                        file.stream,
+                        file.content_type
+                    )
+                    for key, file in request.files.items()
+                }
+
+                r = requests.post(
+                    url,
+                    files=files,
+                    data=request.form,
+                    timeout=300
+                )
+
+            # application/json
+            elif request.is_json:
+
+                r = requests.post(
+                    url,
+                    json=request.get_json(),
+                    timeout=300
+                )
+
+            # form thường
+            else:
+
+                r = requests.post(
+                    url,
+                    data=request.form,
+                    timeout=300
+                )
+
+        response = Response(
+            r.content,
+            status=r.status_code,
+            content_type=r.headers.get(
+                "Content-Type",
+                "application/octet-stream"
+            )
+        )
+
+        if "Content-Disposition" in r.headers:
+            response.headers["Content-Disposition"] = r.headers["Content-Disposition"]
+
+        return response
+
+    except Exception as e:
+        return jsonify({
+            "status": "error",
+            "message": str(e)
+        }), 500
+    
+
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    app.run(host='0.0.0.0', port=5000, debug=False)

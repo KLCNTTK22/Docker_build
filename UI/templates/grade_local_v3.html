@@ -207,8 +207,8 @@
 
 {% block scripts %}
 <script>
-    const GET_FILES_URL = 'http://localhost:5678/webhook/get-rubrics';
-    const GRADE_LOCAL_URL = 'http://localhost:5678/webhook-test/grade-local-v3';
+    const GET_FILES_URL = '/api/get-rubrics';
+    const GRADE_LOCAL_URL = '/api/grade-local-v3';
 
     let globalRubricsList = [];
     const selectedZones = { word: [], excel: [], pptx: [] };

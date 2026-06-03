@@ -18,10 +18,9 @@
 
 {% block scripts %}
 <script>
-    const GET_FILES_URL = 'http://localhost:5678/webhook/get-rubrics';
-    const DOWNLOAD_FILE_URL = 'http://localhost:5678/webhook/get-file';
-    // Thêm URL Webhook để xử lý việc xóa thư mục (bạn cần tự tạo webhook này trên n8n)
-    const DELETE_FOLDER_URL = 'http://localhost:5678/webhook/delete-folder';
+    const GET_FILES_URL = '/api/get-rubrics';
+    const DOWNLOAD_FILE_URL = '/api/get-file';
+    const DELETE_FOLDER_URL = '/api/delete-folder';
 
     async function loadFiles() {
         const container = document.getElementById('file-explorer-container');
@@ -172,7 +171,7 @@
 
         try {
             const response = await fetch(DELETE_FOLDER_URL, {
-                method: 'POST', // Chuyển thành 'DELETE' nếu backend của bạn yêu cầu method DELETE
+                method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ path: folderPath })
             });

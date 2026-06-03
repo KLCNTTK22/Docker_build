@@ -4,7 +4,7 @@ WORKDIR /app
 
 COPY . /app
 
-RUN pip install --no-cache-dir flask werkzeug
+RUN pip install --no-cache-dir flask werkzeug requests
 
 EXPOSE 5000
 
