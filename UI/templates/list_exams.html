@@ -148,6 +148,29 @@
     </div>
 </div>
 
+<!-- MODAL XÁC NHẬN XÓA CUỘC THI -->
+<div class="modal fade" id="deleteContestModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-danger border-2">
+            <div class="modal-header bg-danger-subtle">
+                <h5 class="modal-title fw-bold text-danger"><i class="bi bi-exclamation-triangle-fill"></i> Xác Nhận Xóa Cuộc Thi</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center py-4">
+                <p class="fs-5 mb-1">Bạn có chắc chắn muốn xóa cuộc thi:</p>
+                <p class="fs-4 fw-bold text-dark mb-0" id="delete-contest-name"></p>
+                <p class="text-muted small mt-3 mb-0">Hành động này sẽ cập nhật trạng thái cuộc thi thành "Đã Xóa".</p>
+            </div>
+            <div class="modal-footer bg-light justify-content-center">
+                <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal">Hủy bỏ</button>
+                <button type="button" class="btn btn-danger fw-bold px-4" onclick="executeDeleteContest()" id="btnConfirmDelete">
+                    <i class="bi bi-trash3-fill"></i> Xóa Cuộc Thi
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 {% endblock %}
 
 {% block scripts %}
@@ -159,6 +182,7 @@
     let globalRubricsList = [];
     let selectedRubricsMap = new Map();
     let currentEditingExamId = null; 
+    let contestToDeleteId = null;
 
     // ==========================================
     // UTILS & HELPERS
@@ -516,11 +540,16 @@
                 `;
             });
 
-            // Ẩn nút Edit nếu đã Bị Xóa
+            // Ẩn nút Edit/Delete nếu đã Bị Xóa
             const btnEditHtml = contest.status !== 'DELETE' ? `
-                <button type="button" class="btn btn-outline-primary w-100 mt-auto fw-bold" onclick="editContest('${contest.id}')">
-                    <i class="bi bi-pencil-square"></i> Chỉnh Sửa
-                </button>
+                <div class="d-flex gap-2 mt-auto">
+                    <button type="button" class="btn btn-outline-primary flex-grow-1 fw-bold" onclick="editContest('${contest.id}')">
+                        <i class="bi bi-pencil-square"></i> Chỉnh Sửa
+                    </button>
+                    <button type="button" class="btn btn-outline-danger fw-bold px-3" onclick="confirmDeleteContest('${contest.id}')" title="Xóa cuộc thi">
+                        <i class="bi bi-trash3"></i>
+                    </button>
+                </div>
             ` : `
                 <button type="button" class="btn btn-secondary w-100 mt-auto fw-bold" disabled>
                     <i class="bi bi-slash-circle"></i> Đã Bị Xóa
@@ -601,6 +630,79 @@
         updateSubmitButtonState();
     }
 
+    // ==========================================
+    // NGHIỆP VỤ XÓA CUỘC THI (DELETE)
+    // ==========================================
+    window.confirmDeleteContest = function(contestId) {
+        const contestObj = globalContestsList.find(c => c.id === contestId);
+        if (!contestObj) return;
+
+        contestToDeleteId = contestId;
+        document.getElementById('delete-contest-name').innerText = contestObj.name;
+        
+        const modal = new bootstrap.Modal(document.getElementById('deleteContestModal'));
+        modal.show();
+    }
+
+    window.executeDeleteContest = async function() {
+        if (!contestToDeleteId) return;
+
+        const contestObj = globalContestsList.find(c => c.id === contestToDeleteId);
+        if (!contestObj) return;
+
+        const btn = document.getElementById('btnConfirmDelete');
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Đang xóa...';
+
+        const selectedRubricsArray = [];
+        if (contestObj.rubrics && Array.isArray(contestObj.rubrics)) {
+            contestObj.rubrics.forEach(rb => {
+                const props = rb.properties || {};
+                selectedRubricsArray.push({
+                    "name": rb.name || "",
+                    "folder_id_goc": props.folder_id_goc || rb.id, 
+                    "file_rubric_id": props.file_rubric || props.file_rubric_id || "",
+                    "file_de_id": props.file_de || props.file_de_id || "",
+                    "file_de_name": rb.name || "" 
+                });
+            });
+        }
+
+        const payload = {
+            "action": "save_contest",
+            "data": {
+                "exam_id": contestObj.id,
+                "operation": "delete",
+                "exam_name": contestObj.name,
+                "start_time": contestObj.start,
+                "end_time": contestObj.end,
+                "selected_rubrics": selectedRubricsArray
+            }
+        };
+
+        try {
+            const response = await fetch(N8N_WEBHOOK_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            if (response.ok) {
+                showToast("Xóa Cuộc Thi thành công!", "success");
+                bootstrap.Modal.getInstance(document.getElementById('deleteContestModal')).hide();
+                await loadContestsList();
+            } else {
+                showToast("Lỗi hệ thống: HTTP " + response.status, "danger");
+            }
+        } catch (error) {
+            console.error("Lỗi:", error);
+            showToast("Lỗi kết nối tới N8n.", "danger");
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="bi bi-trash3-fill"></i> Xóa Cuộc Thi';
+            contestToDeleteId = null;
+        }
+    }
 
     // ==========================================
     // 3. NGHIỆP VỤ LOAD DANH SÁCH RUBRIC ĐỂ CHỌN

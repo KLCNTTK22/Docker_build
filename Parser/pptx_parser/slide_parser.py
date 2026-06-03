@@ -48,7 +48,7 @@ def parse_slide(xml_content, file_path, slide_index, context):
         sp_tree = root.find(f".//{{{NAMESPACES['p']}}}spTree")
         if sp_tree is not None:
             # Đọc các shape và picture cơ bản bằng parser dùng chung
-            shape_nodes = parse_shape_tree(sp_tree, rels)
+            shape_nodes = parse_shape_tree(sp_tree, rels, context)
             for shape_node in shape_nodes:
                 node.add_child(shape_node)
 
@@ -87,6 +87,21 @@ def parse_graphic_frame(gf_element, rels, context):
         node.attributes["id"] = nv_pr.attrib.get("id", "")
         node.attributes["name"] = nv_pr.attrib.get("name", "")
 
+    # ==========================================
+    # [THÊM MỚI] 1.5 LẤY TỌA ĐỘ (LAYOUT) CỦA GRAPHIC FRAME
+    # ==========================================
+    xfrm = gf_element.find(f".//{{{NAMESPACES['p']}}}xfrm")
+    if xfrm is not None:
+        off = xfrm.find(f"{{{NAMESPACES['a']}}}off")
+        ext = xfrm.find(f"{{{NAMESPACES['a']}}}ext")
+        if off is not None:
+            node.layout["x"] = off.attrib.get("x")
+            node.layout["y"] = off.attrib.get("y")
+        if ext is not None:
+            node.layout["cx"] = ext.attrib.get("cx")
+            node.layout["cy"] = ext.attrib.get("cy")
+    # ==========================================
+
     graphic_data = gf_element.find(f".//{{{NAMESPACES['a']}}}graphicData")
     if graphic_data is not None:
         uri = graphic_data.attrib.get("uri", "")
@@ -96,7 +111,7 @@ def parse_graphic_frame(gf_element, rels, context):
         if tbl is not None or "table" in uri:
             node.properties["frame_type"] = "table"
             if tbl is not None:
-                node.add_child(parse_table(tbl, rels))
+                node.add_child(parse_table(tbl, rels, context))
 
         # 2. BIỂU ĐỒ (CHART)
         chart_ref = graphic_data.find(f"{{{NAMESPACES['c']}}}chart")
@@ -135,12 +150,12 @@ def parse_graphic_frame(gf_element, rels, context):
                         data_path = target.replace("../", "ppt/")
                         data_xml = context["files"].get(data_path)
                         if data_xml:
-                            node.add_child(parse_smartart_data(data_xml, rels))
+                            node.add_child(parse_smartart_data(data_xml, rels, context))
 
     return node
 
 
-def parse_table(tbl_element, rels):
+def parse_table(tbl_element, rels, context):
     """
     Trích xuất dữ liệu Bảng: gộp ô (rowSpan, gridSpan), thuộc tính fill, và chữ bên trong.
     """
@@ -178,7 +193,7 @@ def parse_table(tbl_element, rels):
             # Trích xuất nội dung văn bản (tận dụng hàm parse_text_body từ shape_parser)
             tx_body = tc_elem.find(f"{{{NAMESPACES['a']}}}txBody")
             if tx_body is not None:
-                paragraphs = parse_text_body(tx_body, rels)
+                paragraphs = parse_text_body(tx_body, rels, context)
                 for p in paragraphs:
                     tc_node.add_child(p)
 
@@ -243,7 +258,7 @@ def parse_chart_data(xml_content):
     return node
 
 
-def parse_smartart_data(xml_content, rels):
+def parse_smartart_data(xml_content, rels, context):
     """
     Trích xuất dữ liệu SmartArt (Diagram) từ file ppt/diagrams/data*.xml.
     Quét danh sách điểm (Point List) để lấy các node văn bản bên trong.
@@ -268,7 +283,7 @@ def parse_smartart_data(xml_content, rels):
                 t_elem = pt.find(f"{{{NAMESPACES['dgm']}}}t")
                 if t_elem is not None:
                     # Vì <dgm:t> chứa trực tiếp <a:p> (Paragraph) nên dùng chung hàm parse_text_body rất hoàn hảo
-                    paragraphs = parse_text_body(t_elem, rels)
+                    paragraphs = parse_text_body(t_elem, rels, context)
                     for p in paragraphs:
                         pt_node.add_child(p)
 

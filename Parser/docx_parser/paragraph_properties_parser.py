@@ -3,6 +3,7 @@ from .xml_utils import *
 from .section_parser import parse_section
 from .run_properties_parser import parse_run_properties
 
+
 def parse_paragraph_properties(pPr, node, context):
     if pPr is None:
         return
@@ -11,7 +12,8 @@ def parse_paragraph_properties(pPr, node, context):
     jc = safe_find(pPr, "w:jc")
     if jc is not None:
         val = jc.attrib.get(qn("w:val"))
-        align_map = {"both": "justify", "center": "center", "right": "right", "left": "left", "distribute": "justify-all"}
+        align_map = {"both": "justify", "center": "center", "right": "right", "left": "left",
+                     "distribute": "justify-all"}
         node.layout["alignment"] = align_map.get(val, val)
 
     # --- 2. Spacing ---
@@ -20,17 +22,26 @@ def parse_paragraph_properties(pPr, node, context):
         spacing_data = {}
         before = spacing.attrib.get(qn("w:before"))
         after = spacing.attrib.get(qn("w:after"))
-        if before: spacing_data["beforePt"] = int(before) / 20
-        if after: spacing_data["afterPt"] = int(after) / 20
+
+        # Ép kiểu an toàn (float) thay vì int để chống lỗi với các số thập phân
+        try:
+            if before: spacing_data["beforePt"] = round(float(before) / 20, 2)
+            if after: spacing_data["afterPt"] = round(float(after) / 20, 2)
+        except ValueError:
+            pass
 
         line = spacing.attrib.get(qn("w:line"))
         line_rule = spacing.attrib.get(qn("w:lineRule"), "auto")
         if line:
-            if line_rule == "auto":
-                spacing_data["lineMultiple"] = round(int(line) / 240, 2)
-            else:
-                spacing_data["linePt"] = int(line) / 20
-            spacing_data["lineRule"] = line_rule
+            try:
+                line_val = float(line)  # 🔥 Dùng float thay vì int
+                if line_rule == "auto":
+                    spacing_data["lineMultiple"] = round(line_val / 240, 2)
+                else:
+                    spacing_data["linePt"] = round(line_val / 20, 2)
+                spacing_data["lineRule"] = line_rule
+            except ValueError:
+                pass
 
         if spacing_data: node.layout["spacing"] = spacing_data
 
@@ -41,8 +52,10 @@ def parse_paragraph_properties(pPr, node, context):
         for attr in ["left", "right", "firstLine", "hanging"]:
             val = ind.attrib.get(qn(f"w:{attr}"))
             if val:
-                try: indent_data[f"{attr}Pt"] = int(val) / 20
-                except ValueError: pass
+                try:
+                    indent_data[f"{attr}Pt"] = round(float(val) / 20, 2)
+                except ValueError:
+                    pass
         if indent_data: node.layout["indent"] = indent_data
 
     # --- 4. Tabs ---
@@ -50,8 +63,14 @@ def parse_paragraph_properties(pPr, node, context):
     if tabs is not None:
         tab_list = []
         for tab in safe_findall(tabs, "w:tab"):
+            pos = tab.attrib.get(qn("w:pos"), 0)
+            try:
+                pos_pt = round(float(pos) / 20, 2)
+            except ValueError:
+                pos_pt = 0
+
             tab_list.append({
-                "positionPt": int(tab.attrib.get(qn("w:pos"), 0)) / 20,
+                "positionPt": pos_pt,
                 "align": tab.attrib.get(qn("w:val")),
                 "leader": tab.attrib.get(qn("w:leader"))
             })
@@ -81,5 +100,4 @@ def parse_paragraph_properties(pPr, node, context):
 
     sectPr = safe_find(pPr, "w:sectPr")
     if sectPr is not None:
-        # 🔥 FIX: Thêm tham số context để section_parser tải được Header/Footer
         parse_section(sectPr, node, context)

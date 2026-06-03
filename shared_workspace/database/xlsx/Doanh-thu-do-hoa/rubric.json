@@ -1,0 +1,65 @@
+[
+  {
+    "criteria_name": "Chart Type Verification",
+    "allocated_points": 2.0,
+    "anchor_locator": {
+      "type": "global"
+    },
+    "rules": [
+      {
+        "description": "Verify the chart is a Bar Chart.",
+        "action": "VERIFY_CHART",
+        "points": 2.0,
+        "expected_type": "barChart"
+      }
+    ]
+  },
+  {
+    "criteria_name": "Chart Category Axis Reference",
+    "allocated_points": 2.0,
+    "anchor_locator": {
+      "type": "global"
+    },
+    "rules": [
+      {
+        "description": "Verify the chart uses the correct category axis reference.",
+        "action": "VERIFY_CHART",
+        "points": 2.0,
+        "expected_type": "barChart",
+        "expected_data_ref_contains": "Sheet1!$B$26:$B$28"
+      }
+    ]
+  },
+  {
+    "criteria_name": "Chart Series 1 Value Reference",
+    "allocated_points": 3.0,
+    "anchor_locator": {
+      "type": "global"
+    },
+    "rules": [
+      {
+        "description": "Verify the chart uses the correct value reference for Series 1.",
+        "action": "VERIFY_CHART",
+        "points": 3.0,
+        "expected_type": "barChart",
+        "expected_data_ref_contains": "Sheet1!$C$26:$C$28"
+      }
+    ]
+  },
+  {
+    "criteria_name": "Chart Series 2 Value Reference",
+    "allocated_points": 3.0,
+    "anchor_locator": {
+      "type": "global"
+    },
+    "rules": [
+      {
+        "description": "Verify the chart uses the correct value reference for Series 2.",
+        "action": "VERIFY_CHART",
+        "points": 3.0,
+        "expected_type": "barChart",
+        "expected_data_ref_contains": "Sheet1!$D$26:$D$28"
+      }
+    ]
+  }
+]

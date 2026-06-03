@@ -2,14 +2,22 @@
 
 {% block content %}
 <style>
-    .draggable-rubric { 
-        cursor: grab; 
-        transition: transform 0.2s, box-shadow 0.2s; 
+    .draggable-rubric {
+        cursor: grab;
+        transition: transform 0.2s, box-shadow 0.2s;
         border-left: 4px solid #0d6efd;
     }
-    .draggable-rubric:active { cursor: grabbing; transform: scale(0.98); }
-    .draggable-rubric:hover { box-shadow: 0 4px 8px rgba(0,0,0,0.1); background-color: #f8f9fa; }
-    
+
+    .draggable-rubric:active {
+        cursor: grabbing;
+        transform: scale(0.98);
+    }
+
+    .draggable-rubric:hover {
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        background-color: #f8f9fa;
+    }
+
     .dropzone {
         min-height: 120px;
         border: 2px dashed #adb5bd;
@@ -22,24 +30,55 @@
         transition: all 0.3s;
         position: relative;
     }
+
     .dropzone.drag-over {
         border-color: #198754;
         background-color: #e8f5e9;
         transform: scale(1.02);
     }
+
     .dropzone.filled {
         border: 2px solid #198754;
         background-color: #fff;
     }
-    .dz-icon { font-size: 2rem; color: #6c757d; margin-bottom: 10px; }
-    .dropzone.filled .dz-icon { display: none; }
-    
-    .filter-bar { background-color: #fff; border: 1px solid #dee2e6; border-radius: 8px; padding: 12px; margin-bottom: 15px; }
-    
-    .icon-click { cursor: pointer; transition: color 0.2s; }
-    .icon-click:hover { color: #0d6efd !important; }
-    .drive-link { font-size: 0.8rem; color: #0d6efd; text-decoration: none; word-break: break-all;}
-    .drive-link:hover { text-decoration: underline; }
+
+    .dz-icon {
+        font-size: 2rem;
+        color: #6c757d;
+        margin-bottom: 10px;
+    }
+
+    .dropzone.filled .dz-icon {
+        display: none;
+    }
+
+    .filter-bar {
+        background-color: #fff;
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        padding: 12px;
+        margin-bottom: 15px;
+    }
+
+    .icon-click {
+        cursor: pointer;
+        transition: color 0.2s;
+    }
+
+    .icon-click:hover {
+        color: #0d6efd !important;
+    }
+
+    .drive-link {
+        font-size: 0.8rem;
+        color: #0d6efd;
+        text-decoration: none;
+        word-break: break-all;
+    }
+
+    .drive-link:hover {
+        text-decoration: underline;
+    }
 </style>
 
 <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
@@ -53,11 +92,12 @@
     <!-- CỘT TRÁI: NGÂN HÀNG RUBRIC (NGUỒN) -->
     <div class="col-md-5 mb-4">
         <div class="card shadow-sm border-0 h-100">
-            <div class="card-header bg-primary text-white fw-bold py-3 d-flex justify-content-between align-items-center">
+            <div
+                class="card-header bg-primary text-white fw-bold py-3 d-flex justify-content-between align-items-center">
                 <span><i class="bi bi-folder-fill"></i> Ngân Hàng Rubrics</span>
                 <span class="badge bg-light text-primary rounded-pill" id="rubric-count">0</span>
             </div>
-            
+
             <div class="card-body bg-light d-flex flex-column" style="max-height: 750px;">
                 <!-- Thanh Lọc -->
                 <div class="filter-bar shadow-sm">
@@ -65,12 +105,14 @@
                         <div class="col-12">
                             <div class="input-group input-group-sm">
                                 <span class="input-group-text bg-white"><i class="bi bi-search text-muted"></i></span>
-                                <input type="text" id="filterSearch" class="form-control" placeholder="Lọc theo tên..." oninput="applyFilters()">
+                                <input type="text" id="filterSearch" class="form-control" placeholder="Lọc theo tên..."
+                                    oninput="applyFilters()">
                             </div>
                         </div>
                         <div class="col-12">
                             <div class="input-group input-group-sm">
-                                <span class="input-group-text bg-white" title="Ngày tạo"><i class="bi bi-calendar-date text-muted"></i></span>
+                                <span class="input-group-text bg-white" title="Ngày tạo"><i
+                                        class="bi bi-calendar-date text-muted"></i></span>
                                 <input type="date" id="filterDate" class="form-control" onchange="applyFilters()">
                             </div>
                         </div>
@@ -97,24 +139,30 @@
             </div>
             <div class="card-body">
                 <div class="alert alert-primary small border-0 bg-primary-subtle">
-                    <i class="bi bi-info-circle-fill"></i> <b>Hướng dẫn:</b> Kéo thả Rubric vào ô môn học tương ứng. Có thể để trống. Bấm <i class="bi bi-grip-vertical"></i> ở thẻ rubric để xem file đính kèm.
+                    <i class="bi bi-info-circle-fill"></i> <b>Hướng dẫn:</b> Kéo thả Rubric vào ô môn học tương ứng. Có
+                    thể để trống. Bấm <i class="bi bi-grip-vertical"></i> ở thẻ rubric để xem file đính kèm.
                 </div>
 
                 <!-- Action Name Input -->
                 <div class="mb-4 bg-light p-3 border rounded">
-                    <label class="form-label fw-bold text-dark"><i class="bi bi-tag-fill text-warning"></i> Tên Hành Động / Phiên Chấm (Bắt buộc):</label>
-                    <input type="text" id="grading_action_name" class="form-control border-warning" placeholder="VD: Chấm thi giữa kỳ K22..." required>
+                    <label class="form-label fw-bold text-dark"><i class="bi bi-tag-fill text-warning"></i> Tên Hành
+                        Động / Phiên Chấm (Bắt buộc):</label>
+                    <input type="text" id="grading_action_name" class="form-control border-warning"
+                        placeholder="VD: Chấm thi giữa kỳ K22..." required>
                 </div>
 
                 <!-- VÙNG 1: WORD -->
                 <div class="mb-4">
                     <div class="d-flex justify-content-between align-items-end mb-2">
-                        <label class="fw-bold text-primary"><i class="bi bi-file-earmark-word-fill"></i> Rubric Word</label>
-                        <select class="form-select form-select-sm w-50 shadow-none" id="select-word" onchange="handleSelectChange('word')">
+                        <label class="fw-bold text-primary"><i class="bi bi-file-earmark-word-fill"></i> Rubric
+                            Word</label>
+                        <select class="form-select form-select-sm w-50 shadow-none" id="select-word"
+                            onchange="handleSelectChange('word')">
                             <option value="">-- Chọn Rubric Word --</option>
                         </select>
                     </div>
-                    <div class="dropzone" id="dropzone-word" ondragover="allowDrop(event)" ondragleave="dragLeave(event)" ondrop="drop(event, 'word')">
+                    <div class="dropzone" id="dropzone-word" ondragover="allowDrop(event)"
+                        ondragleave="dragLeave(event)" ondrop="drop(event, 'word')">
                         <i class="bi bi-cloud-arrow-down dz-icon"></i>
                         <span class="text-muted small dz-placeholder">Kéo & Thả Rubric Word vào đây</span>
                     </div>
@@ -123,12 +171,15 @@
                 <!-- VÙNG 2: EXCEL -->
                 <div class="mb-4">
                     <div class="d-flex justify-content-between align-items-end mb-2">
-                        <label class="fw-bold text-success"><i class="bi bi-file-earmark-excel-fill"></i> Rubric Excel</label>
-                        <select class="form-select form-select-sm w-50 shadow-none" id="select-excel" onchange="handleSelectChange('excel')">
+                        <label class="fw-bold text-success"><i class="bi bi-file-earmark-excel-fill"></i> Rubric
+                            Excel</label>
+                        <select class="form-select form-select-sm w-50 shadow-none" id="select-excel"
+                            onchange="handleSelectChange('excel')">
                             <option value="">-- Chọn Rubric Excel --</option>
                         </select>
                     </div>
-                    <div class="dropzone" id="dropzone-excel" ondragover="allowDrop(event)" ondragleave="dragLeave(event)" ondrop="drop(event, 'excel')">
+                    <div class="dropzone" id="dropzone-excel" ondragover="allowDrop(event)"
+                        ondragleave="dragLeave(event)" ondrop="drop(event, 'excel')">
                         <i class="bi bi-cloud-arrow-down dz-icon"></i>
                         <span class="text-muted small dz-placeholder">Kéo & Thả Rubric Excel vào đây</span>
                     </div>
@@ -137,20 +188,24 @@
                 <!-- VÙNG 3: POWERPOINT -->
                 <div class="mb-4">
                     <div class="d-flex justify-content-between align-items-end mb-2">
-                        <label class="fw-bold text-danger"><i class="bi bi-file-earmark-slides-fill"></i> Rubric PowerPoint</label>
-                        <select class="form-select form-select-sm w-50 shadow-none" id="select-ppt" onchange="handleSelectChange('ppt')">
+                        <label class="fw-bold text-danger"><i class="bi bi-file-earmark-slides-fill"></i> Rubric
+                            PowerPoint</label>
+                        <select class="form-select form-select-sm w-50 shadow-none" id="select-ppt"
+                            onchange="handleSelectChange('ppt')">
                             <option value="">-- Chọn Rubric PowerPoint --</option>
                         </select>
                     </div>
-                    <div class="dropzone" id="dropzone-ppt" ondragover="allowDrop(event)" ondragleave="dragLeave(event)" ondrop="drop(event, 'ppt')">
+                    <div class="dropzone" id="dropzone-ppt" ondragover="allowDrop(event)" ondragleave="dragLeave(event)"
+                        ondrop="drop(event, 'ppt')">
                         <i class="bi bi-cloud-arrow-down dz-icon"></i>
                         <span class="text-muted small dz-placeholder">Kéo & Thả Rubric PowerPoint vào đây</span>
                     </div>
                 </div>
 
                 <hr class="my-4">
-                
-                <button class="btn btn-warning w-100 fw-bold py-3 fs-5 shadow-sm text-dark" onclick="confirmStartGrading()">
+
+                <button class="btn btn-warning w-100 fw-bold py-3 fs-5 shadow-sm text-dark"
+                    onclick="confirmStartGrading()">
                     <i class="bi bi-lightning-charge-fill"></i> BẮT ĐẦU CHẤM ĐIỂM
                 </button>
             </div>
@@ -163,7 +218,8 @@
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-warning border-2">
             <div class="modal-header bg-warning-subtle">
-                <h5 class="modal-title fw-bold text-dark"><i class="bi bi-exclamation-triangle-fill text-warning"></i> Xác Nhận Bắt Đầu Chấm</h5>
+                <h5 class="modal-title fw-bold text-dark"><i class="bi bi-exclamation-triangle-fill text-warning"></i>
+                    Xác Nhận Bắt Đầu Chấm</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body text-center py-4">
@@ -174,7 +230,8 @@
             </div>
             <div class="modal-footer bg-light justify-content-center">
                 <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal">Hủy bỏ</button>
-                <button type="button" class="btn btn-warning fw-bold px-4 text-dark" onclick="submitGrading()" id="btnExecuteGrading">
+                <button type="button" class="btn btn-warning fw-bold px-4 text-dark" onclick="submitGrading()"
+                    id="btnExecuteGrading">
                     <i class="bi bi-check-circle-fill"></i> Đồng Ý & Gửi Lệnh
                 </button>
             </div>
@@ -188,9 +245,9 @@
 <script>
     const GET_DATA_URL = 'http://localhost:5678/webhook/getdata';
     const GRADE_LOCAL_URL = 'http://localhost:5678/webhook-test/grade-local';
-    
+
     let globalRubricsList = [];
-    
+
     const selectedZones = {
         word: null,
         excel: null,
@@ -207,7 +264,7 @@
         const textClass = type === 'warning' ? 'text-dark' : 'text-white';
         const toastEl = document.createElement('div');
         toastEl.className = `toast align-items-center ${bg} ${textClass} border-0 show shadow`;
-        toastEl.innerHTML = `<div class="d-flex"><div class="toast-body fw-medium">${message}</div><button type="button" class="btn-close ${type==='warning'?'':'btn-close-white'} me-2 m-auto" data-bs-dismiss="toast" onclick="this.parentElement.parentElement.remove()"></button></div>`;
+        toastEl.innerHTML = `<div class="d-flex"><div class="toast-body fw-medium">${message}</div><button type="button" class="btn-close ${type === 'warning' ? '' : 'btn-close-white'} me-2 m-auto" data-bs-dismiss="toast" onclick="this.parentElement.parentElement.remove()"></button></div>`;
         tc.appendChild(toastEl);
         setTimeout(() => { if (toastEl.parentNode) toastEl.remove(); }, 3000);
     }
@@ -222,10 +279,10 @@
     function getDriveFileLink(id) { return id ? `https://drive.google.com/file/d/${id}/view` : '#'; }
 
     // Bật/tắt chi tiết files (Icon Grip)
-    window.toggleDetails = function(targetId, event) {
+    window.toggleDetails = function (targetId, event) {
         event.stopPropagation();
         const el = document.getElementById(targetId);
-        if(el.style.display === 'none') {
+        if (el.style.display === 'none') {
             el.style.display = 'block';
         } else {
             el.style.display = 'none';
@@ -238,7 +295,7 @@
     async function loadRubricsList() {
         const listEl = document.getElementById('rubrics-list');
         const loadingEl = document.getElementById('rubrics-loading');
-        
+
         listEl.style.display = 'none';
         loadingEl.style.display = 'block';
 
@@ -250,13 +307,13 @@
             });
 
             if (!response.ok) throw new Error("HTTP error " + response.status);
-            
+
             let data = await response.json();
             globalRubricsList = (data && !Array.isArray(data) && data.id) ? [data] : data;
-            
+
             populateSelectBoxes();
             renderRubricList();
-            
+
         } catch (error) {
             console.error("Lỗi:", error);
             listEl.innerHTML = '<div class="text-danger text-center"><i class="bi bi-x-octagon"></i> Lỗi lấy dữ liệu từ n8n.</div>';
@@ -273,12 +330,12 @@
 
         const searchText = document.getElementById('filterSearch').value.toLowerCase();
         const dateFilter = document.getElementById('filterDate').value;
-        
+
         let count = 0;
 
         globalRubricsList.forEach(rb => {
             if (searchText && !rb.name.toLowerCase().includes(searchText)) return;
-            
+
             if (dateFilter) {
                 const rbDate = rb.createdTime ? rb.createdTime.split('T')[0] : "";
                 if (rbDate !== dateFilter) return;
@@ -286,7 +343,7 @@
 
             count++;
             const props = rb.properties || {};
-            
+
             const fileDeLink = props.file_de ? `<a href="${getDriveFileLink(props.file_de)}" target="_blank" class="drive-link" title="${props.file_de}">Link File Đề</a>` : '<span class="text-muted">N/A</span>';
             const fileMauLink = props.file_mau ? `<a href="${getDriveFileLink(props.file_mau)}" target="_blank" class="drive-link" title="${props.file_mau}">Link File Mẫu</a>` : '<span class="text-muted">N/A</span>';
             const fileRubricLink = props.file_rubric ? `<a href="${getDriveFileLink(props.file_rubric)}" target="_blank" class="drive-link" title="${props.file_rubric}">Link File Rubric</a>` : '<span class="text-muted">N/A</span>';
@@ -309,7 +366,7 @@
                             <div class="text-muted ms-4" style="font-size: 11px;">Ngày tạo: ${formatDate(rb.createdTime)}</div>
                         </div>
                         <a href="${getDriveFolderLink(rb.id)}" target="_blank" class="badge bg-light text-secondary border font-monospace text-decoration-none" title="Mở Thư mục trên Google Drive" onclick="event.stopPropagation()">
-                            ${rb.id.substring(0,6)}.. <i class="bi bi-box-arrow-up-right ms-1"></i>
+                            ${rb.id.substring(0, 6)}.. <i class="bi bi-box-arrow-up-right ms-1"></i>
                         </a>
                     </div>
                     
@@ -324,12 +381,12 @@
         });
 
         document.getElementById('rubric-count').innerText = count;
-        if(count === 0) {
+        if (count === 0) {
             listEl.innerHTML = '<div class="text-center text-muted py-3">Không có Rubric nào phù hợp.</div>';
         }
     }
 
-    window.applyFilters = function() {
+    window.applyFilters = function () {
         renderRubricList();
     }
 
@@ -338,8 +395,8 @@
         selects.forEach(selId => {
             const select = document.getElementById(selId);
             const currentVal = select.value;
-            select.innerHTML = select.options[0].outerHTML; 
-            
+            select.innerHTML = select.options[0].outerHTML;
+
             globalRubricsList.forEach(rb => {
                 select.add(new Option(rb.name, rb.id));
             });
@@ -355,16 +412,16 @@
         e.dataTransfer.effectAllowed = 'copy';
     }
 
-    window.allowDrop = function(e) {
-        e.preventDefault(); 
+    window.allowDrop = function (e) {
+        e.preventDefault();
         e.currentTarget.classList.add('drag-over');
     }
 
-    window.dragLeave = function(e) {
+    window.dragLeave = function (e) {
         e.currentTarget.classList.remove('drag-over');
     }
 
-    window.drop = function(e, zoneName) {
+    window.drop = function (e, zoneName) {
         e.preventDefault();
         const dropzone = e.currentTarget;
         dropzone.classList.remove('drag-over');
@@ -375,7 +432,7 @@
         try {
             const rubricData = JSON.parse(dataStr);
             assignRubricToZone(zoneName, rubricData.id, rubricData.name, rubricData.file_rubric);
-        } catch(err) {
+        } catch (err) {
             console.error("Lỗi Drop JSON:", err);
         }
     }
@@ -383,10 +440,10 @@
     // ==========================================
     // 3. ĐỒNG BỘ GIAO DIỆN (DROPZONE & SELECT)
     // ==========================================
-    window.handleSelectChange = function(zoneName) {
+    window.handleSelectChange = function (zoneName) {
         const selectEl = document.getElementById(`select-${zoneName}`);
         const selectedId = selectEl.value;
-        
+
         if (!selectedId) {
             removeRubricFromZone(zoneName);
         } else {
@@ -401,15 +458,15 @@
         document.getElementById(`select-${zoneName}`).value = id;
         const dz = document.getElementById(`dropzone-${zoneName}`);
         dz.classList.add('filled');
-        
-        let iconColor = zoneName==='word' ? 'text-primary' : (zoneName==='excel' ? 'text-success' : 'text-danger');
-        let iconClass = zoneName==='word' ? 'bi-file-earmark-word-fill' : (zoneName==='excel' ? 'bi-file-earmark-excel-fill' : 'bi-file-earmark-slides-fill');
+
+        let iconColor = zoneName === 'word' ? 'text-primary' : (zoneName === 'excel' ? 'text-success' : 'text-danger');
+        let iconClass = zoneName === 'word' ? 'bi-file-earmark-word-fill' : (zoneName === 'excel' ? 'bi-file-earmark-excel-fill' : 'bi-file-earmark-slides-fill');
 
         dz.innerHTML = `
             <div class="d-flex flex-column align-items-center p-3 w-100">
                 <i class="bi ${iconClass} ${iconColor} fs-1 mb-2"></i>
                 <div class="fw-bold text-dark text-center mb-1 w-100 text-truncate px-2" title="${name}">${name}</div>
-                <div class="font-monospace text-muted small mb-2" title="Folder Gốc">Folder ID: ${id.substring(0,8)}...</div>
+                <div class="font-monospace text-muted small mb-2" title="Folder Gốc">Folder ID: ${id.substring(0, 8)}...</div>
                 <button class="btn btn-sm btn-outline-danger py-0 px-2" onclick="removeRubricFromZone('${zoneName}', event)">
                     <i class="bi bi-x-lg"></i> Xóa
                 </button>
@@ -417,12 +474,12 @@
         `;
     }
 
-    window.removeRubricFromZone = function(zoneName, event) {
-        if(event) event.stopPropagation();
-        
+    window.removeRubricFromZone = function (zoneName, event) {
+        if (event) event.stopPropagation();
+
         selectedZones[zoneName] = null;
-        document.getElementById(`select-${zoneName}`).value = ""; 
-        
+        document.getElementById(`select-${zoneName}`).value = "";
+
         const dz = document.getElementById(`dropzone-${zoneName}`);
         dz.classList.remove('filled');
         dz.innerHTML = `
@@ -434,7 +491,7 @@
     // ==========================================
     // 4. GỬI DỮ LIỆU ĐI (SUBMIT)
     // ==========================================
-    window.confirmStartGrading = function() {
+    window.confirmStartGrading = function () {
         const actionNameInput = document.getElementById('grading_action_name');
         if (!actionNameInput.value.trim()) {
             showToast("Vui lòng nhập Tên Hành Động / Phiên Chấm!", "warning");
@@ -445,7 +502,7 @@
         const isEmpty = !selectedZones.word && !selectedZones.excel && !selectedZones.ppt;
         const warningList = document.getElementById('warning-list');
         const warningTitle = document.getElementById('warning-title');
-        
+
         if (isEmpty) {
             warningTitle.innerHTML = "Trạng thái: <span class='text-danger'>CHƯA CHỌN RUBRIC NÀO</span>";
             warningList.innerHTML = `
@@ -460,15 +517,15 @@
                 <li class="text-danger">Chắc chắn đã cập nhật các file bài làm vào đúng Folder cục bộ trước khi nhấn Bắt đầu.</li>
             `;
         }
-        
+
         const modal = new bootstrap.Modal(document.getElementById('confirmModal'));
         modal.show();
     }
 
-    window.submitGrading = async function() {
+    window.submitGrading = async function () {
         const btn = document.getElementById('btnExecuteGrading');
         btn.disabled = true;
-        btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Đang gửi lệnh...';
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Đang xử lý & tải file...';
 
         const actionName = document.getElementById('grading_action_name').value.trim();
 
@@ -491,8 +548,35 @@
             });
 
             if (response.ok) {
+                // 1. Chuyển response thành Blob để xử lý file tải về
+                const blob = await response.blob();
+
+                // 2. Lấy tên file từ header (nếu server có gửi Content-Disposition)
+                let filename = `KetQuaChamDiem_${new Date().getTime()}.zip`; // Tên mặc định
+                const disposition = response.headers.get('Content-Disposition');
+                if (disposition && disposition.includes('attachment')) {
+                    const filenameRegex = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/;
+                    const matches = filenameRegex.exec(disposition);
+                    if (matches != null && matches[1]) {
+                        filename = matches[1].replace(/['"]/g, '');
+                    }
+                }
+
+                // 3. Tạo URL tạm thời và thẻ <a> ẩn để tải file
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.style.display = 'none';
+                a.href = url;
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click(); // Tự động click để tải
+
+                // 4. Dọn dẹp URL và thẻ <a> sau khi tải xong
+                window.URL.revokeObjectURL(url);
+                a.remove();
+
                 bootstrap.Modal.getInstance(document.getElementById('confirmModal')).hide();
-                showToast("Đã gửi lệnh chấm điểm cục bộ thành công! Vui lòng kiểm tra Console n8n.", "success");
+                showToast("Đã chấm điểm thành công và tải về file nén!", "success");
             } else {
                 showToast("Lỗi HTTP " + response.status, "danger");
             }

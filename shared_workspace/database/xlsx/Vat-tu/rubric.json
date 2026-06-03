@@ -1,0 +1,168 @@
+[
+  {
+    "criteria_name": "Product Name Lookup",
+    "allocated_points": 1.0,
+    "anchor_locator": {
+      "type": "row",
+      "text_contains": "Tên vật tư"
+    },
+    "rules": [
+      {
+        "description": "Verify 'Tên vật tư' using VLOOKUP based on the first character of 'Số chứng từ'",
+        "action": "VERIFY_FUNCTION_NAME",
+        "points": 1.0,
+        "col_index": 2,
+        "expected_count": 10,
+        "expected_function": "VLOOKUP",
+        "expected_reference": "$A$20:$C$22"
+      }
+    ]
+  },
+  {
+    "criteria_name": "Unit Price Lookup",
+    "allocated_points": 1.0,
+    "anchor_locator": {
+      "type": "row",
+      "text_contains": "Đơn giá"
+    },
+    "rules": [
+      {
+        "description": "Verify 'Đơn giá' using VLOOKUP based on the first character of 'Số chứng từ'",
+        "action": "VERIFY_FUNCTION_NAME",
+        "points": 1.0,
+        "col_index": 4,
+        "expected_count": 10,
+        "expected_function": "VLOOKUP",
+        "expected_reference": "$A$20:$C$22"
+      }
+    ]
+  },
+  {
+    "criteria_name": "Discount and Total Calculation",
+    "allocated_points": 2.0,
+    "anchor_locator": {
+      "type": "row",
+      "text_contains": "Tiền giảm"
+    },
+    "rules": [
+      {
+        "description": "Calculate 'Tiền giảm': IF Quantity >= 100 then 10% * Qty * Price, else 0",
+        "action": "VERIFY_DYNAMIC_FORMULA",
+        "points": 1.0,
+        "col_index": 5,
+        "expected_count": 10
+      },
+      {
+        "description": "Calculate 'Thành tiền': Quantity * Unit Price - Tiền giảm",
+        "action": "VERIFY_DYNAMIC_FORMULA",
+        "points": 1.0,
+        "col_index": 6,
+        "expected_count": 10
+      }
+    ]
+  },
+  {
+    "criteria_name": "Data Sorting and Formatting",
+    "allocated_points": 1.5,
+    "anchor_locator": {
+      "type": "row",
+      "text_contains": "Tên vật tư"
+    },
+    "rules": [
+      {
+        "description": "Verify table is sorted by 'Tên vật tư' ascending (First item: Dầu Diesel)",
+        "action": "VERIFY_VALUE",
+        "points": 0.5,
+        "col_index": 2,
+        "expected": "Dầu Diesel"
+      },
+      {
+        "description": "Conditional Formatting: Highlight Quantity >= 400",
+        "action": "VERIFY_CONDITIONAL_FORMATTING",
+        "points": 1.0,
+        "col_index": 3,
+        "expected_value": "399"
+      }
+    ]
+  },
+  {
+    "criteria_name": "Pivot Table Analysis",
+    "allocated_points": 2.0,
+    "anchor_locator": {
+      "type": "global",
+      "text_contains": "PivotTable1"
+    },
+    "rules": [
+      {
+        "description": "Pivot Table Row: Tên vật tư (Source Index 2)",
+        "action": "VERIFY_PIVOT_TABLE",
+        "points": 0.5,
+        "field_type": "row",
+        "expected_fld": "2"
+      },
+      {
+        "description": "Pivot Table Data: Sum of Số lượng (Source Index 3)",
+        "action": "VERIFY_PIVOT_TABLE",
+        "points": 0.75,
+        "field_type": "data",
+        "expected_fld": "3",
+        "expected_subtotal": "sum"
+      },
+      {
+        "description": "Pivot Table Data: Sum of Thành tiền (Source Index 6)",
+        "action": "VERIFY_PIVOT_TABLE",
+        "points": 0.75,
+        "field_type": "data",
+        "expected_fld": "6",
+        "expected_subtotal": "sum"
+      }
+    ]
+  },
+  {
+    "criteria_name": "Chart and Drawing Objects",
+    "allocated_points": 1.0,
+    "anchor_locator": {
+      "type": "global",
+      "text_contains": "drawing"
+    },
+    "rules": [
+      {
+        "description": "Verify Bar Chart for the Pivot Table data exists",
+        "action": "VERIFY_CHART",
+        "points": 0.5,
+        "expected_type": "barChart"
+      },
+      {
+        "description": "Verify existence of drawing objects",
+        "action": "VERIFY_OBJECT_EXISTS",
+        "points": 0.5,
+        "expected_object": "drawing"
+      }
+    ]
+  },
+  {
+    "criteria_name": "Data Filtering and Extraction",
+    "allocated_points": 1.5,
+    "anchor_locator": {
+      "type": "worksheet",
+      "text_contains": "Dầu Diesel"
+    },
+    "rules": [
+      {
+        "description": "Extract data specifically for 'Dầu Diesel' to a new sheet",
+        "action": "VERIFY_EXTRACTED_DATA",
+        "points": 1.0,
+        "expected_value": "Dầu Diesel",
+        "forbidden_values": [
+          "Xăng A92",
+          "Nhớt"
+        ]
+      },
+      {
+        "description": "Ensure AutoFilter is active on the main data source",
+        "action": "VERIFY_FILTER_EXISTS",
+        "points": 0.5
+      }
+    ]
+  }
+]

@@ -5,7 +5,8 @@
 <div class="card shadow-sm border-0 mb-4">
     <div class="card-body bg-light rounded border border-primary-subtle">
         <h5 class="card-title text-primary fw-bold"><i class="bi bi-folder-plus"></i> Upload Nhanh Từ Folder</h5>
-        <p class="text-muted small mb-3">Chọn một thư mục cha chứa các thư mục con. Mỗi thư mục con sẽ tự động tạo thành 1 nhóm đề (Tên đề sẽ lấy theo tên thư mục. File đề PDF có thể bỏ trống nếu không có).</p>
+        <p class="text-muted small mb-3">Chọn một thư mục cha chứa các thư mục con. Mỗi thư mục con sẽ tự động tạo thành
+            1 nhóm đề (Tên đề sẽ lấy theo tên thư mục. File đề PDF có thể bỏ trống nếu không có).</p>
         <input type="file" class="form-control border-primary" id="folderUpload" webkitdirectory directory multiple>
     </div>
 </div>
@@ -23,8 +24,10 @@
             </div>
 
             <div class="d-flex flex-wrap gap-2 mt-4">
-                <button type="button" class="btn btn-outline-secondary" onclick="addGroup()"><i class="bi bi-plus-circle"></i> Thêm đề nữa</button>
-                <button type="submit" class="btn btn-primary ms-auto" id="submitBtn"><i class="bi bi-cloud-upload"></i> Gửi dữ liệu sang n8n</button>
+                <button type="button" class="btn btn-outline-secondary" onclick="addGroup()"><i
+                        class="bi bi-plus-circle"></i> Thêm đề nữa</button>
+                <button type="submit" class="btn btn-primary ms-auto" id="submitBtn"><i class="bi bi-cloud-upload"></i>
+                    Gửi dữ liệu sang n8n</button>
             </div>
         </form>
     </div>
@@ -62,7 +65,7 @@
             </div>
         `;
         toastContainer.appendChild(toastEl);
-        
+
         setTimeout(() => { if (toastEl.parentNode) toastEl.remove(); }, 4000);
     }
 
@@ -71,13 +74,13 @@
         groups.forEach((group, index) => {
             const scoreContainer = group.querySelector('.score-container');
             let syncBtn = scoreContainer.querySelector('.btn-sync');
-            
+
             if (index === 0) {
                 if (!syncBtn) {
                     syncBtn = document.createElement('button');
                     syncBtn.className = 'btn btn-info text-white btn-sync';
                     syncBtn.type = 'button';
-                    syncBtn.onclick = function() { syncScores(this); };
+                    syncBtn.onclick = function () { syncScores(this); };
                     syncBtn.title = 'Đồng bộ điểm này cho toàn bộ các đề bên dưới';
                     syncBtn.innerHTML = '<i class="bi bi-arrow-down-up"></i> Đồng bộ';
                     scoreContainer.appendChild(syncBtn);
@@ -94,7 +97,7 @@
         const group = document.getElementById(groupId);
         if (group) {
             group.remove();
-            updateGroupsUI(); 
+            updateGroupsUI();
         }
     }
 
@@ -134,7 +137,7 @@
             </div>
         `;
         wrapper.appendChild(newGroup);
-        updateGroupsUI(); 
+        updateGroupsUI();
     }
 
     function addGroup() {
@@ -149,7 +152,7 @@
             showToast("Vui lòng nhập điểm cho Nhóm đầu tiên trước khi đồng bộ!", "warning");
             return;
         }
-        
+
         const targetScore = sourceInput.value;
         const scoreInputs = document.querySelectorAll('input[name^="diem_"]');
         scoreInputs.forEach(input => {
@@ -160,7 +163,7 @@
 
     // Khởi tạo Nhóm Đề 1 khi tải trang
     document.addEventListener('DOMContentLoaded', () => {
-        addGroup(); 
+        addGroup();
     });
 
     // Chức năng: Upload hàng loạt từ Folder
@@ -172,7 +175,7 @@
         files.forEach(file => {
             const pathParts = file.webkitRelativePath.split('/');
             if (pathParts.length > 1) {
-                const folderName = pathParts[pathParts.length - 2]; 
+                const folderName = pathParts[pathParts.length - 2];
                 if (!folders[folderName]) folders[folderName] = [];
                 folders[folderName].push(file);
             }
@@ -207,14 +210,14 @@
             if (examFile || refFile) {
                 let targetGroupId;
                 const wrapper = document.getElementById('groupsWrapper');
-                
+
                 // Ghi đè vào Nhóm 1 nếu nó đang trống
                 if (wrapper.children.length === 1 && addedCount === 0) {
                     const firstGroup = wrapper.firstElementChild;
                     const firstTenDe = firstGroup.querySelector('input[name^="ten_de_"]');
                     const firstFileDe = firstGroup.querySelector('input[name^="file_de_"]');
                     const firstFileMau = firstGroup.querySelector('input[name^="file_mau_"]');
-                    
+
                     if (!firstTenDe.value && !firstFileDe.value && !firstFileMau.value) {
                         targetGroupId = firstGroup.id.replace('group_', '');
                     } else {
@@ -250,8 +253,8 @@
 
                 const groupDiv = document.getElementById(`group_${targetGroupId}`);
                 const oldWarning = groupDiv.querySelector('.alert-warning');
-                if(oldWarning) oldWarning.remove(); 
-                
+                if (oldWarning) oldWarning.remove();
+
                 if (warningMsg) {
                     const wDiv = document.createElement('div');
                     wDiv.className = 'alert alert-warning mt-3 mb-0 py-2 small fw-medium';
@@ -275,29 +278,42 @@
     document.getElementById('batchForm').addEventListener('submit', async (e) => {
         e.preventDefault();
         const btn = document.getElementById('submitBtn');
-        btn.disabled = true; 
+        btn.disabled = true;
         btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Đang gửi...';
-        
+
         try {
+            // 1. Tạo FormData từ form hiện tại
+            const formData = new FormData(e.target);
+
+            // 2. LỌC BỎ CÁC TRƯỜNG FILE RỖNG
+            // Tránh việc n8n bị crash stream khi nhận multipart chứa file có size = 0
+            for (const [key, value] of Array.from(formData.entries())) {
+                if (value instanceof File && value.size === 0) {
+                    formData.delete(key);
+                }
+            }
+
+            // 3. Gửi dữ liệu đã làm sạch
             const response = await fetch('http://localhost:5678/webhook/create-rubrics', {
-                method: 'POST', 
-                body: new FormData(e.target)
+                method: 'POST',
+                body: formData
             });
-            if(response.ok) { 
-                showToast("Thành công! N8n đang xử lý dữ liệu.", "success"); 
-                
+
+            if (response.ok) {
+                showToast("Thành công! N8n đang xử lý dữ liệu.", "success");
+
                 document.getElementById('groupsWrapper').innerHTML = '';
                 groupCount = 0;
-                addGroup(); 
-            } else { 
-                showToast("Lỗi gửi dữ liệu. Trạng thái HTTP: " + response.status, "danger"); 
+                addGroup();
+            } else {
+                showToast("Lỗi gửi dữ liệu. Trạng thái HTTP: " + response.status, "danger");
             }
-        } catch (err) { 
-            showToast("Lỗi kết nối N8n. Hãy chắc chắn n8n đang chạy tại localhost:5678", "danger"); 
+        } catch (err) {
+            showToast("Lỗi kết nối N8n. Hãy chắc chắn n8n đang chạy tại localhost:5678", "danger");
             console.error(err);
         }
-        
-        btn.disabled = false; 
+
+        btn.disabled = false;
         btn.innerHTML = '<i class="bi bi-cloud-upload"></i> Gửi dữ liệu sang n8n';
     });
 </script>

@@ -1,0 +1,460 @@
+{% extends "base.html" %}
+
+{% block content %}
+<style>
+    .draggable-rubric {
+        cursor: grab;
+        transition: transform 0.2s, box-shadow 0.2s;
+        border: 1px solid transparent;
+    }
+
+    .draggable-rubric:active {
+        cursor: grabbing;
+        transform: scale(0.98);
+    }
+
+    .draggable-rubric:hover {
+        border-color: #0d6efd;
+        background-color: #e9ecef;
+        border-radius: 4px;
+    }
+
+    .dropzone {
+        min-height: 120px;
+        border: 2px dashed #adb5bd;
+        border-radius: 10px;
+        background-color: #f8f9fa;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.3s;
+        position: relative;
+        padding: 15px;
+    }
+
+    .dropzone.drag-over {
+        border-color: #198754;
+        background-color: #e8f5e9;
+        transform: scale(1.02);
+    }
+
+    .dropzone.filled {
+        border: 2px solid #0d6efd;
+        background-color: #fff;
+        align-items: flex-start;
+        justify-content: flex-start;
+    }
+
+    .dz-icon {
+        font-size: 2rem;
+        color: #6c757d;
+        margin-bottom: 10px;
+    }
+
+    .dropzone.filled .dz-empty-state {
+        display: none;
+    }
+
+    .rubric-badge {
+        background-color: #e9ecef;
+        border: 1px solid #ced4da;
+        border-radius: 6px;
+        padding: 5px 10px;
+        margin: 4px;
+        display: inline-flex;
+        align-items: center;
+        font-size: 0.85rem;
+    }
+
+    .rubric-badge button {
+        background: none;
+        border: none;
+        padding: 0 0 0 8px;
+        color: #dc3545;
+        cursor: pointer;
+        font-weight: bold;
+    }
+
+    .rubric-badge button:hover {
+        color: #a52a2a;
+    }
+</style>
+
+<div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
+    <h3 class="fw-bold text-warning m-0"><i class="bi bi-pc-display"></i> Chấm Điểm Local v3 (Tree View)</h3>
+    <button class="btn btn-outline-secondary" onclick="loadFiles()" title="Làm mới dữ liệu">
+        <i class="bi bi-arrow-clockwise"></i> Đồng bộ Data
+    </button>
+</div>
+
+<div class="row">
+    <div class="col-md-5 mb-4">
+        <div class="card shadow-sm border-0 h-100">
+            <div
+                class="card-header bg-primary text-white fw-bold py-3 d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-folder-tree"></i> Duyệt Tệp Tin Rubric</span>
+                <span class="badge bg-light text-primary rounded-pill" id="rubric-count">0 File</span>
+            </div>
+            <div class="card-body bg-light overflow-auto" style="max-height: 750px;">
+                <div id="file-explorer-container">
+                    <div class="text-center py-5">
+                        <span class="spinner-border spinner-border-sm text-primary"></span> Đang tải cấu trúc dữ liệu...
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-7 mb-4">
+        <div class="card shadow-sm border-0 h-100">
+            <div class="card-header bg-white fw-bold text-dark py-3"><i class="bi bi-grid-1x2"></i> Cấu Hình Chấm Điểm
+                v3</div>
+            <div class="card-body">
+
+                <div class="mb-4 bg-light p-3 border rounded shadow-sm">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small text-danger">File bài làm sinh viên (.zip) <span
+                                class="text-danger">*</span></label>
+                        <input type="file" id="student_zip_file" class="form-control border-danger" accept=".zip"
+                            required>
+                        <div class="form-text">Bắt buộc. Chứa thư mục bài làm của các sinh viên.</div>
+                    </div>
+                    <div>
+                        <label class="form-label fw-bold small text-primary">File danh sách sinh viên (.xlsx)</label>
+                        <input type="file" id="student_excel_file" class="form-control border-primary" accept=".xlsx">
+                        <div class="form-text">Không bắt buộc. Chứa thông tin sinh viên để match điểm.</div>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <label class="fw-bold small text-primary">Rubric Word (Chọn nhiều)</label>
+                        <select class="form-select form-select-sm w-50" id="select-word"
+                            onchange="handleSelectChange('word')">
+                            <option value="">-- Thêm Rubric Word --</option>
+                        </select>
+                    </div>
+                    <div class="dropzone" id="dropzone-word" ondragover="allowDrop(event)"
+                        ondragleave="dragLeave(event)" ondrop="drop(event, 'word')">
+                        <div class="dz-empty-state text-center">
+                            <i class="bi bi-file-earmark-word dz-icon"></i><br><span class="small text-muted">Kéo thả
+                                các rubric vào đây</span>
+                        </div>
+                        <div id="word-list" class="d-flex flex-wrap w-100"></div>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <label class="fw-bold small text-success">Rubric Excel (Chọn nhiều)</label>
+                        <select class="form-select form-select-sm w-50" id="select-excel"
+                            onchange="handleSelectChange('excel')">
+                            <option value="">-- Thêm Rubric Excel --</option>
+                        </select>
+                    </div>
+                    <div class="dropzone" id="dropzone-excel" ondragover="allowDrop(event)"
+                        ondragleave="dragLeave(event)" ondrop="drop(event, 'excel')">
+                        <div class="dz-empty-state text-center">
+                            <i class="bi bi-file-earmark-excel dz-icon"></i><br><span class="small text-muted">Kéo thả
+                                các rubric vào đây</span>
+                        </div>
+                        <div id="excel-list" class="d-flex flex-wrap w-100"></div>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <label class="fw-bold small text-danger">Rubric PowerPoint (Chọn nhiều)</label>
+                        <select class="form-select form-select-sm w-50" id="select-ppt"
+                            onchange="handleSelectChange('ppt')">
+                            <option value="">-- Thêm Rubric PPT --</option>
+                        </select>
+                    </div>
+                    <div class="dropzone" id="dropzone-ppt" ondragover="allowDrop(event)" ondragleave="dragLeave(event)"
+                        ondrop="drop(event, 'ppt')">
+                        <div class="dz-empty-state text-center">
+                            <i class="bi bi-file-earmark-slides dz-icon"></i><br><span class="small text-muted">Kéo thả
+                                các rubric vào đây</span>
+                        </div>
+                        <div id="ppt-list" class="d-flex flex-wrap w-100"></div>
+                    </div>
+                </div>
+
+                <button class="btn btn-warning w-100 fw-bold py-3 mt-3 shadow-sm" onclick="confirmStartGrading()"><i
+                        class="bi bi-lightning-charge-fill"></i> BẮT ĐẦU CHẤM ĐIỂM V3</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="confirmModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-warning-subtle fw-bold">Xác nhận gửi lệnh v3</div>
+            <div class="modal-body">
+                <ul id="warning-list" class="small mb-0"></ul>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                <button type="button" class="btn btn-warning fw-bold" onclick="submitGrading()"
+                    id="btnExecuteGrading">Gửi Lệnh</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const GET_FILES_URL = 'http://localhost:5678/webhook/get-rubrics';
+    const GRADE_LOCAL_URL = 'http://localhost:5678/webhook-test/grade-local-v3';
+
+    let globalRubricsList = [];
+    const selectedZones = { word: [], excel: [], pptx: [] };
+
+    async function loadFiles() {
+        const container = document.getElementById('file-explorer-container');
+        container.innerHTML = `<div class="text-center py-5"><span class="spinner-border spinner-border-sm text-primary"></span> Đang tải...</div>`;
+
+        globalRubricsList = [];
+
+        try {
+            const response = await fetch(GET_FILES_URL, { method: 'GET' });
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+            const result = await response.json();
+
+            if (result.status !== 'success') {
+                throw new Error(result.message || "Tải dữ liệu thất bại");
+            }
+            if (!result.data) {
+                throw new Error("Không có dữ liệu cây thư mục");
+            }
+
+            const rootNode = JSON.parse(result.data);
+
+            container.innerHTML = '';
+            container.appendChild(renderNode(rootNode));
+
+            populateSelectBoxes();
+
+            // Cập nhật bộ đếm (chỉ đếm file JSON)
+            document.getElementById('rubric-count').innerText = `${globalRubricsList.length} File JSON`;
+
+        } catch (e) {
+            console.error(e);
+            container.innerHTML = `<div class="alert alert-danger">Lỗi tải dữ liệu: ${e.message}</div>`;
+        }
+    }
+
+    // Đệ quy render cây thư mục
+    function renderNode(node, parentPath = '') {
+        const div = document.createElement('div');
+        div.className = 'ms-3 my-1';
+
+        const row = document.createElement('div');
+        row.className = 'd-flex align-items-center py-1';
+
+        // Tạo đường dẫn đầy đủ cho node hiện tại
+        const currentPath = parentPath ? `${parentPath}/${node.name}` : node.name;
+
+        if (node.type === 'directory') {
+            row.style.cursor = 'pointer';
+            row.innerHTML = `<i class="bi bi-folder-fill text-warning me-2 folder-icon"></i> <strong class="user-select-none">${node.name}</strong>`;
+            div.appendChild(row);
+
+            const childrenContainer = document.createElement('div');
+            // TRUYỀN currentPath xuống cho các node con
+            (node.children || []).forEach(child => childrenContainer.appendChild(renderNode(child, currentPath)));
+            div.appendChild(childrenContainer);
+
+            row.addEventListener('click', function () {
+                childrenContainer.classList.toggle('d-none');
+                const icon = row.querySelector('.folder-icon');
+                if (childrenContainer.classList.contains('d-none')) {
+                    icon.classList.replace('bi-folder-fill', 'bi-folder');
+                } else {
+                    icon.classList.replace('bi-folder', 'bi-folder-fill');
+                }
+            });
+
+        } else {
+            const isJson = node.name.toLowerCase().endsWith('.json');
+
+            if (isJson) {
+                // SỬA Ở ĐÂY: Dùng currentPath làm ID và file_rubric thay vì node.name
+                globalRubricsList.push({ id: currentPath, name: node.name, file_rubric: currentPath });
+
+                row.className += ' draggable-rubric px-2';
+                row.draggable = true;
+
+                // SỬA Ở ĐÂY: Dùng currentPath để phân biệt khi kéo thả
+                const nodeData = JSON.stringify({ id: currentPath, name: node.name, file_rubric: currentPath });
+                row.addEventListener('dragstart', (e) => {
+                    e.dataTransfer.setData('text/plain', nodeData);
+                });
+
+                // Giao diện hiển thị: Thêm title là đường dẫn đầy đủ để dễ nhìn khi hover chuột
+                row.innerHTML = `
+                <i class="bi bi-filetype-json me-2 text-success"></i> 
+                <span class="me-auto text-truncate" title="${currentPath}">${node.name}</span>
+                <span class="badge bg-primary-subtle text-primary border ms-2" style="font-size: 0.65rem;">Kéo thả</span>
+            `;
+            } else {
+                row.className += ' px-2 text-muted';
+                row.innerHTML = `
+                <i class="bi bi-file-earmark-text me-2 text-secondary"></i> 
+                <span class="me-auto text-truncate" title="${node.name}">${node.name}</span>
+                <span class="badge bg-light text-secondary border ms-2" style="font-size: 0.65rem;">Bỏ qua</span>
+            `;
+            }
+            div.appendChild(row);
+        }
+        return div;
+    }
+
+    function populateSelectBoxes() {
+        const zones = ['word', 'excel', 'ppt'];
+        zones.forEach(zone => {
+            const sel = document.getElementById(`select-${zone}`);
+            sel.innerHTML = `<option value="">-- Thêm Rubric ${zone.toUpperCase()} --</option>`;
+            globalRubricsList.forEach(rb => {
+                const opt = new Option(rb.name, rb.id);
+                sel.add(opt);
+            });
+        });
+    }
+
+    window.allowDrop = (e) => e.preventDefault();
+    window.dragLeave = (e) => e.target.classList.remove('drag-over');
+
+    window.drop = function (e, zone) {
+        e.preventDefault();
+        e.target.classList.remove('drag-over');
+        try {
+            const data = JSON.parse(e.dataTransfer.getData('text/plain'));
+            assignRubricToZone(zone, data.id, data.name, data.file_rubric);
+        } catch (err) {
+            console.error("Lỗi kéo thả:", err);
+        }
+    };
+
+    window.handleSelectChange = function (zone) {
+        const sel = document.getElementById(`select-${zone}`);
+        const id = sel.value;
+        if (!id) return;
+
+        const rb = globalRubricsList.find(r => r.id === id);
+        if (rb) {
+            assignRubricToZone(zone, rb.id, rb.name, rb.file_rubric);
+        }
+        sel.value = "";
+    };
+
+    function assignRubricToZone(zone, id, name, file) {
+        const exists = selectedZones[zone].find(r => r.id === id);
+        if (!exists) {
+            selectedZones[zone].push({ id, name, file_rubric: file });
+            renderZoneUI(zone);
+        }
+    }
+
+    window.removeRubricFromZone = function (zone, id) {
+        selectedZones[zone] = selectedZones[zone].filter(r => r.id !== id);
+        renderZoneUI(zone);
+    };
+
+    function renderZoneUI(zone) {
+        const dz = document.getElementById(`dropzone-${zone}`);
+        const listContainer = document.getElementById(`${zone}-list`);
+
+        if (selectedZones[zone].length > 0) {
+            dz.classList.add('filled');
+            listContainer.innerHTML = selectedZones[zone].map(rb =>
+                `<div class="rubric-badge">
+                    <span class="text-truncate" style="max-width: 250px;" title="${rb.name}">${rb.name}</span>
+                    <button type="button" onclick="removeRubricFromZone('${zone}', '${rb.id}')">&times;</button>
+                </div>`
+            ).join('');
+        } else {
+            dz.classList.remove('filled');
+            listContainer.innerHTML = '';
+        }
+    }
+
+    window.confirmStartGrading = function () {
+        const zipFile = document.getElementById('student_zip_file').files[0];
+        const excelFile = document.getElementById('student_excel_file').files[0];
+
+        if (!zipFile) {
+            alert("Vui lòng tải lên File bài làm sinh viên (.zip) trước khi chấm!");
+            return;
+        }
+
+        const warnList = document.getElementById('warning-list');
+        warnList.innerHTML = `
+            <li><strong>File Bài Làm (.zip):</strong> ${zipFile.name}</li>
+            <li><strong>File Danh Sách (.xlsx):</strong> ${excelFile ? excelFile.name : '<span class="text-muted">Không có</span>'}</li>
+            <hr class="my-2">
+            <li><strong>Word:</strong> Đã chọn ${selectedZones.word.length} rubric</li>
+            <li><strong>Excel:</strong> Đã chọn ${selectedZones.excel.length} rubric</li>
+            <li><strong>PPT:</strong> Đã chọn ${selectedZones.ppt.length} rubric</li>
+        `;
+
+        if (selectedZones.word.length === 0 && selectedZones.excel.length === 0 && selectedZones.ppt.length === 0) {
+            warnList.innerHTML += `<div class="alert alert-warning mt-2 p-2 mb-0">⚠️ Bạn chưa chọn bất kỳ rubric nào! API vẫn sẽ nhận mảng rỗng [].</div>`;
+        }
+
+        new bootstrap.Modal(document.getElementById('confirmModal')).show();
+    };
+
+    window.submitGrading = async function () {
+        const btn = document.getElementById('btnExecuteGrading');
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Đang gửi...';
+
+        const formData = new FormData();
+
+        const zipFile = document.getElementById('student_zip_file').files[0];
+        const excelFile = document.getElementById('student_excel_file').files[0];
+
+        formData.append('student_zip', zipFile);
+        if (excelFile) formData.append('student_excel', excelFile);
+
+        const rubricsPayload = {
+            word: selectedZones.word.map(r => r.file_rubric),
+            excel: selectedZones.excel.map(r => r.file_rubric),
+            ppt: selectedZones.ppt.map(r => r.file_rubric)
+        };
+
+        const payloadData = {
+            rubrics: rubricsPayload,
+            version: "3.0"
+        };
+
+        formData.append('data', JSON.stringify(payloadData));
+
+        try {
+            const res = await fetch(GRADE_LOCAL_URL, {
+                method: 'POST',
+                body: formData
+            });
+
+            if (res.ok) {
+                alert("Gửi lệnh chấm điểm v3 thành công!");
+                bootstrap.Modal.getInstance(document.getElementById('confirmModal')).hide();
+            } else {
+                alert("Lỗi server: " + res.status);
+            }
+        } catch (e) {
+            alert("Lỗi kết nối server: " + e.message);
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = 'Gửi Lệnh';
+        }
+    };
+
+    document.addEventListener('DOMContentLoaded', loadFiles);
+</script>
+{% endblock %}

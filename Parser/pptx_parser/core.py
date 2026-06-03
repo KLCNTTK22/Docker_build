@@ -11,6 +11,7 @@ from .core_props_parser import parse_core_props
 from .app_props_parser import parse_app_props
 from .rels_parser import parse_rels
 from .clean import clean_json
+from .theme_parser import parse_theme_to_map
 
 
 def load_pptx(path):
@@ -29,8 +30,15 @@ def build_context(files):
     context = {
         "files": files,
         "presentation": {},
-        "relationships": {}
+        "relationships": {},
+        "theme_registry": {} 
     }
+    
+    for name, content in files.items():
+        if "ppt/theme/theme" in name and name.endswith(".xml"):
+
+            context["theme_registry"][name] = parse_theme_to_map(content)
+
     rels_xml = files.get("ppt/_rels/presentation.xml.rels")
     if rels_xml:
         context["relationships"]["presentation"] = parse_rels(rels_xml)

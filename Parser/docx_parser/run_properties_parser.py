@@ -1,26 +1,24 @@
 from .xml_utils import *
 
-
 def _get_w14_color(parent):
     """Hàm bổ trợ để lấy màu sắc phức tạp trong thẻ w14 (hỗ trợ cả srgb và scheme)"""
     if parent is None: return None
-
+    
     srgb = safe_find(parent, "w14:srgbClr")
     if srgb is not None:
         color_data = {"val": srgb.attrib.get(qn("w14:val")), "type": "srgb"}
         alpha = safe_find(srgb, "w14:alpha")
         if alpha is not None: color_data["alpha"] = alpha.attrib.get(qn("w14:val"))
         return color_data
-
+        
     scheme = safe_find(parent, "w14:schemeClr")
     if scheme is not None:
         color_data = {"val": scheme.attrib.get(qn("w14:val")), "type": "scheme"}
         alpha = safe_find(scheme, "w14:alpha")
         if alpha is not None: color_data["alpha"] = alpha.attrib.get(qn("w14:val"))
         return color_data
-
+        
     return None
-
 
 def parse_run_properties(rPr, node, context):
     if rPr is None:
@@ -31,7 +29,7 @@ def parse_run_properties(rPr, node, context):
     # ==========================================
     if safe_find(rPr, "w:b") is not None: node.properties["bold"] = True
     if safe_find(rPr, "w:i") is not None: node.properties["italic"] = True
-
+    
     u = safe_find(rPr, "w:u")
     if u is not None:
         val = u.attrib.get(qn("w:val"))
@@ -84,32 +82,41 @@ def parse_run_properties(rPr, node, context):
         if lang_data: node.properties["lang"] = lang_data
 
     # ==========================================
-    # 6. SIZE
+    # 6. SIZE (🔥 FIXED FLOAT ISSUE)
     # ==========================================
     sz = safe_find(rPr, "w:sz")
     if sz is not None:
-        node.properties["fontSize"] = int(sz.attrib.get(qn("w:val"))) / 2
+        sz_val = sz.attrib.get(qn("w:val"))
+        if sz_val:
+            try:
+                # Ép sang float và chia 2 (vì đơn vị là half-point), làm tròn 1 chữ số thập phân
+                node.properties["fontSize"] = round(float(sz_val) / 2, 1)
+            except ValueError:
+                pass
 
     # ==========================================
     # 7. 🔥 ADVANCED TEXT EFFECTS (Hiệu ứng W14)
     # ==========================================
-
+    
     # --- 7.1 SHADOW (Bóng đổ) ---
     shadow = safe_find(rPr, "w14:shadow")
     if shadow is not None:
         shd_data = {}
         blur = shadow.attrib.get(qn("w14:blurRad"))
         dist = shadow.attrib.get(qn("w14:dist"))
-
-        if blur: shd_data["blurPt"] = round(int(blur) / 12700, 2)
-        if dist: shd_data["distancePt"] = round(int(dist) / 12700, 2)
-
+        
+        try:
+            if blur: shd_data["blurPt"] = round(float(blur) / 12700, 2)
+            if dist: shd_data["distancePt"] = round(float(dist) / 12700, 2)
+        except ValueError:
+            pass
+        
         shd_data["direction"] = shadow.attrib.get(qn("w14:dir"))
         shd_data["alignment"] = shadow.attrib.get(qn("w14:algn"))
-
+        
         shd_color = _get_w14_color(shadow)
         if shd_color: shd_data["color"] = shd_color
-
+            
         node.properties["shadow"] = shd_data
 
     # --- 7.2 GLOW (Phát sáng) ---
@@ -117,11 +124,14 @@ def parse_run_properties(rPr, node, context):
     if glow is not None:
         glow_data = {}
         rad = glow.attrib.get(qn("w14:rad"))
-        if rad: glow_data["radiusPt"] = round(int(rad) / 12700, 2)
-
+        try:
+            if rad: glow_data["radiusPt"] = round(float(rad) / 12700, 2)
+        except ValueError:
+            pass
+        
         glw_color = _get_w14_color(glow)
         if glw_color: glow_data["color"] = glw_color
-
+            
         node.properties["glow"] = glow_data
 
     # --- 7.3 REFLECTION (Phản chiếu) ---
@@ -130,9 +140,13 @@ def parse_run_properties(rPr, node, context):
         ref_data = {}
         blur = reflection.attrib.get(qn("w14:blurRad"))
         dist = reflection.attrib.get(qn("w14:dist"))
-        if blur: ref_data["blurPt"] = round(int(blur) / 12700, 2)
-        if dist: ref_data["distancePt"] = round(int(dist) / 12700, 2)
-
+        
+        try:
+            if blur: ref_data["blurPt"] = round(float(blur) / 12700, 2)
+            if dist: ref_data["distancePt"] = round(float(dist) / 12700, 2)
+        except ValueError:
+            pass
+        
         ref_data["direction"] = reflection.attrib.get(qn("w14:dir"))
         ref_data["startAlpha"] = reflection.attrib.get(qn("w14:stA"))
         ref_data["endAlpha"] = reflection.attrib.get(qn("w14:endA"))
@@ -143,16 +157,19 @@ def parse_run_properties(rPr, node, context):
     if outline is not None:
         out_data = {}
         w = outline.attrib.get(qn("w14:w"))
-        if w: out_data["widthPt"] = round(int(w) / 12700, 2)
-
+        try:
+            if w: out_data["widthPt"] = round(float(w) / 12700, 2)
+        except ValueError:
+            pass
+        
         out_data["cap"] = outline.attrib.get(qn("w14:cap"))
         out_data["compound"] = outline.attrib.get(qn("w14:cmpd"))
-
+        
         fill = safe_find(outline, "w14:solidFill")
         if fill is not None:
             fill_col = _get_w14_color(fill)
             if fill_col: out_data["color"] = fill_col
-
+            
         node.properties["outline"] = out_data
 
     # --- 7.5 TEXT FILL (Màu nền chữ: Gradient hoặc Solid đặc biệt) ---
@@ -163,9 +180,9 @@ def parse_run_properties(rPr, node, context):
         if solidFill is not None:
             fill_data["type"] = "solid"
             fill_data["color"] = _get_w14_color(solidFill)
-
+            
         gradFill = safe_find(textFill, "w14:gradFill")
         if gradFill is not None:
             fill_data["type"] = "gradient"
-
+            
         node.properties["textFill"] = fill_data

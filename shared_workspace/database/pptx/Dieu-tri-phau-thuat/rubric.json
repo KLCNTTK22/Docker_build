@@ -1,0 +1,1017 @@
+[
+    {
+        "criteria_name": "Định dạng Slide Master",
+        "allocated_points": 2,
+        "anchor_locator": {
+            "type": "slide_master",
+            "tag": "p:sldMaster"
+        },
+        "rules": [
+            {
+                "description": "Sử dụng đúng Theme",
+                "property_to_check": "properties.app_properties.Template",
+                "expected_value": "Facet",
+                "action": "VERIFY_PROPERTY",
+                "match_type": "EXACT",
+                "points": 0.34
+            }
+        ],
+        "sub_criteria": [
+            {
+                "criteria_name": "Tiêu đề (Cấp 1)",
+                "allocated_points": 0.34,
+                "anchor_locator": {
+                    "type": "master_style",
+                    "style_type": "titleStyle",
+                    "level": 1
+                },
+                "rules": [
+                    {
+                        "description": "Kiểm tra Font chữ",
+                        "property_to_check": "properties.text_styles.titleStyle.lvl1pPr.font_name",
+                        "expected_value": "Times New Roman",
+                        "action": "VERIFY_PROPERTY",
+                        "match_type": "EXACT",
+                        "points": 0.17,
+                        "level": 1
+                    },
+                    {
+                        "description": "Kiểm tra Cỡ chữ",
+                        "property_to_check": "properties.text_styles.titleStyle.lvl1pPr.sz",
+                        "expected_value": "4000",
+                        "action": "VERIFY_PROPERTY",
+                        "match_type": "EXACT",
+                        "points": 0.17,
+                        "level": 1
+                    }
+                ]
+            },
+            {
+                "criteria_name": "Nội dung (Cấp 1)",
+                "allocated_points": 0.33,
+                "anchor_locator": {
+                    "type": "master_style",
+                    "style_type": "bodyStyle",
+                    "level": 1
+                },
+                "rules": [
+                    {
+                        "description": "Kiểm tra Font chữ",
+                        "property_to_check": "properties.text_styles.bodyStyle.lvl1pPr.font_name",
+                        "expected_value": "Times New Roman",
+                        "action": "VERIFY_PROPERTY",
+                        "match_type": "EXACT",
+                        "points": 0.17,
+                        "level": 1
+                    },
+                    {
+                        "description": "Kiểm tra Cỡ chữ",
+                        "property_to_check": "properties.text_styles.bodyStyle.lvl1pPr.sz",
+                        "expected_value": "3600",
+                        "action": "VERIFY_PROPERTY",
+                        "match_type": "EXACT",
+                        "points": 0.16,
+                        "level": 1
+                    }
+                ]
+            },
+            {
+                "criteria_name": "Nội dung (Cấp 2)",
+                "allocated_points": 0.33,
+                "anchor_locator": {
+                    "type": "master_style",
+                    "style_type": "bodyStyle",
+                    "level": 2
+                },
+                "rules": [
+                    {
+                        "description": "Kiểm tra Font chữ",
+                        "property_to_check": "properties.text_styles.bodyStyle.lvl2pPr.font_name",
+                        "expected_value": "Times New Roman",
+                        "action": "VERIFY_PROPERTY",
+                        "match_type": "EXACT",
+                        "points": 0.17,
+                        "level": 2
+                    },
+                    {
+                        "description": "Kiểm tra Cỡ chữ",
+                        "property_to_check": "properties.text_styles.bodyStyle.lvl2pPr.sz",
+                        "expected_value": "3200",
+                        "action": "VERIFY_PROPERTY",
+                        "match_type": "EXACT",
+                        "points": 0.16,
+                        "level": 2
+                    }
+                ]
+            },
+            {
+                "criteria_name": "Nội dung (Cấp 3)",
+                "allocated_points": 0.33,
+                "anchor_locator": {
+                    "type": "master_style",
+                    "style_type": "bodyStyle",
+                    "level": 3
+                },
+                "rules": [
+                    {
+                        "description": "Kiểm tra Font chữ",
+                        "property_to_check": "properties.text_styles.bodyStyle.lvl3pPr.font_name",
+                        "expected_value": "Times New Roman",
+                        "action": "VERIFY_PROPERTY",
+                        "match_type": "EXACT",
+                        "points": 0.17,
+                        "level": 3
+                    },
+                    {
+                        "description": "Kiểm tra Cỡ chữ",
+                        "property_to_check": "properties.text_styles.bodyStyle.lvl3pPr.sz",
+                        "expected_value": "2800",
+                        "action": "VERIFY_PROPERTY",
+                        "match_type": "EXACT",
+                        "points": 0.16,
+                        "level": 3
+                    }
+                ]
+            },
+            {
+                "criteria_name": "Nội dung (Cấp 4)",
+                "allocated_points": 0.33,
+                "anchor_locator": {
+                    "type": "master_style",
+                    "style_type": "bodyStyle",
+                    "level": 4
+                },
+                "rules": [
+                    {
+                        "description": "Kiểm tra Font chữ",
+                        "property_to_check": "properties.text_styles.bodyStyle.lvl4pPr.font_name",
+                        "expected_value": "Times New Roman",
+                        "action": "VERIFY_PROPERTY",
+                        "match_type": "EXACT",
+                        "points": 0.17,
+                        "level": 4
+                    },
+                    {
+                        "description": "Kiểm tra Cỡ chữ",
+                        "property_to_check": "properties.text_styles.bodyStyle.lvl4pPr.sz",
+                        "expected_value": "2400",
+                        "action": "VERIFY_PROPERTY",
+                        "match_type": "EXACT",
+                        "points": 0.16,
+                        "level": 4
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "criteria_name": "Thiết lập cho Slide: ĐIỀU TRỊ BẰNG PHẪU THUẬT CẮT TÚI MẬT NỘI",
+        "allocated_points": 2,
+        "anchor_locator": {
+            "type": "slide",
+            "tag": "p:sld",
+            "properties": {
+                "slide_index": 1
+            },
+            "text_contains": "ĐIỀU TRỊ BẰNG P"
+        },
+        "rules": [],
+        "sub_criteria": [
+            {
+                "criteria_name": "Khối: \"ĐIỀU TRỊ BẰNG PHẪU T...\"",
+                "allocated_points": 1,
+                "anchor_locator": {
+                    "type": "shape",
+                    "tag": "p:sp",
+                    "text_contains": "ĐIỀU TRỊ BẰNG P"
+                },
+                "rules": [
+                    {
+                        "description": "Nội dung chữ: \"ĐIỀU TRỊ BẰNG P...\"",
+                        "property_to_check": "children.0.children.0.text",
+                        "expected_value": "ĐIỀU TRỊ BẰNG PHẪU THUẬT CẮT TÚI MẬT NỘI SOI",
+                        "action": "VERIFY_PROPERTY",
+                        "match_type": "CONTAINS",
+                        "points": 1
+                    }
+                ]
+            },
+            {
+                "criteria_name": "Khối: \"Nguyễn Văn B...\"",
+                "allocated_points": 1,
+                "anchor_locator": {
+                    "type": "shape",
+                    "tag": "p:sp",
+                    "text_contains": "Nguyễn Văn B"
+                },
+                "rules": [
+                    {
+                        "description": "Nội dung chữ: \"Nguyễn Văn B...\"",
+                        "property_to_check": "children.0.children.0.text",
+                        "expected_value": "Nguyễn Văn B",
+                        "action": "VERIFY_PROPERTY",
+                        "match_type": "CONTAINS",
+                        "points": 1
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "criteria_name": "Thiết lập cho Slide: Nội dung trình bày",
+        "allocated_points": 2,
+        "anchor_locator": {
+            "type": "slide",
+            "tag": "p:sld",
+            "properties": {
+                "slide_index": 2
+            },
+            "text_contains": "Nội dung trình "
+        },
+        "rules": [],
+        "sub_criteria": [
+            {
+                "criteria_name": "Khối: \"Nội dung trình bày...\"",
+                "allocated_points": 0.5,
+                "anchor_locator": {
+                    "type": "shape",
+                    "tag": "p:sp",
+                    "text_contains": "Nội dung trình "
+                },
+                "rules": [
+                    {
+                        "description": "Nội dung chữ: \"Nội dung trình ...\"",
+                        "property_to_check": "children.0.children.0.text",
+                        "expected_value": "Nội dung trình bày",
+                        "action": "VERIFY_PROPERTY",
+                        "match_type": "CONTAINS",
+                        "points": 0.25
+                    },
+                    {
+                        "description": "Định dạng Gạch chân",
+                        "property_to_check": "children.0.children.0.style.u",
+                        "expected_value": "sng",
+                        "action": "VERIFY_PROPERTY",
+                        "match_type": "EXACT",
+                        "points": 0.25
+                    }
+                ]
+            },
+            {
+                "criteria_name": "Đối tượng: shape",
+                "allocated_points": 0.5,
+                "anchor_locator": {
+                    "type": "shape",
+                    "tag": "p:sp",
+                    "properties": {
+                        "placeholder": {
+                            "type": "dt"
+                        }
+                    }
+                },
+                "rules": [
+                    {
+                        "description": "Vị trí bố cục tự động (RIGHT_BOTTOM)",
+                        "property_to_check": "layout",
+                        "expected_value": "RIGHT_BOTTOM",
+                        "action": "VERIFY_LAYOUT",
+                        "match_type": "EXACT",
+                        "points": 0.25
+                    },
+                    {
+                        "description": "Định dạng khối tự động: dt",
+                        "property_to_check": "properties.placeholder.type",
+                        "expected_value": "dt",
+                        "action": "VERIFY_PROPERTY",
+                        "match_type": "EXACT",
+                        "points": 0.25
+                    }
+                ]
+            },
+            {
+                "criteria_name": "Đối tượng: shape",
+                "allocated_points": 0.5,
+                "anchor_locator": {
+                    "type": "shape",
+                    "tag": "p:sp",
+                    "properties": {
+                        "placeholder": {
+                            "type": "sldNum"
+                        }
+                    }
+                },
+                "rules": [
+                    {
+                        "description": "Định dạng khối tự động: sldNum",
+                        "property_to_check": "properties.placeholder.type",
+                        "expected_value": "sldNum",
+                        "action": "VERIFY_PROPERTY",
+                        "match_type": "EXACT",
+                        "points": 0.5
+                    }
+                ]
+            },
+            {
+                "criteria_name": "Khối: \"1. Đặt vấn đề2. Kết ...\"",
+                "allocated_points": 0.5,
+                "anchor_locator": {
+                    "type": "graphic_frame",
+                    "tag": "p:graphicFrame",
+                    "text_contains": "1. Đặt vấn đề2."
+                },
+                "rules": [
+                    {
+                        "description": "Vị trí bố cục tự động (CENTER_X_CENTER_Y)",
+                        "property_to_check": "layout",
+                        "expected_value": "CENTER_X_CENTER_Y",
+                        "action": "VERIFY_LAYOUT",
+                        "match_type": "EXACT",
+                        "points": 0.13
+                    },
+                    {
+                        "description": "Loại đối tượng đồ họa",
+                        "property_to_check": "properties.frame_type",
+                        "expected_value": "smartart",
+                        "action": "VERIFY_PROPERTY",
+                        "match_type": "EXACT",
+                        "points": 0.13
+                    }
+                ],
+                "sub_criteria": [
+                    {
+                        "criteria_name": "Node SmartArt",
+                        "allocated_points": 0.12,
+                        "anchor_locator": {
+                            "type": "smartart_node",
+                            "tag": "dgm:pt",
+                            "text_contains": "1. Đặt vấn"
+                        },
+                        "rules": [
+                            {
+                                "description": "Nội dung chữ: \"1. Đặt vấn đề...\"",
+                                "property_to_check": "children.0.children.0.text",
+                                "expected_value": "1. Đặt vấn đề",
+                                "action": "VERIFY_PROPERTY",
+                                "match_type": "CONTAINS",
+                                "points": 0.04
+                            },
+                            {
+                                "description": "Font chữ: Times New Roman",
+                                "property_to_check": "children.0.children.0.style.font_name",
+                                "expected_value": "Times New Roman",
+                                "action": "VERIFY_PROPERTY",
+                                "match_type": "EXACT",
+                                "points": 0.04
+                            },
+                            {
+                                "description": "Cỡ chữ: 40pt",
+                                "property_to_check": "children.0.children.0.style.sz",
+                                "expected_value": "4000",
+                                "action": "VERIFY_PROPERTY",
+                                "match_type": "EXACT",
+                                "points": 0.04
+                            }
+                        ]
+                    },
+                    {
+                        "criteria_name": "Node SmartArt",
+                        "allocated_points": 0.12,
+                        "anchor_locator": {
+                            "type": "smartart_node",
+                            "tag": "dgm:pt",
+                            "text_contains": "2. Kết quả"
+                        },
+                        "rules": [
+                            {
+                                "description": "Nội dung chữ: \"2. Kết quả...\"",
+                                "property_to_check": "children.0.children.0.text",
+                                "expected_value": "2. Kết quả",
+                                "action": "VERIFY_PROPERTY",
+                                "match_type": "CONTAINS",
+                                "points": 0.04
+                            },
+                            {
+                                "description": "Font chữ: Times New Roman",
+                                "property_to_check": "children.0.children.0.style.font_name",
+                                "expected_value": "Times New Roman",
+                                "action": "VERIFY_PROPERTY",
+                                "match_type": "EXACT",
+                                "points": 0.04
+                            },
+                            {
+                                "description": "Cỡ chữ: 40pt",
+                                "property_to_check": "children.0.children.0.style.sz",
+                                "expected_value": "4000",
+                                "action": "VERIFY_PROPERTY",
+                                "match_type": "EXACT",
+                                "points": 0.04
+                            }
+                        ]
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "criteria_name": "Thiết lập cho Slide: 1. Đặt vấn đề",
+        "allocated_points": 2,
+        "anchor_locator": {
+            "type": "slide",
+            "tag": "p:sld",
+            "properties": {
+                "slide_index": 3
+            },
+            "text_contains": "1. Đặt vấn đề"
+        },
+        "rules": [],
+        "sub_criteria": [
+            {
+                "criteria_name": "Khối: \"1. Đặt vấn đề...\"",
+                "allocated_points": 0.4,
+                "anchor_locator": {
+                    "type": "shape",
+                    "tag": "p:sp",
+                    "text_contains": "1. Đặt vấn đề"
+                },
+                "rules": [
+                    {
+                        "description": "Nội dung chữ: \"1. Đặt vấn đề...\"",
+                        "property_to_check": "children.0.children.0.text",
+                        "expected_value": "1. Đặt vấn đề",
+                        "action": "VERIFY_PROPERTY",
+                        "match_type": "CONTAINS",
+                        "points": 0.4
+                    }
+                ]
+            },
+            {
+                "criteria_name": "Khối: \"Siêu âm là phương ti...\"",
+                "allocated_points": 0.4,
+                "anchor_locator": {
+                    "type": "shape",
+                    "tag": "p:sp",
+                    "text_contains": "Siêu âm là phươ"
+                },
+                "rules": [
+                    {
+                        "description": "Nội dung chữ: \"Siêu âm là phươ...\"",
+                        "property_to_check": "children.0.children.0.text",
+                        "expected_value": "Siêu âm là phương tiện rất phổ biến, dễ thực hiện và không gây hại",
+                        "action": "VERIFY_PROPERTY",
+                        "match_type": "CONTAINS",
+                        "points": 0.2
+                    },
+                    {
+                        "description": "Nội dung chữ: \"Mô bệnh học cho...\"",
+                        "property_to_check": "children.1.children.0.text",
+                        "expected_value": "Mô bệnh học cho biết rõ về đặc điểm polyp túi mật, từ đó có hướng điều trị và xử lí thích hợp",
+                        "action": "VERIFY_PROPERTY",
+                        "match_type": "CONTAINS",
+                        "points": 0.2
+                    }
+                ]
+            },
+            {
+                "criteria_name": "Đối tượng: shape",
+                "allocated_points": 0.4,
+                "anchor_locator": {
+                    "type": "shape",
+                    "tag": "p:sp",
+                    "properties": {
+                        "placeholder": {
+                            "type": "dt"
+                        }
+                    }
+                },
+                "rules": [
+                    {
+                        "description": "Định dạng khối tự động: dt",
+                        "property_to_check": "properties.placeholder.type",
+                        "expected_value": "dt",
+                        "action": "VERIFY_PROPERTY",
+                        "match_type": "EXACT",
+                        "points": 0.4
+                    }
+                ]
+            },
+            {
+                "criteria_name": "Đối tượng: shape",
+                "allocated_points": 0.4,
+                "anchor_locator": {
+                    "type": "shape",
+                    "tag": "p:sp",
+                    "properties": {
+                        "placeholder": {
+                            "type": "sldNum"
+                        }
+                    }
+                },
+                "rules": [
+                    {
+                        "description": "Định dạng khối tự động: sldNum",
+                        "property_to_check": "properties.placeholder.type",
+                        "expected_value": "sldNum",
+                        "action": "VERIFY_PROPERTY",
+                        "match_type": "EXACT",
+                        "points": 0.4
+                    }
+                ]
+            },
+            {
+                "criteria_name": "Đối tượng: shape",
+                "allocated_points": 0.4,
+                "anchor_locator": {
+                    "type": "shape",
+                    "tag": "p:sp",
+                    "properties": {
+                        "is_action_button": true
+                    }
+                },
+                "rules": [
+                    {
+                        "description": "Vị trí bố cục tự động (CENTER_X_BOTTOM)",
+                        "property_to_check": "layout",
+                        "expected_value": "CENTER_X_BOTTOM",
+                        "action": "VERIFY_LAYOUT",
+                        "match_type": "EXACT",
+                        "points": 0.14
+                    },
+                    {
+                        "description": "Cấu trúc hình khối (Geometry)",
+                        "property_to_check": "properties.geometry_type",
+                        "expected_value": "actionButtonHome",
+                        "action": "VERIFY_PROPERTY",
+                        "match_type": "EXACT",
+                        "points": 0.13
+                    },
+                    {
+                        "description": "Hành động Click: Link",
+                        "property_to_check": "properties.click_action.action",
+                        "expected_value": "ppaction://hlinksldjump",
+                        "action": "VERIFY_PROPERTY",
+                        "match_type": "CONTAINS",
+                        "points": 0.13
+                    }
+                ]
+            }
+        ]
+    },
+    {
+        "criteria_name": "Thiết lập cho Slide: 2. Kết quả",
+        "allocated_points": 2,
+        "anchor_locator": {
+            "type": "slide",
+            "tag": "p:sld",
+            "properties": {
+                "slide_index": 4
+            },
+            "text_contains": "2. Kết quả"
+        },
+        "rules": [],
+        "sub_criteria": [
+            {
+                "criteria_name": "Khối: \"2. Kết quả...\"",
+                "allocated_points": 0.34,
+                "anchor_locator": {
+                    "type": "shape",
+                    "tag": "p:sp",
+                    "text_contains": "2. Kết quả"
+                },
+                "rules": [
+                    {
+                        "description": "Nội dung chữ: \"2. Kết quả...\"",
+                        "property_to_check": "children.0.children.0.text",
+                        "expected_value": "2. Kết quả",
+                        "action": "VERIFY_PROPERTY",
+                        "match_type": "CONTAINS",
+                        "points": 0.34
+                    }
+                ]
+            },
+            {
+                "criteria_name": "Khối: \"Số lượng trocart the...\"",
+                "allocated_points": 0.34,
+                "anchor_locator": {
+                    "type": "shape",
+                    "tag": "p:sp",
+                    "text_contains": "Số lượng trocar"
+                },
+                "rules": [
+                    {
+                        "description": "Nội dung chữ: \"Số lượng trocar...\"",
+                        "property_to_check": "children.0.children.0.text",
+                        "expected_value": "Số lượng trocart theo phương pháp mổ",
+                        "action": "VERIFY_PROPERTY",
+                        "match_type": "CONTAINS",
+                        "points": 0.34
+                    }
+                ]
+            },
+            {
+                "criteria_name": "Đối tượng: shape",
+                "allocated_points": 0.33,
+                "anchor_locator": {
+                    "type": "shape",
+                    "tag": "p:sp",
+                    "properties": {
+                        "placeholder": {
+                            "type": "dt"
+                        }
+                    }
+                },
+                "rules": [
+                    {
+                        "description": "Định dạng khối tự động: dt",
+                        "property_to_check": "properties.placeholder.type",
+                        "expected_value": "dt",
+                        "action": "VERIFY_PROPERTY",
+                        "match_type": "EXACT",
+                        "points": 0.33
+                    }
+                ]
+            },
+            {
+                "criteria_name": "Đối tượng: shape",
+                "allocated_points": 0.33,
+                "anchor_locator": {
+                    "type": "shape",
+                    "tag": "p:sp",
+                    "properties": {
+                        "placeholder": {
+                            "type": "sldNum"
+                        }
+                    }
+                },
+                "rules": [
+                    {
+                        "description": "Định dạng khối tự động: sldNum",
+                        "property_to_check": "properties.placeholder.type",
+                        "expected_value": "sldNum",
+                        "action": "VERIFY_PROPERTY",
+                        "match_type": "EXACT",
+                        "points": 0.33
+                    }
+                ]
+            },
+            {
+                "criteria_name": "Đối tượng: shape",
+                "allocated_points": 0.33,
+                "anchor_locator": {
+                    "type": "shape",
+                    "tag": "p:sp",
+                    "properties": {
+                        "is_action_button": true
+                    }
+                },
+                "rules": [
+                    {
+                        "description": "Vị trí bố cục tự động (CENTER_X_BOTTOM)",
+                        "property_to_check": "layout",
+                        "expected_value": "CENTER_X_BOTTOM",
+                        "action": "VERIFY_LAYOUT",
+                        "match_type": "EXACT",
+                        "points": 0.11
+                    },
+                    {
+                        "description": "Cấu trúc hình khối (Geometry)",
+                        "property_to_check": "properties.geometry_type",
+                        "expected_value": "actionButtonHome",
+                        "action": "VERIFY_PROPERTY",
+                        "match_type": "EXACT",
+                        "points": 0.11
+                    },
+                    {
+                        "description": "Hành động Click: Link",
+                        "property_to_check": "properties.click_action.action",
+                        "expected_value": "ppaction://hlinksldjump",
+                        "action": "VERIFY_PROPERTY",
+                        "match_type": "CONTAINS",
+                        "points": 0.11
+                    }
+                ]
+            },
+            {
+                "criteria_name": "Khối: \"Số lượng trocart the...\"",
+                "allocated_points": 0.32999999999999996,
+                "anchor_locator": {
+                    "type": "graphic_frame",
+                    "tag": "p:graphicFrame",
+                    "text_contains": "Số lượng trocar"
+                },
+                "rules": [
+                    {
+                        "description": "Vị trí bố cục tự động (CENTER_X_CENTER_Y)",
+                        "property_to_check": "layout",
+                        "expected_value": "CENTER_X_CENTER_Y",
+                        "action": "VERIFY_LAYOUT",
+                        "match_type": "EXACT",
+                        "points": 0.02
+                    },
+                    {
+                        "description": "Loại đối tượng đồ họa",
+                        "property_to_check": "properties.frame_type",
+                        "expected_value": "table",
+                        "action": "VERIFY_PROPERTY",
+                        "match_type": "EXACT",
+                        "points": 0.02
+                    },
+                    {
+                        "description": "Số cột của bảng",
+                        "property_to_check": "children.0.properties.cols_count",
+                        "expected_value": 3,
+                        "action": "VERIFY_PROPERTY",
+                        "match_type": "EXACT",
+                        "points": 0.02
+                    }
+                ],
+                "sub_criteria": [
+                    {
+                        "criteria_name": "Ô [R1-C1]",
+                        "allocated_points": 0.02,
+                        "anchor_locator": {
+                            "type": "table_cell",
+                            "tag": "a:tc",
+                            "text_contains": "Số lượng t"
+                        },
+                        "rules": [
+                            {
+                                "description": "Nội dung chữ: \"Số lượng trocar...\"",
+                                "property_to_check": "children.0.children.0.text",
+                                "expected_value": "Số lượng trocart theo phương pháp mổ",
+                                "action": "VERIFY_PROPERTY",
+                                "match_type": "CONTAINS",
+                                "points": 0.02
+                            }
+                        ]
+                    },
+                    {
+                        "criteria_name": "Ô [R1-C2]",
+                        "allocated_points": 0.02,
+                        "anchor_locator": {
+                            "type": "table_cell",
+                            "tag": "a:tc",
+                            "text_contains": "n"
+                        },
+                        "rules": [
+                            {
+                                "description": "Nội dung chữ: \"n...\"",
+                                "property_to_check": "children.0.children.0.text",
+                                "expected_value": "n",
+                                "action": "VERIFY_PROPERTY",
+                                "match_type": "CONTAINS",
+                                "points": 0.02
+                            }
+                        ]
+                    },
+                    {
+                        "criteria_name": "Ô [R1-C3]",
+                        "allocated_points": 0.02,
+                        "anchor_locator": {
+                            "type": "table_cell",
+                            "tag": "a:tc",
+                            "text_contains": "p"
+                        },
+                        "rules": [
+                            {
+                                "description": "Nội dung chữ: \"p...\"",
+                                "property_to_check": "children.0.children.0.text",
+                                "expected_value": "p",
+                                "action": "VERIFY_PROPERTY",
+                                "match_type": "CONTAINS",
+                                "points": 0.02
+                            }
+                        ]
+                    },
+                    {
+                        "criteria_name": "Ô [R2-C1]",
+                        "allocated_points": 0.02,
+                        "anchor_locator": {
+                            "type": "table_cell",
+                            "tag": "a:tc",
+                            "text_contains": "Single por"
+                        },
+                        "rules": [
+                            {
+                                "description": "Nội dung chữ: \"Single port...\"",
+                                "property_to_check": "children.0.children.0.text",
+                                "expected_value": "Single port",
+                                "action": "VERIFY_PROPERTY",
+                                "match_type": "CONTAINS",
+                                "points": 0.02
+                            }
+                        ]
+                    },
+                    {
+                        "criteria_name": "Ô [R2-C2]",
+                        "allocated_points": 0.02,
+                        "anchor_locator": {
+                            "type": "table_cell",
+                            "tag": "a:tc",
+                            "text_contains": "6"
+                        },
+                        "rules": [
+                            {
+                                "description": "Nội dung chữ: \"6...\"",
+                                "property_to_check": "children.0.children.0.text",
+                                "expected_value": "6",
+                                "action": "VERIFY_PROPERTY",
+                                "match_type": "CONTAINS",
+                                "points": 0.02
+                            }
+                        ]
+                    },
+                    {
+                        "criteria_name": "Ô [R2-C3]",
+                        "allocated_points": 0.02,
+                        "anchor_locator": {
+                            "type": "table_cell",
+                            "tag": "a:tc",
+                            "text_contains": "7,5"
+                        },
+                        "rules": [
+                            {
+                                "description": "Nội dung chữ: \"7,5...\"",
+                                "property_to_check": "children.0.children.0.text",
+                                "expected_value": "7,5",
+                                "action": "VERIFY_PROPERTY",
+                                "match_type": "CONTAINS",
+                                "points": 0.02
+                            }
+                        ]
+                    },
+                    {
+                        "criteria_name": "Ô [R3-C1]",
+                        "allocated_points": 0.02,
+                        "anchor_locator": {
+                            "type": "table_cell",
+                            "tag": "a:tc",
+                            "text_contains": "3 trocart"
+                        },
+                        "rules": [
+                            {
+                                "description": "Nội dung chữ: \"3 trocart...\"",
+                                "property_to_check": "children.0.children.0.text",
+                                "expected_value": "3 trocart",
+                                "action": "VERIFY_PROPERTY",
+                                "match_type": "CONTAINS",
+                                "points": 0.02
+                            }
+                        ]
+                    },
+                    {
+                        "criteria_name": "Ô [R3-C2]",
+                        "allocated_points": 0.02,
+                        "anchor_locator": {
+                            "type": "table_cell",
+                            "tag": "a:tc",
+                            "text_contains": "55"
+                        },
+                        "rules": [
+                            {
+                                "description": "Nội dung chữ: \"55...\"",
+                                "property_to_check": "children.0.children.0.text",
+                                "expected_value": "55",
+                                "action": "VERIFY_PROPERTY",
+                                "match_type": "CONTAINS",
+                                "points": 0.02
+                            }
+                        ]
+                    },
+                    {
+                        "criteria_name": "Ô [R3-C3]",
+                        "allocated_points": 0.02,
+                        "anchor_locator": {
+                            "type": "table_cell",
+                            "tag": "a:tc",
+                            "text_contains": "68,8"
+                        },
+                        "rules": [
+                            {
+                                "description": "Nội dung chữ: \"68,8...\"",
+                                "property_to_check": "children.0.children.0.text",
+                                "expected_value": "68,8",
+                                "action": "VERIFY_PROPERTY",
+                                "match_type": "CONTAINS",
+                                "points": 0.02
+                            }
+                        ]
+                    },
+                    {
+                        "criteria_name": "Ô [R4-C1]",
+                        "allocated_points": 0.02,
+                        "anchor_locator": {
+                            "type": "table_cell",
+                            "tag": "a:tc",
+                            "text_contains": "4 trocart"
+                        },
+                        "rules": [
+                            {
+                                "description": "Nội dung chữ: \"4 trocart...\"",
+                                "property_to_check": "children.0.children.0.text",
+                                "expected_value": "4 trocart",
+                                "action": "VERIFY_PROPERTY",
+                                "match_type": "CONTAINS",
+                                "points": 0.02
+                            }
+                        ]
+                    },
+                    {
+                        "criteria_name": "Ô [R4-C2]",
+                        "allocated_points": 0.02,
+                        "anchor_locator": {
+                            "type": "table_cell",
+                            "tag": "a:tc",
+                            "text_contains": "19"
+                        },
+                        "rules": [
+                            {
+                                "description": "Nội dung chữ: \"19...\"",
+                                "property_to_check": "children.0.children.0.text",
+                                "expected_value": "19",
+                                "action": "VERIFY_PROPERTY",
+                                "match_type": "CONTAINS",
+                                "points": 0.02
+                            }
+                        ]
+                    },
+                    {
+                        "criteria_name": "Ô [R4-C3]",
+                        "allocated_points": 0.02,
+                        "anchor_locator": {
+                            "type": "table_cell",
+                            "tag": "a:tc",
+                            "text_contains": "23,7"
+                        },
+                        "rules": [
+                            {
+                                "description": "Nội dung chữ: \"23,7...\"",
+                                "property_to_check": "children.0.children.0.text",
+                                "expected_value": "23,7",
+                                "action": "VERIFY_PROPERTY",
+                                "match_type": "CONTAINS",
+                                "points": 0.02
+                            }
+                        ]
+                    },
+                    {
+                        "criteria_name": "Ô [R5-C1]",
+                        "allocated_points": 0.01,
+                        "anchor_locator": {
+                            "type": "table_cell",
+                            "tag": "a:tc",
+                            "text_contains": "Tổng"
+                        },
+                        "rules": [
+                            {
+                                "description": "Nội dung chữ: \"Tổng...\"",
+                                "property_to_check": "children.0.children.0.text",
+                                "expected_value": "Tổng",
+                                "action": "VERIFY_PROPERTY",
+                                "match_type": "CONTAINS",
+                                "points": 0.01
+                            }
+                        ]
+                    },
+                    {
+                        "criteria_name": "Ô [R5-C2]",
+                        "allocated_points": 0.01,
+                        "anchor_locator": {
+                            "type": "table_cell",
+                            "tag": "a:tc",
+                            "text_contains": "80"
+                        },
+                        "rules": [
+                            {
+                                "description": "Nội dung chữ: \"80...\"",
+                                "property_to_check": "children.0.children.0.text",
+                                "expected_value": "80",
+                                "action": "VERIFY_PROPERTY",
+                                "match_type": "CONTAINS",
+                                "points": 0.01
+                            }
+                        ]
+                    },
+                    {
+                        "criteria_name": "Ô [R5-C3]",
+                        "allocated_points": 0.01,
+                        "anchor_locator": {
+                            "type": "table_cell",
+                            "tag": "a:tc",
+                            "text_contains": "100"
+                        },
+                        "rules": [
+                            {
+                                "description": "Nội dung chữ: \"100...\"",
+                                "property_to_check": "children.0.children.0.text",
+                                "expected_value": "100",
+                                "action": "VERIFY_PROPERTY",
+                                "match_type": "CONTAINS",
+                                "points": 0.01
+                            }
+                        ]
+                    }
+                ]
+            }
+        ]
+    }
+]

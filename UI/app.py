@@ -11,7 +11,7 @@ BASE_DATA_DIR = os.path.join(PROJECT_ROOT, 'shared_workspace')
 os.makedirs(BASE_DATA_DIR, exist_ok=True)
 
 # Hỗ trợ tạo folder theo môn
-SUPPORTED_SUBJECTS = ['grade', 'submit', 'rubric', 'tmp', 'grade', 'grade_ai']
+SUPPORTED_SUBJECTS = ['grade', 'submit', 'rubric', 'tmp', 'grade', 'grade_ai', 'students', 'database', 'database/docx', 'database/xlsx', 'database/pptx']
 for sub in SUPPORTED_SUBJECTS:
         os.makedirs(os.path.join(BASE_DATA_DIR, sub), exist_ok=True)
 
@@ -25,12 +25,12 @@ def home():
 
 @app.route('/create')
 def create_rubric():
-    return render_template('create.html', active_page='create')
+    return render_template('create_manual.html', active_page='create')
 
 # Trang Quản lý Rubric
 @app.route('/rubrics')
 def manage_rubrics():
-    return render_template('rubrics.html', active_page='rubrics')
+    return render_template('rubrics_v2.html', active_page='rubrics')
 
 # Đổi route exams thành Cuộc Thi
 @app.route('/exams')
@@ -40,7 +40,7 @@ def list_exams():
 # Route mới cho chức năng Chấm Local
 @app.route('/grade-local')
 def grade_local():
-    return render_template('grade_local.html', active_page='grade_local')
+    return render_template('grade_local_v3.html', active_page='grade_local')
 
 # Placeholder cho chức năng Chấm AI (làm sau)
 @app.route('/grade-ai')
@@ -53,6 +53,10 @@ def view_results(subject_name):
     if subject_name not in SUPPORTED_SUBJECTS:
         return "Môn học không được hỗ trợ", 404
     return render_template('results.html', active_page='results', subject=subject_name)
+
+@app.route('/create-manual')
+def create_manual():
+    return render_template('create_manual.html', active_page='create_manual')
 
 
 # ==========================================

@@ -1,0 +1,295 @@
+[
+    {
+        "criteria_name": "Đoạn văn: ",
+        "allocated_points": 2.5,
+        "anchor_locator": {
+            "tag": "w:p",
+            "text_contains": "TỶ LỆ ĐÔNG MÁU SAU TIÊM JOHNSO"
+        },
+        "rules": [
+            {
+                "description": "Kiểm tra Nội dung gõ đúng",
+                "property_path": "",
+                "expected_value": "TỶ LỆ ĐÔNG MÁU SAU TIÊM JOHNSON & JOHNSON",
+                "match_flag": "FUZZY_TEXT",
+                "relative_offset": 0,
+                "points": 0.5,
+                "required_ratio": 0.8
+            },
+            {
+                "description": "Kiểm tra Style đoạn văn (Heading1)",
+                "property_path": "properties.pStyle",
+                "expected_value": "Heading1",
+                "match_flag": "STRICT",
+                "relative_offset": 0,
+                "points": 0.5
+            },
+            {
+                "description": "Kiểm tra Chữ In đậm",
+                "property_path": "properties.paragraphRunProperties.bold",
+                "expected_value": true,
+                "match_flag": "STRICT",
+                "relative_offset": 0,
+                "points": 0.5
+            },
+            {
+                "description": "Kiểm tra Cỡ chữ",
+                "property_path": "properties.paragraphRunProperties.fontSize",
+                "expected_value": 14,
+                "match_flag": "TOLERANT",
+                "relative_offset": 0,
+                "points": 0.5,
+                "accepted_range": [
+                    13,
+                    15
+                ]
+            },
+            {
+                "description": "Kiểm tra Font chữ",
+                "property_path": "properties.paragraphRunProperties.font.ascii",
+                "expected_value": "Times New Roman",
+                "match_flag": "STRICT",
+                "relative_offset": 0,
+                "points": 0.5
+            }
+        ]
+    },
+    {
+        "criteria_name": "Đoạn văn: ",
+        "allocated_points": 1,
+        "anchor_locator": {
+            "tag": "w:p",
+            "text_contains": "Tỷ lệ đông máu sau tiêm vaccin"
+        },
+        "rules": [
+            {
+                "description": "Kiểm tra Nội dung gõ đúng",
+                "property_path": "",
+                "expected_value": "Tỷ lệ đông máu sau tiêm vaccine J&J",
+                "match_flag": "FUZZY_TEXT",
+                "relative_offset": 0,
+                "points": 0.5,
+                "required_ratio": 0.8
+            },
+            {
+                "description": "Kiểm tra Định dạng Danh sách (decimal)",
+                "property_path": "list.format",
+                "expected_value": "decimal",
+                "match_flag": "STRICT",
+                "relative_offset": 0,
+                "points": 0.5
+            }
+        ]
+    },
+    {
+        "criteria_name": "Kiểm tra chèn image",
+        "allocated_points": 1,
+        "anchor_locator": {
+            "tag": "w:p"
+        },
+        "rules": [
+            {
+                "description": "Quét xuống dưới để tìm Hình ảnh",
+                "property_path": "",
+                "expected_value": "",
+                "match_flag": "PRESENCE_ONLY",
+                "search_mode": "FORWARD",
+                "search_target_key": "type",
+                "search_target_value": "image",
+                "points": 1
+            }
+        ]
+    },
+    {
+        "criteria_name": "Đoạn văn: ",
+        "allocated_points": 1,
+        "anchor_locator": {
+            "tag": "w:p",
+            "text_contains": "Điều này rất phổ biến và không"
+        },
+        "rules": [
+            {
+                "description": "Kiểm tra Nội dung gõ đúng",
+                "property_path": "",
+                "expected_value": "Điều này rất phổ biến và không đáng lo. Các cuộc điều tra thường cho thấy phản ứng phụ là ngẫu nhiên, hiếm gặp hoặc không quá nguy hiểm. Nếu cuộc điều tra không cho thấy rủi ro từ vaccine, cơ quan quản lý đưa ra hướng dẫn mới về nhóm nên hạn chế tiêm chủng. Quá trình tạm dừng giúp chuyên gia có thời gian tư vấn cho bác sĩ cách nhận biết tình trạng bệnh.",
+                "match_flag": "FUZZY_TEXT",
+                "relative_offset": 0,
+                "points": 0.5,
+                "required_ratio": 0.8
+            },
+            {
+                "description": "Kiểm tra Cỡ chữ",
+                "property_path": "properties.paragraphRunProperties.fontSize",
+                "expected_value": 14,
+                "match_flag": "TOLERANT",
+                "relative_offset": 0,
+                "points": 0.25,
+                "accepted_range": [
+                    13,
+                    15
+                ]
+            },
+            {
+                "description": "Kiểm tra Font chữ",
+                "property_path": "properties.paragraphRunProperties.font.ascii",
+                "expected_value": "Times New Roman",
+                "match_flag": "STRICT",
+                "relative_offset": 0,
+                "points": 0.25
+            }
+        ]
+    },
+    {
+        "criteria_name": "Đoạn văn: ",
+        "allocated_points": 1.25,
+        "anchor_locator": {
+            "tag": "w:p",
+            "text_contains": "Tại cuộc họp báo hôm 13/4, tiế"
+        },
+        "rules": [
+            {
+                "description": "Kiểm tra Nội dung gõ đúng",
+                "property_path": "",
+                "expected_value": "Tại cuộc họp báo hôm 13/4, tiến sĩ Peter Marks, thành viên FDA cho biết trường hợp đông máu ở hai loại vaccine “rất, rất giống nhau”. Cả Johnson & Johnson và AstraZeneca đều sử dụng chung công nghệ vector virus. Vaccine chứa virus cảm cúm vô hại mang DNA vào tế bào người, tạo protein kích hoạt hệ miễn dịch chống nCoV. Giới chuyên gia chưa rõ liệu công nghệ này có phải nguyên nhân gây đông máu hay không.",
+                "match_flag": "FUZZY_TEXT",
+                "relative_offset": 0,
+                "points": 0.5,
+                "required_ratio": 0.8
+            },
+            {
+                "description": "Kiểm tra Cỡ chữ",
+                "property_path": "properties.paragraphRunProperties.fontSize",
+                "expected_value": 14,
+                "match_flag": "TOLERANT",
+                "relative_offset": 0,
+                "points": 0.25,
+                "accepted_range": [
+                    13,
+                    15
+                ]
+            },
+            {
+                "description": "Kiểm tra Font chữ",
+                "property_path": "properties.paragraphRunProperties.font.ascii",
+                "expected_value": "Times New Roman",
+                "match_flag": "STRICT",
+                "relative_offset": 0,
+                "points": 0.5
+            }
+        ]
+    },
+    {
+        "criteria_name": "Đoạn văn: ",
+        "allocated_points": 0.5,
+        "anchor_locator": {
+            "tag": "w:p",
+            "text_contains": "Hiện tượng đông máu Vaccine Mo"
+        },
+        "rules": [
+            {
+                "description": "Kiểm tra Nội dung gõ đúng",
+                "property_path": "",
+                "expected_value": "Hiện tượng đông máu Vaccine Moderna và PfizerHình Ảnh VACCINE  SEQ Hình_Ảnh_VACCINE \\* ARABIC 2Hình Ảnh VACCINE  SEQ Hình_Ảnh_VACCINE \\* ARABIC 2",
+                "match_flag": "FUZZY_TEXT",
+                "relative_offset": 0,
+                "points": 0.5,
+                "required_ratio": 0.8
+            }
+        ]
+    },
+    {
+        "criteria_name": "Đoạn văn: ",
+        "allocated_points": 0.5,
+        "anchor_locator": {
+            "tag": "w:p",
+            "text_contains": "Mục Lục"
+        },
+        "rules": [
+            {
+                "description": "Kiểm tra Nội dung gõ đúng",
+                "property_path": "",
+                "expected_value": "Mục Lục",
+                "match_flag": "FUZZY_TEXT",
+                "relative_offset": 0,
+                "points": 0.5,
+                "required_ratio": 0.8
+            }
+        ]
+    },
+    {
+        "criteria_name": "Đoạn văn: ",
+        "allocated_points": 1.25,
+        "anchor_locator": {
+            "tag": "w:p",
+            "text_contains": "Tỷ lệ đông máu sau tiêm vaccin"
+        },
+        "rules": [
+            {
+                "description": "Kiểm tra Nội dung gõ đúng",
+                "property_path": "",
+                "expected_value": "Tỷ lệ đông máu sau tiêm vaccine Pfizer là 0,2 trên một triệu người, của Moderna là 0. FDAA hầu như không phát hiện các trường hợp tương tự ở người đã tiêm hai loại vaccine trên. Tuy nhiên, một số ít bệnh nhân có triệu chứng giảm tiểu cầu.",
+                "match_flag": "FUZZY_TEXT",
+                "relative_offset": 0,
+                "points": 0.25,
+                "required_ratio": 0.8
+            },
+            {
+                "description": "Kiểm tra Cỡ chữ",
+                "property_path": "properties.paragraphRunProperties.fontSize",
+                "expected_value": 14,
+                "match_flag": "TOLERANT",
+                "relative_offset": 0,
+                "points": 0.5,
+                "accepted_range": [
+                    13,
+                    15
+                ]
+            },
+            {
+                "description": "Kiểm tra Font chữ",
+                "property_path": "properties.paragraphRunProperties.font.ascii",
+                "expected_value": "Times New Roman",
+                "match_flag": "STRICT",
+                "relative_offset": 0,
+                "points": 0.5
+            }
+        ]
+    },
+    {
+        "criteria_name": "Đoạn văn: ",
+        "allocated_points": 0.5,
+        "anchor_locator": {
+            "tag": "w:hyperlink"
+        },
+        "rules": [
+            {
+                "description": "Kiểm tra Nội dung gõ đúng",
+                "property_path": "",
+                "expected_value": "Hình Ảnh VACCINE 1",
+                "match_flag": "FUZZY_TEXT",
+                "relative_offset": 0,
+                "points": 0.5,
+                "required_ratio": 0.8
+            }
+        ]
+    },
+    {
+        "criteria_name": "Đoạn văn: ",
+        "allocated_points": 0.5,
+        "anchor_locator": {
+            "tag": "w:p",
+            "text_contains": "Hình Ảnh VACCINE 2\t PAGEREF _o"
+        },
+        "rules": [
+            {
+                "description": "Kiểm tra Nội dung gõ đúng",
+                "property_path": "",
+                "expected_value": "Hình Ảnh VACCINE 2",
+                "match_flag": "FUZZY_TEXT",
+                "relative_offset": 0,
+                "points": 0.5,
+                "required_ratio": 0.8
+            }
+        ]
+    }
+]

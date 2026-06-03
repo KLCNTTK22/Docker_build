@@ -1,0 +1,198 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+            <h5 class="mb-0"><i class="bi bi-folder-tree"></i> Duyệt Tệp Tin Hệ Thống</h5>
+            <button class="btn btn-sm btn-light" onclick="loadFiles()">Tải lại danh sách</button>
+        </div>
+        <div class="card-body">
+            <div id="file-explorer-container">
+                <div class="text-center py-5">Đang tải cấu trúc dữ liệu...</div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const GET_FILES_URL = 'http://localhost:5678/webhook/get-rubrics';
+    const DOWNLOAD_FILE_URL = 'http://localhost:5678/webhook/get-file';
+    // Thêm URL Webhook để xử lý việc xóa thư mục (bạn cần tự tạo webhook này trên n8n)
+    const DELETE_FOLDER_URL = 'http://localhost:5678/webhook/delete-folder';
+
+    async function loadFiles() {
+        const container = document.getElementById('file-explorer-container');
+        try {
+            const response = await fetch(GET_FILES_URL, { method: 'GET' });
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+            const result = await response.json();
+            console.log("API RESULT:", result);
+
+            if (result.status !== 'success') {
+                throw new Error(result.message || "Tải dữ liệu thất bại");
+            }
+            if (!result.data) {
+                throw new Error("Không có dữ liệu cây thư mục");
+            }
+
+            const rootNode = typeof result.data === 'string' ? JSON.parse(result.data) : result.data;
+            container.innerHTML = '';
+
+            container.appendChild(renderNode(rootNode, ''));
+
+        } catch (e) {
+            console.error(e);
+            container.innerHTML = `
+                <div class="alert alert-danger">
+                    Lỗi tải dữ liệu: ${e.message}
+                </div>
+            `;
+        }
+    }
+
+    function renderNode(node, currentPath = '') {
+        const div = document.createElement('div');
+        div.className = 'ms-3 my-1';
+
+        const row = document.createElement('div');
+        row.className = 'd-flex align-items-center py-1';
+
+        let fullPath = currentPath;
+        if (!currentPath) {
+            fullPath = node.name;
+        } else {
+            const separator = currentPath.endsWith('/') ? '' : '/';
+            fullPath = currentPath + separator + node.name;
+        }
+
+        if (node.type === 'directory') {
+            // Kiểm tra xem folder này có chứa file .json nào trực tiếp không
+            const isParentOfJson = (node.children || []).some(
+                child => child.type === 'file' && child.name.toLowerCase().endsWith('.json')
+            );
+
+            let deleteBtnHtml = '';
+            if (isParentOfJson) {
+                // Thêm nút xóa nếu thỏa mãn điều kiện
+                deleteBtnHtml = `
+                    <button class="btn btn-sm btn-outline-danger btn-delete-folder ms-2" data-path="${fullPath}" title="Xóa thư mục">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                `;
+            }
+
+            // Đổi strong thành class="me-auto" để đẩy nút xóa sang phải
+            row.innerHTML = `
+                <i class="bi bi-folder-fill text-warning me-2" style="cursor:pointer;" onclick="toggleFolder(this)"></i> 
+                <strong class="me-auto" style="cursor:pointer;" onclick="toggleFolder(this)">${node.name}</strong>
+                ${deleteBtnHtml}
+            `;
+            div.appendChild(row);
+
+            // Gán sự kiện an toàn cho nút xóa (nếu có)
+            if (isParentOfJson) {
+                const deleteBtn = row.querySelector('.btn-delete-folder');
+                deleteBtn.addEventListener('click', function (e) {
+                    e.stopPropagation(); // Ngăn chặn sự kiện click lan ra ngoài (không kích hoạt toggleFolder)
+                    deleteFolder(this.getAttribute('data-path'));
+                });
+            }
+
+            const childrenContainer = document.createElement('div');
+            (node.children || []).forEach(child => childrenContainer.appendChild(renderNode(child, fullPath)));
+            div.appendChild(childrenContainer);
+
+        } else {
+            row.innerHTML = `
+                <i class="bi bi-file-earmark-text me-2 text-secondary"></i> 
+                <span class="me-auto">${node.name}</span>
+                <button class="btn btn-sm btn-outline-primary btn-download" data-path="${fullPath}" title="Tải xuống">
+                    <i class="bi bi-download"></i>
+                </button>
+            `;
+
+            const btn = row.querySelector('.btn-download');
+            btn.addEventListener('click', function () {
+                downloadFile(this.getAttribute('data-path'));
+            });
+
+            div.appendChild(row);
+        }
+        return div;
+    }
+
+    function toggleFolder(element) {
+        const childrenContainer = element.parentElement.nextElementSibling;
+        if (childrenContainer) {
+            childrenContainer.classList.toggle('d-none');
+            const icon = element.parentElement.querySelector('i');
+            if (childrenContainer.classList.contains('d-none')) {
+                icon.classList.remove('bi-folder-fill');
+                icon.classList.add('bi-folder');
+            } else {
+                icon.classList.remove('bi-folder');
+                icon.classList.add('bi-folder-fill');
+            }
+        }
+    }
+
+    async function downloadFile(filePath) {
+        try {
+            const response = await fetch(DOWNLOAD_FILE_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ path: filePath })
+            });
+
+            if (!response.ok) throw new Error("Lỗi tải file từ Server");
+
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filePath.split('/').pop();
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            window.URL.revokeObjectURL(url);
+        } catch (e) {
+            alert("Lỗi tải file: " + e.message);
+        }
+    }
+
+    // Hàm gọi API xóa thư mục
+    async function deleteFolder(folderPath) {
+        // Hỏi xác nhận trước khi xóa để tránh thao tác nhầm
+        const isConfirm = confirm(`Bạn có chắc chắn muốn xóa thư mục này và toàn bộ nội dung bên trong không?\n\nĐường dẫn: ${folderPath}`);
+        if (!isConfirm) return;
+
+        try {
+            const response = await fetch(DELETE_FOLDER_URL, {
+                method: 'POST', // Chuyển thành 'DELETE' nếu backend của bạn yêu cầu method DELETE
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ path: folderPath })
+            });
+
+            if (!response.ok) throw new Error("Lỗi kết nối đến Server khi xóa");
+
+            const result = await response.json();
+
+            // Giả định API trả về { status: 'success' }
+            if (result.status === 'success' || result.message === 'success') {
+                alert("Xóa thư mục thành công!");
+                loadFiles(); // Tải lại cây thư mục sau khi xóa
+            } else {
+                throw new Error(result.message || "Không thể xóa thư mục");
+            }
+        } catch (e) {
+            alert("Lỗi khi xóa: " + e.message);
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', loadFiles);
+</script>
+{% endblock %}

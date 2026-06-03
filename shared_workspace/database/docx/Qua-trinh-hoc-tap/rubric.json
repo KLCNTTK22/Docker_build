@@ -1,0 +1,406 @@
+[
+    {
+        "criteria_name": "Đoạn văn: ",
+        "allocated_points": 1.25,
+        "anchor_locator": {
+            "tag": "w:p",
+            "text_contains": "QUÁ TRÌNH HỌC TẬP VÀ LÀM VIỆC"
+        },
+        "rules": [
+            {
+                "description": "Kiểm tra Nội dung gõ đúng",
+                "property_path": "",
+                "expected_value": "QUÁ TRÌNH HỌC TẬP VÀ LÀM VIỆC",
+                "match_flag": "FUZZY_TEXT",
+                "relative_offset": 0,
+                "points": 0.25,
+                "required_ratio": 0.8
+            },
+            {
+                "description": "Kiểm tra Chữ In đậm",
+                "property_path": "properties.paragraphRunProperties.bold",
+                "expected_value": true,
+                "match_flag": "STRICT",
+                "relative_offset": 0,
+                "points": 0.25
+            },
+            {
+                "description": "Kiểm tra Căn lề",
+                "property_path": "layout.alignment",
+                "expected_value": "center",
+                "match_flag": "TOLERANT",
+                "relative_offset": 0,
+                "points": 0.25,
+                "accepted_values": [
+                    "center"
+                ]
+            },
+            {
+                "description": "Kiểm tra Cách đoạn trên (Space Before)",
+                "property_path": "layout.spacing.beforePt",
+                "expected_value": 18,
+                "match_flag": "TOLERANT",
+                "relative_offset": 0,
+                "points": 0.25,
+                "accepted_range": [
+                    17,
+                    19
+                ]
+            },
+            {
+                "description": "Kiểm tra Cách đoạn dưới (Space After)",
+                "property_path": "layout.spacing.afterPt",
+                "expected_value": 18,
+                "match_flag": "TOLERANT",
+                "relative_offset": 0,
+                "points": 0.25,
+                "accepted_range": [
+                    17,
+                    19
+                ]
+            }
+        ]
+    },
+    {
+        "criteria_name": "Đoạn văn: ",
+        "allocated_points": 1.25,
+        "anchor_locator": {
+            "tag": "w:p",
+            "text_contains": "Bản thân"
+        },
+        "rules": [
+            {
+                "description": "Kiểm tra Nội dung gõ đúng",
+                "property_path": "",
+                "expected_value": "Bản thân",
+                "match_flag": "FUZZY_TEXT",
+                "relative_offset": 0,
+                "points": 0.25,
+                "required_ratio": 0.8
+            },
+            {
+                "description": "Kiểm tra Style đoạn văn (ListParagraph)",
+                "property_path": "properties.pStyle",
+                "expected_value": "ListParagraph",
+                "match_flag": "STRICT",
+                "relative_offset": 0,
+                "points": 0.25
+            },
+            {
+                "description": "Kiểm tra Chữ In đậm",
+                "property_path": "properties.paragraphRunProperties.bold",
+                "expected_value": true,
+                "match_flag": "STRICT",
+                "relative_offset": 0,
+                "points": 0.25
+            },
+            {
+                "description": "Kiểm tra Cách đoạn dưới (Space After)",
+                "property_path": "layout.spacing.afterPt",
+                "expected_value": 6,
+                "match_flag": "TOLERANT",
+                "relative_offset": 0,
+                "points": 0.25,
+                "accepted_range": [
+                    5,
+                    7
+                ]
+            },
+            {
+                "description": "Kiểm tra Định dạng Danh sách (decimal)",
+                "property_path": "list.format",
+                "expected_value": "decimal",
+                "match_flag": "STRICT",
+                "relative_offset": 0,
+                "points": 0.25
+            }
+        ]
+    },
+    {
+        "criteria_name": "Đoạn văn: ",
+        "allocated_points": 1.25,
+        "anchor_locator": {
+            "tag": "w:p",
+            "text_contains": "Họ và tên \tnam/nữ"
+        },
+        "rules": [
+            {
+                "description": "Kiểm tra Nội dung gõ đúng",
+                "property_path": "",
+                "expected_value": "Họ và tên \tnam/nữ",
+                "match_flag": "FUZZY_TEXT",
+                "relative_offset": 0,
+                "points": 0.25,
+                "required_ratio": 0.8
+            },
+            {
+                "description": "Kiểm tra Tab 1 (Căn left)",
+                "property_path": "layout.tabs.0.align",
+                "expected_value": "left",
+                "match_flag": "STRICT",
+                "relative_offset": 0,
+                "points": 0.25
+            },
+            {
+                "description": "Kiểm tra Tab 1 (Dấu dot)",
+                "property_path": "layout.tabs.0.leader",
+                "expected_value": "dot",
+                "match_flag": "STRICT",
+                "relative_offset": 0,
+                "points": 0.25
+            },
+            {
+                "description": "Kiểm tra Tab 2 (Căn right)",
+                "property_path": "layout.tabs.1.align",
+                "expected_value": "right",
+                "match_flag": "STRICT",
+                "relative_offset": 0,
+                "points": 0.25
+            },
+            {
+                "description": "Kiểm tra Tab 2 (Dấu dot)",
+                "property_path": "layout.tabs.1.leader",
+                "expected_value": "dot",
+                "match_flag": "STRICT",
+                "relative_offset": 0,
+                "points": 0.25
+            }
+        ]
+    },
+    {
+        "criteria_name": "Đoạn văn: ",
+        "allocated_points": 1.25,
+        "anchor_locator": {
+            "tag": "w:p",
+            "text_contains": "Ngày sinh\t nơi sinh"
+        },
+        "rules": [
+            {
+                "description": "Kiểm tra Nội dung gõ đúng",
+                "property_path": "",
+                "expected_value": "Ngày sinh\t nơi sinh",
+                "match_flag": "FUZZY_TEXT",
+                "relative_offset": 0,
+                "points": 0.25,
+                "required_ratio": 0.8
+            },
+            {
+                "description": "Kiểm tra Tab 1 (Căn left)",
+                "property_path": "layout.tabs.0.align",
+                "expected_value": "left",
+                "match_flag": "STRICT",
+                "relative_offset": 0,
+                "points": 0.25
+            },
+            {
+                "description": "Kiểm tra Tab 1 (Dấu dot)",
+                "property_path": "layout.tabs.0.leader",
+                "expected_value": "dot",
+                "match_flag": "STRICT",
+                "relative_offset": 0,
+                "points": 0.25
+            },
+            {
+                "description": "Kiểm tra Tab 2 (Căn right)",
+                "property_path": "layout.tabs.1.align",
+                "expected_value": "right",
+                "match_flag": "STRICT",
+                "relative_offset": 0,
+                "points": 0.25
+            },
+            {
+                "description": "Kiểm tra Tab 2 (Dấu dot)",
+                "property_path": "layout.tabs.1.leader",
+                "expected_value": "dot",
+                "match_flag": "STRICT",
+                "relative_offset": 0,
+                "points": 0.25
+            }
+        ]
+    },
+    {
+        "criteria_name": "Đoạn văn: ",
+        "allocated_points": 0.25,
+        "anchor_locator": {
+            "tag": "w:p",
+            "text_contains": "Dân tộc \ttôn giáo"
+        },
+        "rules": [
+            {
+                "description": "Kiểm tra Nội dung gõ đúng",
+                "property_path": "",
+                "expected_value": "Dân tộc tôn giáo",
+                "match_flag": "FUZZY_TEXT",
+                "relative_offset": 0,
+                "points": 0.25,
+                "required_ratio": 0.8
+            }
+        ]
+    },
+    {
+        "criteria_name": "Đoạn văn: ",
+        "allocated_points": 0.25,
+        "anchor_locator": {
+            "tag": "w:p",
+            "text_contains": "Địa chỉ liên lạc"
+        },
+        "rules": [
+            {
+                "description": "Kiểm tra Nội dung gõ đúng",
+                "property_path": "",
+                "expected_value": "Địa chỉ liên lạc",
+                "match_flag": "FUZZY_TEXT",
+                "relative_offset": 0,
+                "points": 0.25,
+                "required_ratio": 0.8
+            }
+        ]
+    },
+    {
+        "criteria_name": "Đoạn văn: ",
+        "allocated_points": 2,
+        "anchor_locator": {
+            "tag": "w:p",
+            "text_contains": "Quá trình học tập"
+        },
+        "rules": [
+            {
+                "description": "Kiểm tra Nội dung gõ đúng",
+                "property_path": "",
+                "expected_value": "Quá trình học tập",
+                "match_flag": "FUZZY_TEXT",
+                "relative_offset": 0,
+                "points": 0.5,
+                "required_ratio": 0.8
+            },
+            {
+                "description": "Kiểm tra Style đoạn văn (ListParagraph)",
+                "property_path": "properties.pStyle",
+                "expected_value": "ListParagraph",
+                "match_flag": "STRICT",
+                "relative_offset": 0,
+                "points": 0.5
+            },
+            {
+                "description": "Kiểm tra Chữ In đậm",
+                "property_path": "properties.paragraphRunProperties.bold",
+                "expected_value": true,
+                "match_flag": "STRICT",
+                "relative_offset": 0,
+                "points": 0.5
+            },
+            {
+                "description": "Kiểm tra Cách đoạn dưới (Space After)",
+                "property_path": "layout.spacing.afterPt",
+                "expected_value": 6,
+                "match_flag": "TOLERANT",
+                "relative_offset": 0,
+                "points": 0.5,
+                "accepted_range": [
+                    5,
+                    7
+                ]
+            }
+        ]
+    },
+    {
+        "criteria_name": "Đoạn văn: ",
+        "allocated_points": 0.5,
+        "anchor_locator": {
+            "tag": "w:p",
+            "text_contains": "Ngày tháng năm"
+        },
+        "rules": [
+            {
+                "description": "Đi vào Hàng đầu tiên (Header Bảng)",
+                "search_mode": "INDEX",
+                "nested_rules": [
+                    {
+                        "description": "Kiểm tra Nội dung Text (Fuzzy)",
+                        "property_path": "",
+                        "expected_value": "Ngày tháng năm",
+                        "match_flag": "FUZZY_TEXT",
+                        "relative_offset": 0,
+                        "points": 0.5,
+                        "required_ratio": 0.8
+                    }
+                ],
+                "points": 0,
+                "scope_index": 0
+            }
+        ]
+    },
+    {
+        "criteria_name": "Đoạn văn: ",
+        "allocated_points": 1,
+        "anchor_locator": {
+            "tag": "w:p",
+            "text_contains": "Lời cam đoan"
+        },
+        "rules": [
+            {
+                "description": "Kiểm tra Nội dung gõ đúng",
+                "property_path": "",
+                "expected_value": "Lời cam đoan",
+                "match_flag": "FUZZY_TEXT",
+                "relative_offset": 0,
+                "points": 0.5,
+                "required_ratio": 0.8
+            },
+            {
+                "description": "Kiểm tra Style đoạn văn (ListParagraph)",
+                "property_path": "properties.pStyle",
+                "expected_value": "ListParagraph",
+                "match_flag": "STRICT",
+                "relative_offset": 0,
+                "points": 0.5
+            }
+        ]
+    },
+    {
+        "criteria_name": "Đoạn văn: ",
+        "allocated_points": 1,
+        "anchor_locator": {
+            "tag": "w:p",
+            "text_contains": "Danh mục tiêu đề"
+        },
+        "rules": [
+            {
+                "description": "Kiểm tra Nội dung gõ đúng",
+                "property_path": "",
+                "expected_value": "Danh mục tiêu đề",
+                "match_flag": "FUZZY_TEXT",
+                "relative_offset": 0,
+                "points": 0.25,
+                "required_ratio": 0.8
+            },
+            {
+                "description": "Kiểm tra Style đoạn văn (TOCHeading)",
+                "property_path": "properties.pStyle",
+                "expected_value": "TOCHeading",
+                "match_flag": "STRICT",
+                "relative_offset": 0,
+                "points": 0.25
+            },
+            {
+                "description": "Kiểm tra Font chữ",
+                "property_path": "properties.paragraphRunProperties.font.ascii",
+                "expected_value": "Times New Roman",
+                "match_flag": "STRICT",
+                "relative_offset": 0,
+                "points": 0.25
+            },
+            {
+                "description": "Kiểm tra Căn lề",
+                "property_path": "layout.alignment",
+                "expected_value": "center",
+                "match_flag": "TOLERANT",
+                "relative_offset": 0,
+                "points": 0.25,
+                "accepted_values": [
+                    "center"
+                ]
+            }
+        ]
+    }
+]

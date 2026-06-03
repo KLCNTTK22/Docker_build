@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="vi">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -15,30 +16,36 @@
             flex-direction: column;
             align-items: center;
         }
+
         .header {
             text-align: center;
             margin-bottom: 50px;
         }
+
         .header h1 {
             font-size: 2.8rem;
             color: #0f172a;
             margin-bottom: 10px;
             font-weight: 800;
         }
+
         .header p {
             font-size: 1.2rem;
             color: #64748b;
         }
+
         .container {
             max-width: 1100px;
             width: 100%;
         }
+
         .grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
             gap: 25px;
             margin-bottom: 40px;
         }
+
         .card {
             background: white;
             border-radius: 12px;
@@ -52,35 +59,56 @@
             position: relative;
             overflow: hidden;
         }
+
         .card::before {
             content: "";
             position: absolute;
-            top: 0; left: 0; width: 100%; height: 4px;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
         }
-        .card.c-rubric::before { background-color: #3b82f6; } /* Blue */
-        .card.c-exam::before { background-color: #f59e0b; } /* Amber */
-        .card.c-result::before { background-color: #10b981; } /* Emerald */
+
+        .card.c-rubric::before {
+            background-color: #3b82f6;
+        }
+
+        /* Blue */
+        .card.c-exam::before {
+            background-color: #f59e0b;
+        }
+
+        /* Amber */
+        .card.c-result::before {
+            background-color: #10b981;
+        }
+
+        /* Emerald */
 
         .card:hover {
             transform: translateY(-8px);
             box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
         }
+
         .icon {
             font-size: 3.5rem;
             margin-bottom: 20px;
         }
+
         .card h3 {
             margin: 0 0 15px 0;
             font-size: 1.4rem;
             font-weight: 700;
             color: #1e293b;
         }
+
         .card p {
             margin: 0;
             color: #64748b;
             font-size: 1rem;
             line-height: 1.5;
         }
+
         /* Style cho phần Khởi tạo nhanh */
         .quick-action {
             text-align: center;
@@ -88,6 +116,7 @@
             padding-top: 30px;
             border-top: 1px dashed #cbd5e1;
         }
+
         .btn-quick {
             display: inline-flex;
             align-items: center;
@@ -100,12 +129,14 @@
             font-weight: 600;
             transition: 0.2s;
         }
+
         .btn-quick:hover {
             background-color: #334155;
             color: white;
         }
     </style>
 </head>
+
 <body>
 
     <div class="header">
@@ -115,40 +146,46 @@
 
     <div class="container">
         <div class="grid">
-            <!-- 1. Quản lý Rubric -->
+            <!-- 1. Tạo Rubric -->
+            <a href="/create" class="card c-rubric">
+                <div class="icon">🤖</div>
+                <h3>1. Tạo Rubric</h3>
+                <p>Tạo rubric chấm điểm tự động từ file mẫu bằng AI. Hỗ trợ xây dựng tiêu chí đánh giá cho Word, Excel
+                    và PowerPoint.</p>
+            </a>
+
+            <!-- 2. Quản lý Rubric -->
             <a href="/rubrics" class="card c-rubric">
                 <div class="icon">📋</div>
-                <h3>1. Quản Lý Rubric</h3>
-                <p>Xem, chỉnh sửa và cấu hình luật chấm điểm (JSON) được sinh ra từ AI. Quản lý các file mẫu gốc.</p>
+                <h3>2. Quản Lý Rubric</h3>
+                <p>Xem, chỉnh sửa và quản lý các rubric đã tạo. Cấu hình tiêu chí, thang điểm và lưu trữ bộ quy tắc chấm
+                    điểm.</p>
             </a>
 
-            <!-- 2. Quản lý Cuộc Thi -->
-            <a href="/exams" class="card c-exam">
-                <div class="icon">🎓</div>
-                <h3>2. Quản Lý Cuộc Thi</h3>
-                <p>Tổ chức đề thi, thiết lập thời gian, phân phối bài tập đến sinh viên và thu thập bài làm.</p>
+            <!-- 3. Chấm bài -->
+            <a href="/grade-local" class="card c-exam">
+                <div class="icon">📝</div>
+                <h3>3. Chấm Bài</h3>
+                <p>Tự động chấm bài làm của sinh viên theo rubric đã thiết lập, xuất kết quả đánh giá và nhận xét chi
+                    tiết.</p>
             </a>
 
-            <!-- 3. Quản lý Cuộc Thi -->
-            <a href="/exams" class="card c-exam">
-                <div class="icon">🎓</div>
-                <h3>3. Chấm local</h3>
-                <p>Sử dụng thư mục hệ thống để chấm điểm bài làm</p>
+            <!-- 4. Chấm AI 
+            <a href="/grade-ai" class="card c-exam" style="border: 1px solid #f59e0b22;">
+                <div class="icon">✨</div>
+                <h3>4. Chấm AI (n8n)</h3>
+                <p>Sử dụng sức mạnh của AI và workflow n8n để phân tích sâu nội dung, đánh giá các tiêu chí phức tạp.
+                </p>
             </a>
+            -->
 
-            <!-- 4. Quản lý Cuộc Thi -->
-            <a href="/exams" class="card c-exam">
-                <div class="icon">🎓</div>
-                <h3>4. Chấm AI</h3>
-                <p>Sử dụng AI để chấm</p>
-            </a>
-
-            <!-- 5. Kết Quả -->
+            <!-- 5. Kết Quả 
             <a href="/subject/word" class="card c-result">
                 <div class="icon">📊</div>
-                <h3>3. Phân Tích & Kết Quả</h3>
+                <h3>5. Phân Tích & Kết Quả</h3>
                 <p>Xem báo cáo chấm điểm chi tiết, duyệt cây AST của bài làm sinh viên và đánh giá độ chính xác.</p>
             </a>
+            -->
         </div>
 
         <div class="quick-action">
@@ -159,4 +196,5 @@
     </div>
 
 </body>
+
 </html>

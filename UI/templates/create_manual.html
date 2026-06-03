@@ -1,0 +1,623 @@
+{% extends "base.html" %}
+
+{% block content %}
+<style>
+    /* Styling cho phần hiển thị Document Render */
+    .document-preview-container {
+        background-color: #fff;
+        border: 1px solid #ced4da;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        padding: 40px;
+        min-height: 800px;
+        max-height: 800px;
+        overflow-y: auto;
+        font-family: 'Times New Roman', Times, serif;
+        color: #000;
+        position: relative;
+    }
+
+    /* Hiệu ứng hover và Active cho AST Nodes */
+    .ast-selectable {
+        border: 2px dashed transparent;
+        transition: all 0.1s ease-in-out;
+        border-radius: 4px;
+        position: relative;
+    }
+
+    /* Chỉ highlight phần tử sâu nhất được hover */
+    .ast-selectable.ast-hovered {
+        border-color: #0d6efd;
+        background-color: rgba(13, 110, 253, 0.05);
+        cursor: crosshair;
+        box-shadow: inset 0 0 0 1px #0d6efd;
+    }
+
+    /* Trạng thái khi người dùng đã click chọn */
+    .ast-selectable.selected-node {
+        border-color: #198754;
+        background-color: rgba(25, 135, 84, 0.1);
+        box-shadow: inset 0 0 0 2px #198754;
+    }
+
+    .ast-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 1rem;
+    }
+
+    .ast-table th,
+    .ast-table td {
+        border: 1px solid #000;
+        padding: 5px;
+    }
+
+    .ast-placeholder {
+        background-color: #e9ecef;
+        border: 1px dashed #6c757d;
+        padding: 5px 10px;
+        font-size: 12px;
+        display: inline-block;
+        margin: 2px;
+    }
+
+    /* Giao diện trống (Empty state) */
+    .empty-state {
+        text-align: center;
+        padding: 4rem 2rem;
+        color: #6c757d;
+    }
+
+    .empty-state i {
+        font-size: 3.5rem;
+        color: #dee2e6;
+        margin-bottom: 1rem;
+    }
+
+    /* Giao diện cây lồng nhau (Nested Rules) */
+    .rule-card {
+        transition: all 0.3s;
+    }
+
+    .rule-card:hover {
+        border-left-color: #0d6efd !important;
+    }
+</style>
+
+<div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
+    <h3 class="fw-bold text-success m-0"><i class="bi bi-pencil-square"></i> Tạo Rubric Thủ Công</h3>
+</div>
+
+<div class="card shadow-sm border-0 mb-4">
+    <div class="card-body bg-light rounded border border-success-subtle">
+        <form id="uploadForm" class="d-flex align-items-center gap-3">
+            <div class="flex-grow-1">
+                <input type="file" id="fileInput" class="form-control border-success" accept=".docx,.xlsx,.pptx"
+                    required>
+            </div>
+            <button type="submit" class="btn btn-success fw-bold px-4" id="btnUpload">
+                <i class="bi bi-cloud-upload"></i> Upload & Phân Tích
+            </button>
+        </form>
+    </div>
+</div>
+
+<div class="row h-100" id="workspace" style="display: none;">
+    <div class="col-md-7 mb-4">
+        <div class="card shadow-sm border-0 h-100">
+            <div class="card-header bg-dark text-white fw-bold py-3 d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-file-earmark-text"></i> Bản Xem Trước</span>
+            </div>
+            <div class="card-body p-0 bg-light">
+                <div class="document-preview-container" id="document-preview"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-5 mb-4">
+        <div class="card shadow-sm border-0 h-100 flex-column d-flex">
+            <div
+                class="card-header bg-white fw-bold text-primary py-3 d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-ui-checks"></i> Xây dựng Tiêu chí</span>
+                <div class="d-flex gap-2">
+                    <button class="btn btn-sm btn-outline-info" data-bs-toggle="modal" data-bs-target="#guideModal"
+                        title="Xem hướng dẫn sử dụng">
+                        <i class="bi bi-question-circle"></i> HD
+                    </button>
+
+                    <button class="btn btn-sm btn-outline-primary" onclick="activeBuilder.createEmptyCriteria()">
+                        <i class="bi bi-plus-circle"></i> Tiêu chí Mới
+                    </button>
+                    <button class="btn btn-sm btn-info text-white" onclick="activeBuilder.showRubricModal()">
+                        <i class="bi bi-eye"></i> Xem Rubric
+                    </button>
+                    <button class="btn btn-sm btn-warning text-dark fw-bold shadow-sm" onclick="testGrading()"
+                        id="btnTestGrading">
+                        <i class="bi bi-play-circle-fill"></i> Chấm Thử
+                    </button>
+                    <button class="btn btn-sm btn-success" onclick="activeBuilder.exportRubric()" disabled
+                        id="btnSaveRubric">
+                        <i class="bi bi-download"></i> Lưu rubric
+                    </button>
+                </div>
+            </div>
+
+            <div class="bg-light border-bottom p-2 gap-2 flex-wrap" id="word-speed-tools" style="display: none;">
+                <button class="btn btn-sm btn-outline-secondary" onclick="RubricBuilder.addGlobalPageSetup()">
+                    <i class="bi bi-aspect-ratio"></i> KT Page Setup (Lề)
+                </button>
+                <button class="btn btn-sm btn-outline-secondary"
+                    onclick="RubricBuilder.addGlobalExistenceCheck('image')">
+                    <i class="bi bi-image"></i> KT Có Hình Ảnh
+                </button>
+                <button class="btn btn-sm btn-outline-secondary"
+                    onclick="RubricBuilder.addGlobalExistenceCheck('table')">
+                    <i class="bi bi-table"></i> KT Có Bảng
+                </button>
+                <button class="btn btn-sm btn-outline-secondary" onclick="RubricBuilder.addGlobalHeaderFooterCheck()">
+                    <i class="bi bi-layout-text-window"></i> KT Header/Footer
+                </button>
+            </div>
+
+            <div class="bg-light border-bottom p-2 gap-2 flex-wrap" id="pptx-speed-tools" style="display: none;">
+                <button class="btn btn-sm btn-outline-success" onclick="PPTRubricBuilder.presetSlideCount()">
+                    <i class="bi bi-layers"></i> Đếm số lượng Slide
+                </button>
+                <button class="btn btn-sm btn-outline-success" onclick="PPTRubricBuilder.presetTransitionCheck()">
+                    <i class="bi bi-magic"></i> Check Transition (Chuyển trang)
+                </button>
+                <button class="btn btn-sm btn-outline-success" onclick="PPTRubricBuilder.presetActionButtons()">
+                    <i class="bi bi-play-btn"></i> Check Action Buttons
+                </button>
+            </div>
+            <div class="bg-light border-bottom p-2 gap-2 flex-wrap" id="excel-speed-tools" style="display: none;">
+                <button class="btn btn-sm btn-outline-success"
+                    onclick="ExcelRubricBuilder.addGlobalObjectCheck('chart')">
+                    <i class="bi bi-bar-chart"></i> KT Có Biểu đồ
+                </button>
+                <button class="btn btn-sm btn-outline-success"
+                    onclick="ExcelRubricBuilder.addGlobalObjectCheck('pivotTable')">
+                    <i class="bi bi-table"></i> KT Có Pivot Table
+                </button>
+                <button class="btn btn-sm btn-outline-info" onclick="ExcelRubricBuilder.createGlobalCriteria()">
+                    <i class="bi bi-globe"></i> Thêm Tiêu chí Toàn Cục (Chart/Pivot)
+                </button>
+                <div class="vr mx-1"></div>
+                <span class="text-muted small align-self-center"><i class="bi bi-info-circle"></i> Mẹo: Dùng "Tiêu chí
+                    mới" bên dưới, sau đó bấm nút [Chọn] để lấy dữ liệu từ bảng bên trái.</span>
+            </div>
+
+            <div class="card-body bg-light overflow-auto" id="rubric-builder-container" style="max-height: 700px;">
+                <div class="empty-state" id="rubric-empty-state">
+                    <i class="bi bi-cursor"></i>
+                    <h5>Sẵn sàng xây dựng</h5>
+                    <p class="mb-0">Hãy bấm <strong>[Tiêu chí Mới]</strong> ở trên<br>Hoặc <strong
+                            class="text-primary">Click vào văn bản bên trái</strong> để hệ thống tự động gợi ý.</p>
+                </div>
+
+                <div id="rubric-builder-area" class="d-none"></div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/js/word_renderer.js"></script>
+<script src="/static/js/powerpoint_render.js"></script>
+<script src="/static/js/rubric_builder_word.js"></script>
+<script src="/static/js/rubric_builder_powerpoint.js"></script>
+<script src="/static/js/excel_renderer.js"></script>
+<script src="/static/js/rubric_builder_excel.js"></script>
+
+<script>
+    const PARSER_WEBHOOK_URL = 'http://localhost:5678/webhook/parser_file';
+    let currentAST = null;
+
+    // Toast Notification
+    function showToast(message, type = 'success') {
+        let tc = document.getElementById('toast-container');
+        if (!tc) {
+            tc = document.createElement('div');
+            tc.id = 'toast-container';
+            tc.className = 'toast-container position-fixed bottom-0 end-0 p-3';
+            tc.style.zIndex = '1055';
+            document.body.appendChild(tc);
+        }
+
+        const bg = type === 'success' ? 'bg-success' : (type === 'danger' ? 'bg-danger' : 'bg-warning');
+        const textClass = type === 'warning' ? 'text-dark' : 'text-white';
+        const icon = type === 'success' ? 'bi-check-circle' : (type === 'danger' ? 'bi-x-circle' : 'bi-exclamation-triangle');
+
+        // Tạo một thẻ div độc lập cho mỗi Toast
+        const toastEl = document.createElement('div');
+        toastEl.className = `toast align-items-center ${bg} ${textClass} border-0 shadow-lg mb-2`;
+        toastEl.setAttribute('role', 'alert');
+        toastEl.setAttribute('aria-live', 'assertive');
+        toastEl.setAttribute('aria-atomic', 'true');
+
+        toastEl.innerHTML = `
+            <div class="d-flex">
+                <div class="toast-body fw-medium">
+                    <i class="bi ${icon} me-2"></i>${message}
+                </div>
+                <button type="button" class="btn-close ${type === 'warning' ? '' : 'btn-close-white'} me-2 m-auto" data-bs-dismiss="toast"></button>
+            </div>
+        `;
+
+        tc.appendChild(toastEl);
+
+        // Kích hoạt Bootstrap Toast
+        const bsToast = new bootstrap.Toast(toastEl, { delay: 3000 });
+        bsToast.show();
+
+        // Lắng nghe sự kiện khi Toast ẩn đi thì xóa luôn thẻ div khỏi DOM để giải phóng bộ nhớ
+        toastEl.addEventListener('hidden.bs.toast', () => {
+            toastEl.remove();
+        });
+    }
+
+    // Xử lý Upload & Render
+    document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const fileInput = document.getElementById('fileInput');
+        const btn = document.getElementById('btnUpload');
+
+        if (fileInput.files.length === 0) return;
+
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Đang phân tích...';
+
+        const formData = new FormData();
+        formData.append('file', fileInput.files[0]);
+
+        try {
+            const response = await fetch(PARSER_WEBHOOK_URL, { method: 'POST', body: formData });
+            if (!response.ok) throw new Error("HTTP error " + response.status);
+
+            const result = await response.json();
+
+            if (result.status === "success" && result.data) {
+                currentAST = JSON.parse(result.data);
+
+                document.getElementById('workspace').style.display = 'flex';
+                showToast("Phân tích file thành công!", "success");
+
+                // ==========================================
+                // BẬT CHẾ ĐỘ THÔNG MINH (WORD, PPTX HOẶC EXCEL)
+                // ==========================================
+                if (currentAST.tag === "w:document" || currentAST.type === "document") {
+                    activeBuilder = RubricBuilder;
+                    activeBuilder.init(currentAST);
+                    renderWordAST(currentAST, 'document-preview');
+
+                    document.getElementById('word-speed-tools').style.display = 'flex';
+                    document.getElementById('pptx-speed-tools').style.display = 'none';
+                    // Ẩn excel-speed-tools nếu có
+                }
+                else if (currentAST.tag === "p:presentation" || currentAST.type === "presentation") {
+                    activeBuilder = PPTRubricBuilder;
+                    activeBuilder.init(currentAST);
+                    PPTXRenderer.render(currentAST, 'document-preview');
+
+                    document.getElementById('word-speed-tools').style.display = 'none';
+                    document.getElementById('pptx-speed-tools').style.display = 'flex';
+                    // Ẩn excel-speed-tools nếu có
+                }
+                else if (currentAST.tag === "workbook" || currentAST.type === "workbook") {
+                    // CẬP NHẬT MỚI CHO EXCEL
+                    activeBuilder = ExcelRubricBuilder; // Đảm bảo bạn khai báo class này để handle node
+                    activeBuilder.init(currentAST);
+                    ExcelRenderer.render(currentAST, 'document-preview');
+
+                    document.getElementById('word-speed-tools').style.display = 'none';
+                    document.getElementById('pptx-speed-tools').style.display = 'none';
+
+                    // Nếu sau này bạn tạo thêm dải công cụ nhanh cho excel (id='excel-speed-tools')
+                    // document.getElementById('excel-speed-tools').style.display = 'flex'; 
+                }
+
+            } else {
+                showToast("Dữ liệu trả về không đúng cấu trúc.", "warning");
+            }
+        } catch (error) {
+            console.error("Lỗi:", error);
+            showToast("Lỗi kết nối hoặc phân tích.", "danger");
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="bi bi-cloud-upload"></i> Upload & Phân Tích';
+        }
+    });
+
+    // Bắt sự kiện Click vào Document Preview
+    document.getElementById('document-preview').addEventListener('click', function (e) {
+        const targetNode = e.target.closest('.ast-selectable');
+        if (!targetNode) return;
+
+        document.querySelectorAll('.ast-selectable').forEach(el => el.classList.remove('selected-node'));
+        targetNode.classList.add('selected-node');
+
+        // Bắn tín hiệu vào công cụ đang được kích hoạt (Word hoặc PPTX)
+        if (activeBuilder) activeBuilder.handleNodeClick(targetNode.dataset.astPath);
+    });
+    // ==========================================
+    // TÍNH NĂNG CHẤM THỬ (TEST RUBRIC)
+    // ==========================================
+    async function testGrading() {
+        if (!activeBuilder) return;
+        const rubricData = activeBuilder.getRubric();
+        const fileInput = document.getElementById('fileInput');
+
+        if (!fileInput || fileInput.files.length === 0) {
+            return showToast("Không tìm thấy file gốc. Vui lòng tải file lên trước!", "warning");
+        }
+        if (rubricData.length === 0) {
+            return showToast("Rubric đang trống! Vui lòng tạo ít nhất 1 tiêu chí.", "warning");
+        }
+
+        const btn = document.getElementById('btnTestGrading');
+        const originalHtml = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Đang chấm...';
+
+        const formData = new FormData();
+        formData.append('file', fileInput.files[0]);
+        formData.append('rubric', JSON.stringify(rubricData));
+
+        try {
+            const response = await fetch('http://localhost:5678/webhook/check_rurbic', {
+                method: 'POST',
+                body: formData
+            });
+
+            if (!response.ok) throw new Error("HTTP error " + response.status);
+
+            let result = await response.json();
+
+            // BÓC LỚP MẢNG CỦA N8N
+            if (Array.isArray(result)) {
+                result = result[0];
+            }
+
+            if (result.status !== "success" || !result.data) {
+                throw new Error(result.message || "Dữ liệu trả về từ server bị lỗi!");
+            }
+
+            // LẤY DATA THỰC SỰ
+            const scoreData = result.data.data ? result.data.data : result.data;
+
+            // Xử lý hiển thị Tổng Điểm
+            document.getElementById('testFinalScore').innerText = scoreData.final_score || "0.0";
+
+            // Xử lý hiển thị Bảng Report
+            const tbody = document.getElementById('testReportBody');
+            tbody.innerHTML = '';
+
+            // TÍNH NĂNG MỚI: Tương thích cả mảng `report` (Word) và mảng `details` (PowerPoint)
+            const reportArray = scoreData.report || scoreData.details || [];
+
+            if (reportArray.length > 0) {
+                reportArray.forEach(item => {
+                    // Trích xuất dữ liệu linh hoạt cho cả 2 hệ thống
+                    let status = item.status;
+                    // PowerPoint có group_name và description, Word có criteria
+                    let criteriaName = item.criteria || (item.group_name ? `[${item.group_name}]<br><small class="text-secondary">${item.description}</small>` : "Tiêu chí");
+
+                    let score = item.score !== undefined ? item.score : item.awarded_points;
+                    let maxScore = item.max_score !== undefined ? item.max_score : item.max_points;
+
+                    let messageHtml = '';
+
+                    // Xử lý Status Badge cho cả Word và PPTX
+                    let statusBadge = '';
+                    if (status === 'SUCCESS' || status === 'PASSED') {
+                        statusBadge = '<span class="badge bg-success">Thành công</span>';
+                    } else if (status === 'FAILED_ANCHOR') {
+                        statusBadge = '<span class="badge bg-danger">Mất mỏ neo</span>';
+                    } else if (status === 'FAILED') {
+                        statusBadge = '<span class="badge bg-danger">Thất bại</span>';
+                    } else if (status === 'PARTIAL') {
+                        statusBadge = '<span class="badge bg-warning text-dark">Một phần</span>';
+                    } else {
+                        statusBadge = `<span class="badge bg-secondary">${status}</span>`;
+                    }
+
+                    let scoreClass = score === maxScore ? 'text-success' : 'text-danger';
+
+                    // Xử lý Message cơ bản (Dành cho PPTX hoặc lỗi chung)
+                    if (item.message) {
+                        let msgClass = (status === 'SUCCESS' || status === 'PASSED') ? 'text-success' : 'text-danger';
+                        messageHtml = `<small class="${msgClass}">${item.message}</small>`;
+                    }
+
+                    // Xử lý Sub-details chuyên sâu (Dành riêng cho Word)
+                    if (item.details && Array.isArray(item.details) && item.details.length > 0 && item.details[0].desc) {
+                        let errors = item.details.filter(d => !d.passed).map(d => {
+                            let exp = typeof d.expected === 'object' ? 'Đối tượng' : d.expected;
+                            let act = typeof d.actual === 'object' ? 'Sai cấu trúc' : d.actual;
+                            let reason = d.reason ? `(<em>${d.reason}</em>)` : `(Cần: ${exp} | Ghi nhận: ${act})`;
+                            return `<li>${d.desc} ${reason}</li>`;
+                        }).join('');
+
+                        if (errors) messageHtml = `<ul class="text-danger small ps-3 mb-0">${errors}</ul>`;
+                        else messageHtml = `<small class="text-success"><i class="bi bi-check-all"></i> Hoàn hảo</small>`;
+                    }
+
+                    tbody.innerHTML += `
+                    <tr>
+                        <td class="fw-bold text-primary" style="max-width: 250px;">${criteriaName}</td>
+                        <td class="text-center align-middle">${statusBadge}</td>
+                        <td class="text-center align-middle fw-bold ${scoreClass}">${score} / ${maxScore}</td>
+                        <td style="max-width: 300px;">${messageHtml}</td>
+                    </tr>
+                `;
+                });
+            } else {
+                tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted">Không có dữ liệu báo cáo chi tiết.</td></tr>';
+            }
+
+            // Mở Modal kết quả
+            new bootstrap.Modal(document.getElementById('testResultModal')).show();
+            if (typeof showToast === 'function') showToast("Chấm điểm hoàn tất!", "success");
+
+        } catch (error) {
+            console.error("Lỗi chấm điểm:", error);
+            if (typeof showToast === 'function') showToast("Lỗi kết nối hoặc xử lý kết quả từ Server.", "danger");
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = originalHtml;
+        }
+    }
+</script>
+<div class="modal fade" id="guideModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header bg-info text-white">
+                <h5 class="modal-title fw-bold"><i class="bi bi-book"></i> Hướng Dẫn Cấu Hình Chấm Điểm (Rubric)</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                    aria-label="Close"></button>
+            </div>
+            <div class="modal-body bg-light p-4">
+
+                <p class="text-muted fs-6 mb-4">Tài liệu dành cho Giảng viên thiết lập tự động hóa chấm bài
+                    Word/PowerPoint.</p>
+
+                <div class="bg-white p-4 rounded shadow-sm mb-4">
+                    <h5 class="text-primary border-bottom pb-2 mb-3">1. Làm quen với Giao diện</h5>
+                    <p>Giao diện được chia làm 2 phần chính:</p>
+                    <ul>
+                        <li><strong>Cột bên trái (Bản Xem Trước):</strong> Hiển thị bài mẫu (đáp án). Khi bạn rê chuột
+                            vào, hệ thống sẽ làm nổi bật từng Đoạn văn, Hình ảnh hoặc Bảng biểu.</li>
+                        <li><strong>Cột bên phải (Bộ Công Cụ):</strong> Nơi bạn đặt tên tiêu chí, quy định số điểm và
+                            chọn những lỗi muốn máy tính kiểm tra.</li>
+                    </ul>
+                </div>
+
+                <div class="bg-white p-4 rounded shadow-sm mb-4">
+                    <h5 class="text-primary border-bottom pb-2 mb-3">2. Cách tạo tiêu chí chấm điểm Dễ Nhất</h5>
+                    <p>Để chấm điểm một đoạn văn bản (Ví dụ: Chấm font chữ, lề, in đậm của phần <em>"LỜI MỞ ĐẦU"</em>),
+                        bạn làm như sau:</p>
+                    <ol>
+                        <li class="mb-2">Nhìn sang <strong>Bản xem trước</strong> (bên trái), tìm đến đoạn văn bạn muốn
+                            chấm.</li>
+                        <li class="mb-2"><strong>Click chuột trái</strong> vào đoạn văn đó. Cột bên phải sẽ tự động mở
+                            ra một Form.</li>
+                        <li class="mb-2">Máy tính sẽ <strong>tự động nhận diện</strong> đoạn văn đó dùng Font gì, Cỡ chữ
+                            bao nhiêu, In đậm hay không... và gợi ý sẵn cho bạn.</li>
+                        <li class="mb-2">Bạn chỉ cần điều chỉnh lại <strong>Điểm số</strong> cho từng luật (mặc định là
+                            0.5đ), hoặc xóa các luật không muốn chấm, sau đó bấm nút <strong>LƯU TIÊU CHÍ</strong>.</li>
+                    </ol>
+                </div>
+
+                <div class="bg-white p-4 rounded shadow-sm mb-4">
+                    <h5 class="text-primary border-bottom pb-2 mb-3">3. Xử lý các trường hợp phức tạp (Bảng, Hình ảnh)
+                    </h5>
+
+                    <h6 class="fw-bold mt-3 text-dark">A. Kiểm tra xem sinh viên có chèn Hình Ảnh/Biểu Đồ không</h6>
+                    <div class="alert alert-warning py-2">
+                        <i class="bi bi-exclamation-triangle-fill"></i> <strong>Vấn đề:</strong> Máy tính không thể
+                        "nhìn" thấy hình ảnh như con người. Bạn cần chỉ cho máy một "biển báo" để nó tìm.
+                    </div>
+                    <ul>
+                        <li>Bấm nút <strong>[KT Có Hình Ảnh]</strong> ở trên thanh công cụ.</li>
+                        <li>Tại mục <em>Mỏ neo chính</em>, hãy gõ chính xác <strong>Đoạn chữ nằm ngay bên trên</strong>
+                            bức ảnh (Ví dụ: <em>"Biểu đồ thể hiện doanh thu"</em>).</li>
+                        <li>Hệ thống sẽ tự động tạo luật: Từ dòng chữ đó, <strong>quét xuống phía dưới</strong> xem có
+                            tấm ảnh nào không.</li>
+                    </ul>
+
+                    <h6 class="fw-bold mt-4 text-dark">B. Chấm điểm chi tiết bên trong Bảng (Table)</h6>
+                    <p>Nếu bạn muốn kiểm tra xem Hàng 1, Cột 2 của bảng có in đậm hay không, hãy làm theo cách sau:</p>
+                    <ul>
+                        <li><strong>Click vào chiếc Bảng</strong> ở bản xem trước bên trái.</li>
+                        <li>Tại mục cấu hình luật, chọn hộp thoại thả xuống và chọn mục đầu tiên: <strong>📦 Cấu hình
+                                Nhóm con (Bảng, Danh sách...)</strong> rồi bấm [Thêm vào Gốc].</li>
+                        <li>Một thẻ màu Vàng sẽ hiện ra. Tại đây, chọn chế độ <strong>Nhảy theo Index con</strong> và
+                            điền số <strong>0</strong> (Tương đương Hàng số 1).</li>
+                        <li>Tiếp tục bấm nút <strong>[+ Luật con]</strong> màu xanh lá bên trong thẻ màu Vàng đó, chọn
+                            thuộc tính (Ví dụ: Chữ in đậm) để yêu cầu máy chấm.</li>
+                    </ul>
+                </div>
+
+                <div class="bg-white p-4 rounded shadow-sm">
+                    <h5 class="text-primary border-bottom pb-2 mb-3">4. Cẩm nang các loại Luật (Cột "Yêu cầu")</h5>
+                    <p>Bạn có thể yêu cầu máy tính chấm lỏng tay hoặc chấm gắt gao:</p>
+                    <table class="table table-bordered table-sm">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Loại so sánh</th>
+                                <th>Ý nghĩa</th>
+                                <th>Ví dụ sử dụng</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>== (Chính xác)</strong></td>
+                                <td>Bài làm phải giống hệt 100% yêu cầu.</td>
+                                <td>Chấm Font chữ phải đúng "Times New Roman".</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Dải/DS (Khoảng)</strong></td>
+                                <td>Cho phép sai số. Cỡ chữ 14 sẽ tự động được máy châm chước sai số 5% (từ 13 đến 15).
+                                </td>
+                                <td>Chấm Cỡ chữ, Căn lề, Khoảng cách các đoạn.</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Fuzzy (Nội dung)</strong></td>
+                                <td>Chấp nhận sai một vài lỗi chính tả nhỏ do sinh viên gõ vội.</td>
+                                <td>Bắt buộc gõ đúng chữ "CỘNG HÒA XÃ HỘI CHỦ NGHĨA".</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Tồn tại</strong></td>
+                                <td>Chỉ quan tâm sinh viên có làm thao tác đó hay không.</td>
+                                <td>Kiểm tra có chèn Ảnh, hoặc có đánh số trang.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+            </div>
+            <div class="modal-footer bg-light">
+                <button type="button" class="btn btn-secondary fw-bold px-4" data-bs-dismiss="modal">Đã hiểu &
+                    Đóng</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="testResultModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title fw-bold"><i class="bi bi-clipboard2-data"></i> Báo cáo Chấm điểm (Test Run)</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body bg-light p-4">
+
+                <div class="text-center mb-4">
+                    <h6 class="text-muted text-uppercase fw-bold">Tổng điểm bài làm</h6>
+                    <h1 class="display-3 fw-bold text-success" id="testFinalScore">0.0</h1>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-hover bg-white border shadow-sm rounded">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Tiêu chí kiểm tra</th>
+                                <th class="text-center">Trạng thái</th>
+                                <th class="text-center">Điểm</th>
+                                <th>Chi tiết (Lỗi)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="testReportBody">
+                        </tbody>
+                    </table>
+                </div>
+
+            </div>
+            <div class="modal-footer bg-light">
+                <button type="button" class="btn btn-secondary fw-bold px-4" data-bs-dismiss="modal">Đóng</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

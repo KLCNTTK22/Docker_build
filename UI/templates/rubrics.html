@@ -284,7 +284,16 @@
             }
 
             const resData = await response.json();
-            currentFullJson = resData; 
+            
+            // Xử lý "lột vỏ" (strip wrapper) nếu API trả về [{ "status": "success", "rubric_content": [...] }]
+            let cleanData = resData;
+            if (Array.isArray(resData) && resData.length > 0 && resData[0].rubric_content) {
+                cleanData = resData[0].rubric_content;
+            } else if (resData && !Array.isArray(resData) && resData.rubric_content) {
+                cleanData = resData.rubric_content;
+            }
+
+            currentFullJson = cleanData; 
             
             btnSave.disabled = false;
             
@@ -303,20 +312,32 @@
     }
 
     // 3. RENDER CÂY TRỰC QUAN (VISUAL TREE)
-    function renderVisualTree(dataArray) {
+    function renderVisualTree(data) {
         const container = document.getElementById('visual-rubric-container');
         container.innerHTML = '';
         
-        if (!Array.isArray(dataArray) || dataArray.length === 0 || !dataArray[0].rubric_content) {
-            container.innerHTML = '<div class="text-center text-danger mt-4">Không tìm thấy trường rubric_content trong dữ liệu trả về.</div>';
+        // Trích xuất mảng rubric_content một cách an toàn
+        let rubricContent = [];
+        if (Array.isArray(data)) {
+            if (data.length > 0 && data[0].rubric_content) {
+                rubricContent = data[0].rubric_content;
+            } else {
+                rubricContent = data; // Fallback
+            }
+        } else if (data && data.rubric_content) {
+            rubricContent = data.rubric_content;
+        }
+
+        if (!Array.isArray(rubricContent) || rubricContent.length === 0) {
+            container.innerHTML = '<div class="text-center text-danger mt-4">Không tìm thấy cấu trúc rubric_content hợp lệ trong JSON.</div>';
             return;
         }
 
-        const rubricContent = dataArray[0].rubric_content;
         let totalScore = 0;
 
         rubricContent.forEach((criteria, cIdx) => {
-            totalScore += (criteria.allocated_points || 0);
+            const cPoints = criteria.allocated_points || 0;
+            totalScore += cPoints;
 
             const card = document.createElement('div');
             card.className = 'card mb-3 border-secondary shadow-sm';
@@ -325,7 +346,7 @@
             header.className = 'card-header bg-white d-flex justify-content-between align-items-center cursor-pointer hover-bg-light';
             header.innerHTML = `
                 <div class="fw-bold text-dark"><i class="bi bi-caret-right-fill text-secondary me-1"></i> ${criteria.criteria_name || 'Không có tên'}</div>
-                <span class="badge bg-primary rounded-pill fs-6">${criteria.allocated_points || 0} đ</span>
+                <span class="badge bg-primary rounded-pill fs-6">${cPoints} đ</span>
             `;
             header.onclick = (e) => {
                 highlightVisualNode(header);
@@ -337,14 +358,23 @@
             body.className = 'list-group list-group-flush';
             
             (criteria.rules || []).forEach((rule, rIdx) => {
+                // Tự động render tất cả các thuộc tính phụ thành Badge
+                let tagsHtml = '';
+                for (const [key, value] of Object.entries(rule)) {
+                    if (key !== 'description' && key !== 'points') {
+                        let displayVal = typeof value === 'object' ? JSON.stringify(value) : value;
+                        tagsHtml += `<span class="badge bg-light text-secondary border mt-1 me-1">${key}: ${displayVal}</span>`;
+                    }
+                }
+
                 const li = document.createElement('li');
                 li.className = 'list-group-item list-group-item-action d-flex justify-content-between align-items-center cursor-pointer ps-4';
                 li.innerHTML = `
-                    <div>
+                    <div class="pe-3">
                         <div class="text-dark small fw-medium">${rule.description || 'Chưa mô tả'}</div>
-                        <span class="badge bg-light text-secondary border mt-1">Action: ${rule.action || 'N/A'}</span>
+                        <div class="d-flex flex-wrap">${tagsHtml}</div>
                     </div>
-                    <span class="text-success fw-bold small">${rule.points || 0} đ</span>
+                    <span class="text-success fw-bold small text-nowrap">${rule.points || 0} đ</span>
                 `;
                 li.onclick = (e) => {
                     e.stopPropagation();
@@ -358,7 +388,8 @@
             container.appendChild(card);
         });
 
-        document.getElementById('total-points').innerText = `Tổng: ${totalScore} đ`;
+        // Xử lý làm tròn số tránh lỗi phẩy số thực JS (vd: 4.000000001 đ)
+        document.getElementById('total-points').innerText = `Tổng: ${Math.round(totalScore * 100) / 100} đ`;
     }
 
     function highlightVisualNode(element) {
@@ -428,7 +459,7 @@
                 body: JSON.stringify({
                     "action": "save_rubric",
                     "data": {
-                        "id": currentSelectedRubric.id,
+                        "id": currentSelectedRubric.properties?.file_rubric || currentSelectedRubric.id,
                         "content": parsedContent
                     }
                 })

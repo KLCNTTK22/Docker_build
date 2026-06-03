@@ -1,0 +1,263 @@
+[
+  {
+    "criteria_name": "Document-level page setup and margins",
+    "allocated_points": 1.5,
+    "anchor_locator": {
+      "tag": "w:document"
+    },
+    "rules": [
+      {
+        "description": "Page size width 12240 and height 15840 (exact match expected)",
+        "relative_offset": 0,
+        "property_path": "section.pageSize.w",
+        "expected_value": "12240",
+        "match_flag": "TOLERANT",
+        "accepted_range": [12240, 12240],
+        "points": 0.5
+      },
+      {
+        "description": "Page size height 15840 (exact match expected)",
+        "relative_offset": 0,
+        "property_path": "section.pageSize.h",
+        "expected_value": "15840",
+        "match_flag": "TOLERANT",
+        "accepted_range": [15840, 15840],
+        "points": 0.5
+      },
+      {
+        "description": "Margins top 1440, bottom 1440, left 1440, right 1440, header 720, footer 720, gutter 0",
+        "relative_offset": 0,
+        "property_path": "section.margin",
+        "expected_value": {
+          "top": "1440",
+          "bottom": "1440",
+          "left": "1440",
+          "right": "1440",
+          "header": "720",
+          "footer": "720",
+          "gutter": "0"
+        },
+        "match_flag": "TOLERANT",
+        "accepted_range": null,
+        "accepted_values": null,
+        "points": 0.5
+      }
+    ]
+  },
+  {
+    "criteria_name": "Main title centered and bold",
+    "allocated_points": 1.0,
+    "anchor_locator": {
+      "tag": "w:p",
+      "text_contains": "QUÁ TRÌNH HỌC TẬP VÀ LÀM VIỆC"
+    },
+    "rules": [
+      {
+        "description": "Title paragraph centered",
+        "relative_offset": 0,
+        "property_path": "layout.alignment",
+        "expected_value": "center",
+        "match_flag": "STRICT",
+        "points": 0.5
+      },
+      {
+        "description": "Run text is bold",
+        "relative_offset": 0,
+        "property_path": "children.0.properties.bold",
+        "expected_value": true,
+        "match_flag": "STRICT",
+        "points": 0.5
+      }
+    ]
+  },
+  {
+    "criteria_name": "Tab leaders for form fields",
+    "allocated_points": 1.5,
+    "anchor_locator": {
+      "tag": "w:p",
+      "text_contains": "Họ và tên"
+    },
+    "rules": [
+      {
+        "description": "Tab leader dot at 226.8pt and 460.7pt for left and right alignment",
+        "relative_offset": 0,
+        "property_path": "layout.tabs",
+        "expected_value": [
+          {
+            "positionPt": 226.8,
+            "align": "left",
+            "leader": "dot"
+          },
+          {
+            "positionPt": 460.7,
+            "align": "right",
+            "leader": "dot"
+          }
+        ],
+        "match_flag": "TOLERANT",
+        "accepted_range": null,
+        "accepted_values": null,
+        "points": 0.75
+      },
+      {
+        "description": "Consistent tab structure across similar personal-info paragraphs",
+        "relative_offset": 0,
+        "property_path": "layout.tabs",
+        "expected_value": [
+          {
+            "positionPt": 226.8,
+            "align": "left",
+            "leader": "dot"
+          },
+          {
+            "positionPt": 460.7,
+            "align": "right",
+            "leader": "dot"
+          }
+        ],
+        "match_flag": "TOLERANT",
+        "accepted_range": null,
+        "accepted_values": null,
+        "points": 0.75
+      }
+    ]
+  },
+  {
+    "criteria_name": "List paragraph styling for section headings",
+    "allocated_points": 1.0,
+    "anchor_locator": {
+      "tag": "w:p",
+      "text_contains": "Bản thân"
+    },
+    "rules": [
+      {
+        "description": "Uses ListParagraph style",
+        "relative_offset": 0,
+        "property_path": "properties.pStyle",
+        "expected_value": "ListParagraph",
+        "match_flag": "STRICT",
+        "points": 0.5
+      },
+      {
+        "description": "Bookmark present for TOC reference",
+        "relative_offset": 0,
+        "property_path": "children.0.tag",
+        "expected_value": "w:bookmarkStart",
+        "match_flag": "PRESENCE_ONLY",
+        "points": 0.5
+      }
+    ]
+  },
+  {
+    "criteria_name": "Table with headers and borders",
+    "allocated_points": 1.5,
+    "anchor_locator": {
+      "tag": "w:tbl",
+      "text_contains": "Ngày tháng năm"
+    },
+    "rules": [
+      {
+        "description": "Table has grid borders and single borders on all sides",
+        "relative_offset": 0,
+        "property_path": "layout.borders.top.style",
+        "expected_value": "single",
+        "match_flag": "STRICT",
+        "points": 0.5
+      },
+      {
+        "description": "Header row background shading",
+        "relative_offset": 0,
+        "property_path": "children.0.children.0.layout.shading",
+        "expected_value": "F1A983",
+        "match_flag": "STRICT",
+        "points": 0.5
+      },
+      {
+        "description": "Table uses TableGrid style",
+        "relative_offset": 0,
+        "property_path": "style.tableStyle",
+        "expected_value": "TableGrid",
+        "match_flag": "STRICT",
+        "points": 0.5
+      }
+    ]
+  },
+  {
+    "criteria_name": "Caption style for table captions",
+    "allocated_points": 1.0,
+    "anchor_locator": {
+      "tag": "w:p",
+      "text_contains": "Bảng 1"
+    },
+    "rules": [
+      {
+        "description": "Uses Caption paragraph style",
+        "relative_offset": 0,
+        "property_path": "properties.pStyle",
+        "expected_value": "Caption",
+        "match_flag": "STRICT",
+        "points": 0.5
+      },
+      {
+        "description": "Contains SEQ field for automatic numbering",
+        "relative_offset": 0,
+        "property_path": "",
+        "expected_value": null,
+        "match_flag": "PRESENCE_ONLY",
+        "points": 0.5
+      }
+    ]
+  },
+  {
+    "criteria_name": "Document-wide TOC and figure list",
+    "allocated_points": 1.5,
+    "anchor_locator": {
+      "tag": "w:document"
+    },
+    "rules": [
+      {
+        "description": "TOC with heading levels 1-3 exists (global scan)",
+        "relative_offset": 0,
+        "property_path": "",
+        "expected_value": null,
+        "match_flag": "PRESENCE_ONLY",
+        "points": 0.5
+      },
+      {
+        "description": "Table of Figures using 'Bảng' caption prefix exists (global scan)",
+        "relative_offset": 0,
+        "property_path": "",
+        "expected_value": null,
+        "match_flag": "PRESENCE_ONLY",
+        "points": 0.5
+      },
+      {
+        "description": "TOC and TOF use hyperlink and page reference fields",
+        "relative_offset": 0,
+        "property_path": "",
+        "expected_value": null,
+        "match_flag": "PRESENCE_ONLY",
+        "points": 0.5
+      }
+    ]
+  },
+  {
+    "criteria_name": "Signature table structure",
+    "allocated_points": 0.5,
+    "anchor_locator": {
+      "tag": "w:tbl",
+      "text_contains": "BÊN A"
+    },
+    "rules": [
+      {
+        "description": "Table has three columns (BÊN A, BÊN B, label column)",
+        "relative_offset": 0,
+        "property_path": "children.0.children",
+        "expected_value": 3,
+        "match_flag": "TOLERANT",
+        "accepted_range": [3, 3],
+        "points": 0.5
+      }
+    ]
+  }
+]

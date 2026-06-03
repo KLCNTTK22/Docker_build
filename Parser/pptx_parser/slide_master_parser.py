@@ -32,12 +32,13 @@ def parse_slide_master(xml_content, file_path, context):
         # 2. ĐỌC TEXT STYLES (ĐỊNH DẠNG MẶC ĐỊNH CHUNG - QUAN TRỌNG CHO KẾ THỪA)
         tx_styles = root.find(f".//{{{NAMESPACES['p']}}}txStyles")
         if tx_styles is not None:
-            node.properties["text_styles"] = parse_master_text_styles(tx_styles)
+            # SỬA: Truyền thêm context vào để có thể giải mã biến Theme
+            node.properties["text_styles"] = parse_master_text_styles(tx_styles, context)
 
         # 3. QUÉT CÁC ĐỐI TƯỢNG TRONG SPTREE
         sp_tree = root.find(f".//{{{NAMESPACES['p']}}}spTree")
         if sp_tree is not None:
-            shape_nodes = parse_shape_tree(sp_tree, rels)
+            shape_nodes = parse_shape_tree(sp_tree, rels, context)
             for shape_node in shape_nodes:
                 node.add_child(shape_node)
 
@@ -47,9 +48,10 @@ def parse_slide_master(xml_content, file_path, context):
     return node
 
 
-def parse_master_text_styles(tx_styles_elem):
+def parse_master_text_styles(tx_styles_elem, context):
     """
     Bóc tách các định dạng mặc định (Title, Body, Other) từ Slide Master.
+    Đã nâng cấp để bóc tách thông số nhiều cấp độ (lvl1, lvl2...) và giải mã Font.
     """
     styles_dict = {}
 
@@ -58,18 +60,43 @@ def parse_master_text_styles(tx_styles_elem):
         tag_name = style_type.tag.split('}')[-1]
         styles_dict[tag_name] = {}
 
-        # Thường ta chỉ cần lấy lvl1pPr (Level 1) làm đại diện cho chấm điểm cơ bản
-        lvl1 = style_type.find(f"{{{NAMESPACES['a']}}}lvl1pPr")
-        if lvl1 is not None:
-            def_r_pr = lvl1.find(f"{{{NAMESPACES['a']}}}defRPr")
-            if def_r_pr is not None:
-                # Lấy size mặc định
-                if "sz" in def_r_pr.attrib:
-                    styles_dict[tag_name]["sz"] = def_r_pr.attrib["sz"]
+        # Quét các cấp bậc (từ Level 1 đến Level 9)
+        for lvl in range(1, 10):
+            lvl_tag = f"lvl{lvl}pPr"
+            lvl_elem = style_type.find(f"{{{NAMESPACES['a']}}}{lvl_tag}")
+            
+            if lvl_elem is not None:
+                def_r_pr = lvl_elem.find(f"{{{NAMESPACES['a']}}}defRPr")
+                if def_r_pr is not None:
+                    lvl_data = {}
+                    
+                    # Lấy size mặc định
+                    if "sz" in def_r_pr.attrib:
+                        lvl_data["sz"] = def_r_pr.attrib["sz"]
 
-                # Lấy font mặc định
-                latin = def_r_pr.find(f"{{{NAMESPACES['a']}}}latin")
-                if latin is not None and "typeface" in latin.attrib:
-                    styles_dict[tag_name]["font_name"] = latin.attrib["typeface"]
+                    # Lấy font mặc định
+                    latin = def_r_pr.find(f"{{{NAMESPACES['a']}}}latin")
+                    if latin is not None and "typeface" in latin.attrib:
+                        font_raw = latin.attrib["typeface"]
+                        
+                        # --- LOGIC GIẢI MÃ FONT THEME ---
+                        if font_raw.startswith("+"):
+                            resolved_font = font_raw
+                            for theme_map in context.get("theme_registry", {}).values():
+                                if font_raw in theme_map:
+                                    resolved_font = theme_map[font_raw]
+                                    break
+                            lvl_data["font_name"] = resolved_font
+                        else:
+                            lvl_data["font_name"] = font_raw
+                        # ---------------------------------
+
+                    if lvl_data:
+                        # Vẫn gán đè trực tiếp cấp 1 ra ngoài để tương thích ngược với code JS cũ
+                        if lvl == 1:
+                            styles_dict[tag_name].update(lvl_data)
+                        
+                        # Lưu thêm object con cho từng level (phục vụ chấm điểm cấp 2, 3...)
+                        styles_dict[tag_name][lvl_tag] = lvl_data
 
     return styles_dict

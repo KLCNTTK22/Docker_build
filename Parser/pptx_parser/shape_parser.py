@@ -3,7 +3,7 @@ from .ast_node import ASTNode
 from .xml_utils import NAMESPACES
 
 
-def parse_shape_tree(sp_tree, rels):
+def parse_shape_tree(sp_tree, rels, context):
     """
     Duyệt qua tất cả các đối tượng hình học trong thẻ <p:spTree>.
     Bao gồm: p:sp (Shape), p:pic (Picture), p:graphicFrame (Table, Chart...), p:grpSp (Group)
@@ -18,7 +18,7 @@ def parse_shape_tree(sp_tree, rels):
         if tag_name == 'pic':
             nodes.append(parse_picture(child, rels))
         elif tag_name == 'sp':
-            nodes.append(parse_shape_element(child, rels))
+            nodes.append(parse_shape_element(child, rels, context))
 
         # graphicFrame được xử lý ở slide_parser.py
 
@@ -54,7 +54,7 @@ def parse_picture(pic_element, rels):
     return node
 
 
-def parse_shape_element(sp_element, rels):
+def parse_shape_element(sp_element, rels, context):
     """
     Phân tích thẻ <p:sp> (Shape thông thường).
     Xử lý: Placeholder, Hình học cơ bản, Kiểu dáng (Fill/Outline/Effects), Tọa độ, và Text Body.
@@ -106,10 +106,9 @@ def parse_shape_element(sp_element, rels):
     # 4. Trích xuất nội dung văn bản (Text Body)
     tx_body = sp_element.find(f".//{{{NAMESPACES['p']}}}txBody")
     if tx_body is not None:
-        paragraph_nodes = parse_text_body(tx_body, rels)
+        paragraph_nodes = parse_text_body(tx_body, rels, context)
         for p_node in paragraph_nodes:
             node.add_child(p_node)
-
     return node
 
 
@@ -192,7 +191,7 @@ def parse_fill(parent_element):
     return None
 
 
-def parse_text_body(tx_body_element, rels):
+def parse_text_body(tx_body_element, rels, context):
     """
     Hàm dùng chung để phân tích <txBody>.
     Đã được nâng cấp để đọc trọn vẹn Text Styling (Font, Color, Size, Effects...).
@@ -227,7 +226,17 @@ def parse_text_body(tx_body_element, rels):
                 # Font Name (Typeface)
                 latin_font = r_pr.find(f"{{{NAMESPACES['a']}}}latin")
                 if latin_font is not None and "typeface" in latin_font.attrib:
-                    r_node.style["font_name"] = latin_font.attrib["typeface"]
+                    font_raw = latin_font.attrib["typeface"]
+                    if font_raw.startswith("+"):
+                        resolved_font = font_raw
+                        # Tìm trong registry (thường là theme1.xml)
+                        for theme_map in context.get("theme_registry", {}).values():
+                            if font_raw in theme_map:
+                                resolved_font = theme_map[font_raw]
+                                break
+                        r_node.style["font_name"] = resolved_font
+                    else:
+                        r_node.style["font_name"] = font_raw
 
                 # Text Fill (Màu chữ)
                 text_fill = parse_fill(r_pr)
