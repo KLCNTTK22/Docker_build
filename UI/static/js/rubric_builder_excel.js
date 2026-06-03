@@ -1,783 +1,540 @@
 /**
- * POWERPOINT RUBRIC BUILDER MODULE - MASTER & SLIDE DEEP INSPECTOR
- * Tự động quét sâu đa tầng (Slide/Master > Element > Sub-Element) và trích xuất định dạng.
+ * EXCEL RUBRIC BUILDER - MANUAL + PICK MODE
  */
+const ExcelRubricBuilder = (function () {
+    let currentAST = null;
+    let rubric = [];
+    let pickingTargetInputId = null; // Lưu ID của thẻ Input đang chờ lấy dữ liệu
 
-const PPTRubricBuilder = (function () {
-    let globalRubric = [];
-    let currentPendingGroups = [];
-    let AST = null;
-    let currentNodePath = null;
-
-    // Danh sách "Tự chọn" (Presets) phù hợp với PowerPoint
-    const PPTX_PRESETS = [
-        { label: "🔤 Font chữ", path: "style.font_name", type: "VERIFY_PROPERTY", match: "EXACT" },
-        { label: "📏 Cỡ chữ (Font Size)", path: "style.sz", type: "VERIFY_PROPERTY", match: "EXACT" },
-        { label: "Chữ In đậm", path: "style.b", type: "VERIFY_PROPERTY", match: "EXACT", val: "1" },
-        { label: "Chữ In nghiêng", path: "style.i", type: "VERIFY_PROPERTY", match: "EXACT", val: "1" },
-        { label: "🎨 Màu nền đối tượng (Fill Color)", path: "style.fill.color", type: "VERIFY_PROPERTY", match: "EXACT" },
-        { label: "✨ Hiệu ứng đồ họa (Glow, Reflection...)", path: "style.effects", type: "VERIFY_PROPERTY", match: "CONTAINS" },
-        { label: "🎬 Hiệu ứng xuất hiện (Animation)", path: "properties.animations.0.presetClass", type: "VERIFY_PROPERTY", match: "EXACT", val: "entr" },
-        { label: "🔗 Đường dẫn liên kết (Hyperlink)", path: "properties.hyperlink_target", type: "VERIFY_PROPERTY", match: "CONTAINS" },
-        { label: "📐 Cấu trúc hình khối (Geometry Type)", path: "properties.geometry_type", type: "VERIFY_PROPERTY", match: "EXACT" },
-        { label: "Nội dung Text (Mở rộng)", path: "text", type: "VERIFY_PROPERTY", match: "CONTAINS" }
-    ];
-
-    function init(parsedAST) {
-        AST = parsedAST;
-        globalRubric = [];
-    }
-
-    // ==========================================
-    // UTILS TRUY XUẤT DỮ LIỆU
-    // ==========================================
-    function extractAllText(node) {
-        if (!node) return "";
-        let txt = node.text || "";
-        if (node.children) node.children.forEach(c => txt += extractAllText(c));
-        return txt;
-    }
-
+    // --- HELPER DỊCH ĐƯỜNG DẪN AST LẤY TEXT/FORMULA ---
     function getNodeByPath(path) {
-        if (!path) return AST;
-        const keys = path.split('.');
-        let current = AST;
-        for (let key of keys) {
-            if (current && current[key] !== undefined) current = current[key];
-            else return null;
-        }
-        return current;
-    }
-
-    function getSlideTitle(slideNode) {
-        if (!slideNode) return "Slide";
-        let titleNode = slideNode.children?.find(c => c.properties?.is_placeholder && (c.properties.placeholder.type === 'title' || c.properties.placeholder.type === 'ctrTitle'));
-        if (titleNode) return extractAllText(titleNode).trim().substring(0, 40) || "Slide Không Tiêu Đề";
-        return `Slide ${slideNode.properties?.slide_index || ''}`;
-    }
-
-    function getParentSlide(path) {
-        let keys = path.split('.');
-        if (keys.length >= 2 && keys[0] === 'children') {
-            let idx = parseInt(keys[1]);
-            return AST.children[idx];
-        }
-        return null;
-    }
-
-    function getSpatialZone(layout) {
-        if (!layout) return "CENTER_X_CENTER_Y";
-        let x = parseFloat(layout.x || 0);
-        let y = parseFloat(layout.y || 0);
-        let cx = parseFloat(layout.cx || 0);
-        let cy = parseFloat(layout.cy || 0);
-
-        let centerX = x + (cx / 2);
-        let centerY = y + (cy / 2);
-
-        const SLIDE_W = 12192000;
-        const SLIDE_H = 6858000;
-
-        let zones = [];
-        if (centerX < SLIDE_W * 0.33) zones.push("LEFT");
-        else if (centerX > SLIDE_W * 0.66) zones.push("RIGHT");
-        else zones.push("CENTER_X");
-
-        if (centerY < SLIDE_H * 0.33) zones.push("TOP");
-        else if (centerY > SLIDE_H * 0.66) zones.push("BOTTOM");
-        else zones.push("CENTER_Y");
-
-        return zones.join("_");
-    }
-
-    // ==========================================
-    // CẤU TRÚC ĐỐI TƯỢNG (FACTORY)
-    // ==========================================
-    function createRuleObj(desc, path, value, action = "VERIFY_PROPERTY", match = "EXACT") {
-        return {
-            id: 'rule_' + Date.now() + Math.random().toString().substring(2, 6),
-            description: desc,
-            property_to_check: path,
-            expected_value: value,
-            action: action,
-            match_type: match,
-            points: 0.25
-        };
-    }
-
-    function createRuleGroup(name, anchor, rules = []) {
-        return {
-            id: 'group_' + Date.now() + Math.random().toString().substring(2, 6),
-            criteria_name: name,
-            allocated_points: 0,
-            anchor_locator: anchor,
-            rules: rules,
-            sub_criteria: []
-        };
-    }
-
-    // ==========================================
-    // CÁC HÀM PRESETS (GIAO DIỆN)
-    // ==========================================
-    function presetSlideCount() {
-        let expectedCount = AST.properties?.app_properties?.Slides || 4;
-        let group = createRuleGroup("Yêu cầu số lượng Slide toàn bài", { type: "presentation", tag: "p:presentation" }, [
-            createRuleObj("Tổng số lượng Slide", "properties.app_properties.Slides", parseInt(expectedCount), "VERIFY_PROPERTY", "EXACT")
-        ]);
-        group.rules[0].points = 1.0;
-        currentPendingGroups = [group];
-        renderBuilderArea("Yêu cầu số lượng Slide", "global", "");
-    }
-
-    function presetTransitionCheck() {
-        let group = createRuleGroup("Hiệu ứng chuyển trang", { type: "slide", tag: "p:sld" }, [
-            createRuleObj("Loại Transition", "properties.effect_type", "p:circle", "VERIFY_PROPERTY", "CONTAINS")
-        ]);
-        group.rules[0].points = 1.0;
-        currentPendingGroups = [group];
-        renderBuilderArea("Hiệu ứng chuyển Slide (Transition)", "global", "");
-    }
-
-    function presetActionButtons() {
-        let group = createRuleGroup("Cấu hình nút điều hướng", { type: "presentation", tag: "p:presentation" }, [
-            {
-                id: 'rule_' + Date.now(),
-                description: "Số lượng nút điều hướng",
-                action: "VERIFY_COUNT",
-                property_to_check: "children",
-                expected_count: 3,
-                points: 1.5
-            }
-        ]);
-        currentPendingGroups = [group];
-        renderBuilderArea("Cấu hình Action Buttons", "global", "");
-    }
-
-    function presetMatrixLayout() {
-        let group = createRuleGroup("Ma trận bố cục không gian", { type: "slide", tag: "p:sld" }, [
-            {
-                id: 'rule_' + Date.now(),
-                description: "Kiểm tra ma trận",
-                action: "VERIFY_MATRIX_LAYOUT",
-                expected_matrix: "[[1], [2, 3]]",
-                items_definition: {
-                    "1": { "type": "shape", "text_contains": "Tiêu đề" },
-                    "2": { "type": "graphic_frame", "properties": { "frame_type": "smartart" } }
-                },
-                points: 2.0
-            }
-        ]);
-        currentPendingGroups = [group];
-        renderBuilderArea("Kiểm tra Ma trận Bố cục", "slide", "");
-        if (typeof showToast === 'function') showToast("MẸO: Click vào các khối con để gán ID ma trận!", "info");
-    }
-
-    function createEmptyCriteria() {
-        currentPendingGroups = [];
-        currentNodePath = null;
-        renderBuilderArea("Tiêu chí Tự chọn", "slide", "");
-    }
-
-    // ==========================================
-    // MÁY QUÉT SÂU (DEEP SCANNERS)
-    // ==========================================
-    function parseTextRunsDeep(node, relPath, targetRules) {
-        if (node.type === 'text_run') {
-            let txt = node.text?.trim();
-            if (txt) {
-                targetRules.push(createRuleObj(`Nội dung chữ: "${txt.substring(0, 15)}..."`, `${relPath}.text`, txt, "VERIFY_PROPERTY", "CONTAINS"));
-            }
-            let s = node.style || {};
-            if (s.font_name) targetRules.push(createRuleObj(`Font chữ: ${s.font_name}`, `${relPath}.style.font_name`, s.font_name));
-            if (s.sz) targetRules.push(createRuleObj(`Cỡ chữ: ${parseInt(s.sz) / 100}pt`, `${relPath}.style.sz`, s.sz));
-            if (s.b === '1' || s.b === 1) targetRules.push(createRuleObj(`Định dạng In đậm`, `${relPath}.style.b`, "1"));
-            if (s.i === '1' || s.i === 1) targetRules.push(createRuleObj(`Định dạng In nghiêng`, `${relPath}.style.i`, "1"));
-            if (s.u && s.u !== 'none') targetRules.push(createRuleObj(`Định dạng Gạch chân`, `${relPath}.style.u`, s.u));
-            if (s.fill?.color) targetRules.push(createRuleObj(`Màu chữ (Hex): ${s.fill.color}`, `${relPath}.style.fill.color`, s.fill.color));
-
-            if (s.effects && s.effects.length > 0) {
-                targetRules.push(createRuleObj(`Hiệu ứng chữ: ${s.effects.join(',')}`, `${relPath}.style.effects`, s.effects.join(','), "VERIFY_PROPERTY", "CONTAINS"));
+        if (!currentAST || !path) return null;
+        let parts = path.split('.');
+        let node = currentAST;
+        for (let i = 0; i < parts.length; i++) {
+            let part = parts[i];
+            if (node[part] !== undefined) {
+                node = node[part];
+            } else {
+                return null;
             }
         }
-        if (node.children) {
-            node.children.forEach((c, idx) => {
-                let currentPath = relPath ? `${relPath}.children.${idx}` : `children.${idx}`;
-                parseTextRunsDeep(c, currentPath, targetRules);
+        return node;
+    }
+
+    function extractNodeData(node) {
+        let text = "";
+        let formula = "";
+        let isDynamic = false;
+
+        if (node.type === 'row' || node.tag === 'row') {
+            // Lấy toàn bộ chữ trong dòng (dùng làm mỏ neo Header)
+            let cells = node.children ? node.children.filter(c => c.tag === 'c' || c.type === 'cell') : [];
+            let vals = [];
+            cells.forEach(c => {
+                let cellData = extractNodeData(c);
+                if (cellData.text) vals.push(cellData.text);
             });
+            text = vals.join(", ");
+        } else if (node.type === 'cell' || node.tag === 'c') {
+            if (node.children) {
+                node.children.forEach(v => {
+                    if (v.tag === 'v' || v.type === 'value') text = v.text ?? v.value ?? "";
+                    if (v.tag === 'f' || v.type === 'formula') formula = v.text ?? v.value ?? "";
+                });
+            }
+            isDynamic = node.properties?.is_dynamic_formula || false;
+        } else {
+            // Các node khác
+            if (node.text) text = node.text;
+        }
+
+        return { text: text.trim(), formula: formula.trim(), isDynamic };
+    }
+
+    // --- CORE BUILDER LOGIC ---
+    function init(astData) {
+        currentAST = astData;
+        rubric = [];
+        pickingTargetInputId = null;
+        document.getElementById('excel-speed-tools').style.display = 'flex';
+        renderBuilderUI();
+    }
+
+    function enablePickMode(inputId, typeHint) {
+        pickingTargetInputId = inputId;
+        if (typeof showToast === 'function') {
+            showToast(`Hãy click vào một ${typeHint} trên bảng xem trước để lấy dữ liệu.`, 'warning');
         }
     }
 
-    function scanInteractions(node, rules) {
-        let p = node.properties || {};
-        if (p.animations?.length > 0) {
-            let anim = p.animations[0];
-            rules.push(createRuleObj(`Hiệu ứng Animation (${anim.presetClass || 'entr'})`, `properties.animations.0.presetClass`, anim.presetClass || 'entr'));
-        }
-        if (p.is_action_button || p.click_action) {
-            let action = p.click_action?.action || "unknown";
-            rules.push(createRuleObj(`Hành động Click: ${action.split('?jump=')[1] || 'Link'}`, `properties.click_action.action`, action, "VERIFY_PROPERTY", "CONTAINS"));
-        }
-    }
-
-    // ==========================================
-    // SỰ KIỆN CLICK TỪ TÀI LIỆU
-    // ==========================================
     function handleNodeClick(astPath) {
-        currentNodePath = astPath;
-        const node = getNodeByPath(astPath);
+        if (!pickingTargetInputId) {
+            if (typeof showToast === 'function') showToast("Vui lòng bấm nút [Chọn] ở Form Tiêu chí trước khi click vào lưới.", "warning");
+            return;
+        }
+
+        let targetPath = astPath;
+
+        // =========================================================
+        // THUẬT TOÁN BẮT DÒNG (ROW) KHI CLICK VÀO MỘT Ô (CELL)
+        // =========================================================
+        if (pickingTargetInputId.includes('_headers')) {
+            let parts = astPath.split('.');
+            if (parts.length >= 4) {
+                targetPath = parts.slice(0, 4).join('.');
+            }
+        }
+
+        const node = getNodeByPath(targetPath);
         if (!node) return;
-        currentSelectedNode = node;
 
-        const builderArea = document.getElementById('rubric-builder-area');
+        const data = extractNodeData(node);
+        const inputEl = document.getElementById(pickingTargetInputId);
 
-        if (!builderArea.classList.contains('d-none') && currentPendingGroups.length > 0) {
-            let firstRule = currentPendingGroups[0].rules[0];
-            if (firstRule && firstRule.action === "VERIFY_MATRIX_LAYOUT") {
-                let itemId = prompt("Nhập số định danh (ID) cho khối này trong lưới ma trận:");
-                if (!itemId) return;
+        if (inputEl) {
+            inputEl.style.transition = 'background-color 0.3s';
+            inputEl.style.backgroundColor = '#d1e7dd';
+            setTimeout(() => inputEl.style.backgroundColor = '', 500);
 
-                let nodeText = extractAllText(node).trim();
-                firstRule.items_definition[itemId] = {
-                    type: node.type,
-                    text_contains: nodeText.length > 0 ? nodeText.substring(0, 15) : undefined,
-                    properties: node.properties?.is_placeholder ? { is_placeholder: true } : undefined
-                };
-                renderCart();
-                return;
-            }
-        }
-
-        currentPendingGroups = [];
-        let rootNode = null;
-        let rootType = "";
-        let parts = astPath.split('.');
-        while (parts.length > 0) {
-            let n = getNodeByPath(parts.join('.'));
-            if (n?.type === 'slide') { rootNode = n; rootType = 'slide'; break; }
-            if (n?.type === 'slide_master') { rootNode = n; rootType = 'slide_master'; break; }
-            parts.pop(); parts.pop();
-        }
-
-        if (!rootNode) return;
-
-        let mainGroup = null;
-        let criteriaTitle = "";
-
-        if (rootType === 'slide_master') {
-            criteriaTitle = "Định dạng Slide Master";
-            mainGroup = createRuleGroup(criteriaTitle, { type: "slide_master", tag: "p:sldMaster" });
-
-            if (AST.properties?.app_properties?.Template) {
-                mainGroup.rules.push(createRuleObj("Sử dụng đúng Theme", "properties.app_properties.Template", AST.properties.app_properties.Template));
-            }
-
-            let ts = rootNode.properties?.text_styles || {};
-            ["titleStyle", "bodyStyle", "otherStyle"].forEach(style => {
-                for (let i = 1; i <= 5; i++) {
-                    let lvl = ts[style]?.[`lvl${i}pPr`] || (i === 1 ? ts[style] : null);
-                    if (lvl) {
-                        let styleName = style === "titleStyle" ? "Tiêu đề" : (style === "bodyStyle" ? "Nội dung" : "Khác");
-                        let subGroup = createRuleGroup(`${styleName} (Cấp ${i})`, { type: "master_style", style_type: style, level: i });
-
-                        if (lvl.font_name && !lvl.font_name.startsWith("+")) {
-                            let r = createRuleObj("Kiểm tra Font chữ", `properties.text_styles.${style}.lvl${i}pPr.font_name`, lvl.font_name);
-                            r.level = i; subGroup.rules.push(r);
-                        }
-                        if (lvl.sz) {
-                            let r = createRuleObj("Kiểm tra Cỡ chữ", `properties.text_styles.${style}.lvl${i}pPr.sz`, lvl.sz);
-                            r.level = i; subGroup.rules.push(r);
-                        }
-                        if (subGroup.rules.length > 0) mainGroup.sub_criteria.push(subGroup);
-                    }
-                }
-            });
-        }
-        else if (rootType === 'slide') {
-            let slideTitleStr = getSlideTitle(rootNode);
-            criteriaTitle = `Thiết lập cho Slide: ${slideTitleStr}`;
-            let mainAnchor = {
-                type: "slide",
-                tag: "p:sld",
-                properties: { slide_index: rootNode.properties.slide_index },
-                text_contains: slideTitleStr.substring(0, 15)
-            };
-            mainGroup = createRuleGroup(criteriaTitle, mainAnchor);
-
-            let trans = rootNode.children?.find(c => c.type === 'transition');
-            if (trans) {
-                mainGroup.rules.push(createRuleObj("Loại hiệu ứng chuyển trang", "properties.effect_type", trans.properties.effect_type));
-                let dur = trans.attributes?.['{http://schemas.microsoft.com/office/powerpoint/2010/main}dur'];
-                if (dur) mainGroup.rules.push(createRuleObj("Thời gian chuyển trang (Duration)", "attributes.{http://schemas.microsoft.com/office/powerpoint/2010/main}dur", dur));
-            }
-        }
-
-        rootNode.children?.forEach((child, cIdx) => {
-            if (child.type === 'transition') return;
-
-            let childText = extractAllText(child).trim();
-            let childLabel = childText ? `Khối: "${childText.substring(0, 20)}..."` : `Đối tượng: ${child.type}`;
-
-            let childLocator = { type: child.type, tag: child.tag };
-            if (childText) childLocator.text_contains = childText.substring(0, 15);
-
-            if (child.properties?.is_placeholder) {
-                if (!childText) {
-                    childLocator.properties = childLocator.properties || {};
-                    childLocator.properties.placeholder = { type: child.properties.placeholder.type };
-                }
-            }
-            if (child.properties?.is_action_button) {
-                childLocator.properties = childLocator.properties || {};
-                childLocator.properties.is_action_button = true;
-            }
-
-            let subGroup = createRuleGroup(childLabel, childLocator);
-
-            if (child.layout) {
-                let zone = getSpatialZone(child.layout);
-                subGroup.rules.push(createRuleObj(`Vị trí bố cục tự động (${zone})`, "layout", zone, "VERIFY_LAYOUT"));
-            }
-
-            if (child.type === 'shape') {
-                if (child.properties?.geometry_type) {
-                    subGroup.rules.push(createRuleObj("Cấu trúc hình khối (Geometry)", "properties.geometry_type", child.properties.geometry_type));
-                }
-                if (child.style?.fill?.color) {
-                    subGroup.rules.push(createRuleObj("Màu nền đối tượng (Fill Color)", "style.fill.color", child.style.fill.color));
-                }
-
-                parseTextRunsDeep(child, "", subGroup.rules);
-                scanInteractions(child, subGroup.rules);
-            }
-            else if (child.type === 'picture') {
-                subGroup.rules.push(createRuleObj("Xác minh chèn Hình ảnh vào slide", "type", "picture", "VERIFY_PROPERTY"));
-                if (child.properties?.filename) {
-                    subGroup.rules.push(createRuleObj("Tên file ảnh", "properties.filename", child.properties.filename, "VERIFY_PROPERTY", "CONTAINS"));
-                }
-            }
-            else if (child.type === 'graphic_frame') {
-                let fType = child.properties?.frame_type;
-                subGroup.rules.push(createRuleObj("Loại đối tượng đồ họa", "properties.frame_type", fType));
-
-                if (fType === 'table' && child.children?.[0]) {
-                    let tbl = child.children[0];
-                    subGroup.rules.push(createRuleObj("Số cột của bảng", "children.0.properties.cols_count", tbl.properties.cols_count));
-
-                    tbl.children?.forEach((row, rIdx) => {
-                        row.children?.forEach((cell, cIdx) => {
-                            let cellText = extractAllText(cell).trim();
-                            if (cellText) {
-                                let cellGroup = createRuleGroup(`Ô [R${rIdx + 1}-C${cIdx + 1}]`, { type: "table_cell", tag: "a:tc", text_contains: cellText.substring(0, 10) });
-                                parseTextRunsDeep(cell, "", cellGroup.rules);
-                                if (cell.attributes?.gridSpan) cellGroup.rules.push(createRuleObj("Gộp cột (Colspan)", "attributes.gridSpan", cell.attributes.gridSpan));
-                                subGroup.sub_criteria.push(cellGroup);
-                            }
-                        });
-                    });
-                }
-                else if (fType === 'smartart' && child.children?.[0]) {
-                    let dm = child.children[0];
-                    dm.children?.forEach((pt, pIdx) => {
-                        if (pt.type === 'smartart_node') {
-                            let ptText = extractAllText(pt).trim();
-                            if (ptText) {
-                                let ptGroup = createRuleGroup("Node SmartArt", { type: "smartart_node", tag: "dgm:pt", text_contains: ptText.substring(0, 10) });
-                                parseTextRunsDeep(pt, "", ptGroup.rules);
-                                subGroup.sub_criteria.push(ptGroup);
-                            }
-                        }
-                    });
-                }
-                else if (fType === 'chart' && child.children?.[0]) {
-                    let chartType = child.children[0].properties?.chart_type;
-                    if (chartType) subGroup.rules.push(createRuleObj(`Loại biểu đồ (${chartType})`, `children.0.properties.chart_type`, chartType));
-                }
-            }
-
-            if (child.properties?.is_placeholder) {
-                let ph = child.properties.placeholder?.type;
-                if (['ftr', 'dt', 'sldNum'].includes(ph)) {
-                    subGroup.rules.push(createRuleObj(`Định dạng khối tự động: ${ph}`, "properties.placeholder.type", ph));
-                }
-            }
-
-            if (subGroup.rules.length > 0 || subGroup.sub_criteria.length > 0) {
-                mainGroup.sub_criteria.push(subGroup);
-            }
-        });
-
-        currentPendingGroups.push(mainGroup);
-        autoDistributePoints(currentPendingGroups[0], 2.0);
-        renderBuilderArea(mainGroup.criteria_name, rootType, "");
-    }
-
-    // ==========================================
-    // RENDER GIAO DIỆN (UI CỘT PHẢI)
-    // ==========================================
-    function renderBuilderArea(title, anchorTag, anchorTextVal) {
-        document.getElementById('rubric-empty-state').classList.add('d-none');
-        const builderArea = document.getElementById('rubric-builder-area');
-        builderArea.classList.remove('d-none');
-
-        let optionsHtml = PPTX_PRESETS.map((tpl, i) => `<option value="${i}">${tpl.label}</option>`).join('');
-
-        builderArea.innerHTML = `
-            <div class="mb-3 border-bottom pb-3">
-                <label class="form-label fw-bold text-success">📌 1. Tên Nhóm Tiêu Chí</label>
-                <input type="text" id="criteria_name" class="form-control fw-bold border-success mb-3" value="${title}" onchange="if(PPTRubricBuilder.currentPendingGroups[0]) PPTRubricBuilder.currentPendingGroups[0].criteria_name = this.value">
-                <small class="text-muted"><i class="bi bi-shield-check text-success"></i> Hệ thống tự động khóa định vị (Anchor) vào Slide hoặc Master tùy vùng click.</small>
-            </div>
-            
-            <div class="input-group input-group-sm mb-3 shadow-sm">
-                <span class="input-group-text bg-white"><i class="bi bi-plus-circle-fill text-success"></i></span>
-                <select class="form-select" id="pptx_rule_select">
-                    <option value="">-- Bổ sung thêm Luật kiểm tra thủ công --</option>
-                    ${optionsHtml}
-                </select>
-                <button class="btn btn-outline-success fw-bold" onclick="PPTRubricBuilder.addManualRule()">Thêm vào Gốc</button>
-            </div>
-
-            <h6 class="fw-bold border-bottom pb-2"><i class="bi bi-diagram-3"></i> Cấu trúc Luật Đa Tầng (Rules Tree):</h6>
-            <div id="selected_rules_cart" class="mb-3" style="max-height: 500px; overflow-y: auto;"></div>
-            
-            <div class="d-flex justify-content-between mt-3">
-                <button class="btn btn-outline-danger" onclick="document.getElementById('rubric-builder-area').innerHTML=''; document.getElementById('rubric-empty-state').classList.remove('d-none');"><i class="bi bi-x"></i> Hủy bỏ</button>
-                <button class="btn btn-success fw-bold px-4 shadow" onclick="PPTRubricBuilder.saveCurrentCriteria()"><i class="bi bi-save"></i> LƯU NHÓM TIÊU CHÍ</button>
-            </div>
-        `;
-        renderCart();
-    }
-
-    function addManualRule() {
-        const sel = document.getElementById('pptx_rule_select');
-        if (sel.value === "" || currentPendingGroups.length === 0) return;
-        const tpl = PPTX_PRESETS[sel.value];
-        currentPendingGroups[0].rules.push(createRuleObj(tpl.label, tpl.path, tpl.val || "", tpl.type, tpl.match));
-        renderCart();
-    }
-
-    function addSubRule(groupId) {
-        const sel = document.getElementById('pptx_rule_select');
-        if (sel.value === "") return alert("Vui lòng chọn 1 thuộc tính định dạng ở hộp Dropdown phía trên trước!");
-        const tpl = PPTX_PRESETS[sel.value];
-
-        let targetGroup = null;
-        for (let g of currentPendingGroups) {
-            if (g.id === groupId) { targetGroup = g; break; }
-            if (g.sub_criteria) {
-                let sub = g.sub_criteria.find(s => s.id === groupId);
-                if (sub) { targetGroup = sub; break; }
-                for (let s of g.sub_criteria) {
-                    if (s.sub_criteria) {
-                        let sub3 = s.sub_criteria.find(s3 => s3.id === groupId);
-                        if (sub3) { targetGroup = sub3; break; }
-                    }
-                }
-            }
-        }
-
-        if (targetGroup) {
-            targetGroup.rules.push(createRuleObj(tpl.label, tpl.path, tpl.val || "", tpl.type, tpl.match));
-            autoDistributePoints(currentPendingGroups[0], 2.0);
-            renderCart();
-        }
-    }
-
-    // --- HÀM MỚI: XÓA CẢ MỘT KHỐI (SUB-CRITERIA) ---
-    function removeGroup(targetGroupId) {
-        function delGrp(groups) {
-            for (let i = 0; i < groups.length; i++) {
-                if (groups[i].sub_criteria) {
-                    const idx = groups[i].sub_criteria.findIndex(g => g.id === targetGroupId);
-                    if (idx > -1) {
-                        groups[i].sub_criteria.splice(idx, 1);
-                        return true;
-                    }
-                    if (delGrp(groups[i].sub_criteria)) return true;
-                }
-            }
-            return false;
-        }
-
-        if (confirm("Bạn có chắc chắn muốn xóa toàn bộ khối này (và các luật con bên trong)?")) {
-            delGrp(currentPendingGroups);
-            autoDistributePoints(currentPendingGroups[0], 2.0);
-            renderCart();
-        }
-    }
-
-    function updateRule(groupId, ruleId, field, val) {
-        function findGroupAndRule(groups) {
-            for (let g of groups) {
-                if (g.id === groupId) {
-                    let r = g.rules.find(x => x.id == ruleId);
-                    if (r) return r;
-                }
-                if (g.sub_criteria) {
-                    let res = findGroupAndRule(g.sub_criteria);
-                    if (res) return res;
-                }
-            }
-            return null;
-        }
-        let rule = findGroupAndRule(currentPendingGroups);
-        if (rule) {
-            if (field === 'points') {
-                rule.points = parseFloat(val);
-                rule.is_manually_edited = true;
-                let totalPts = currentPendingGroups[0].target_points || 2.0;
-                autoDistributePoints(currentPendingGroups[0], totalPts);
-                renderCart();
+            if (inputEl.classList.contains('pick-formula') && data.formula) {
+                let funcMatch = data.formula.match(/^[=]?([A-Z]+)\(/i);
+                inputEl.value = funcMatch ? funcMatch[1].toUpperCase() : data.formula;
             } else {
-                rule[field] = val;
-            }
-        }
-    }
-
-    function removeRule(groupId, ruleId) {
-        function delRule(groups) {
-            for (let g of groups) {
-                if (g.id === groupId) {
-                    const idx = g.rules.findIndex(x => x.id == ruleId);
-                    if (idx > -1) { g.rules.splice(idx, 1); return true; }
+                if (pickingTargetInputId.includes('_headers')) {
+                    let cleanHeaders = data.text.split(',').map(s => s.trim()).filter(s => s !== "");
+                    inputEl.value = cleanHeaders.join(", ");
+                } else {
+                    inputEl.value = data.text;
                 }
-                if (g.sub_criteria && delRule(g.sub_criteria)) return true;
             }
-            return false;
-        }
-        delRule(currentPendingGroups);
-        autoDistributePoints(currentPendingGroups[0], 2.0);
-        renderCart();
-    }
-
-    function updateMainPoints(val) {
-        if (currentPendingGroups.length === 0) return;
-        let pts = parseFloat(val) || 0;
-        currentPendingGroups[0].target_points = pts;
-        autoDistributePoints(currentPendingGroups[0], pts);
-        renderCart();
-    }
-
-    function autoDistributePoints(group, availablePoints) {
-        // 1. Thu thập tất cả các "nhánh" cần chia điểm (Rule chưa sửa tay + Tất cả các nhóm con)
-        let unlockedBranches = [];
-        let lockedPoints = 0;
-
-        // Kiểm tra các rule trực tiếp
-        group.rules.forEach(r => {
-            if (r.is_manually_edited) {
-                lockedPoints += (r.points || 0);
-            } else {
-                unlockedBranches.push({ type: 'rule', ref: r });
-            }
-        });
-
-        // Kiểm tra các nhóm con (Sub-criteria luôn được chia điểm từ cha)
-        if (group.sub_criteria) {
-            group.sub_criteria.forEach(sub => {
-                unlockedBranches.push({ type: 'sub', ref: sub });
-            });
+            inputEl.dispatchEvent(new Event('change'));
         }
 
-        const N = unlockedBranches.length;
-        if (N === 0) return;
-
-        // 2. Tính toán số điểm còn lại và quy đổi ra số nguyên (nhân 100) để chia chính xác
-        let remainingPoints = Math.max(0, availablePoints - lockedPoints);
-        let totalCents = Math.round(remainingPoints * 100);
-        let baseCentsPerBranch = Math.floor(totalCents / N);
-        let remainderCents = totalCents % N; // Phần dư cần được bù vào
-
-        // 3. Phân bổ điểm
-        unlockedBranches.forEach((branch, index) => {
-            // Mỗi nhánh nhận điểm cơ sở, các nhánh đầu tiên nhận thêm 0.01đ từ phần dư
-            let allocatedCents = baseCentsPerBranch + (index < remainderCents ? 1 : 0);
-            let allocatedPoints = allocatedCents / 100;
-
-            if (branch.type === 'rule') {
-                branch.ref.points = allocatedPoints;
-            } else {
-                // Nếu là nhóm con, ném số điểm được chia xuống để nó tự chia tiếp cho con của nó
-                autoDistributePoints(branch.ref, allocatedPoints);
-            }
-        });
+        pickingTargetInputId = null; 
     }
 
-    function renderRulesList(group, depth = 0) {
-        let html = '';
-        let marginLeft = depth * 20;
-        let borderColor = depth === 0 ? 'border-success' : (depth === 1 ? 'border-primary' : 'border-info');
+    function renderBuilderUI() {
+        const area = document.getElementById('rubric-builder-area');
+        const emptyState = document.getElementById('rubric-empty-state');
+        if (!area) return;
 
-        group.rules.forEach((rule) => {
-            html += `
-            <div class="card mb-2 border-start border-4 ${borderColor} shadow-sm" style="margin-left: ${marginLeft}px;">
-                <div class="card-body p-2">
-                    <div class="d-flex justify-content-between align-items-center mb-1">
-                        <input type="text" class="form-control form-control-sm fw-bold text-dark border-0 bg-transparent px-0 w-75" 
-                            value="${rule.description}" onchange="PPTRubricBuilder.updateRule('${group.id}', '${rule.id}', 'description', this.value)">
-                        <div class="d-flex gap-1 align-items-center">
-                            <span class="small text-muted">Điểm:</span>
-                            <input type="number" class="form-control form-control-sm text-center" style="width: 50px;" value="${rule.points}" step="0.25" onchange="PPTRubricBuilder.updateRule('${group.id}', '${rule.id}', 'points', this.value)">
-                            <button class="btn btn-sm text-danger p-0" onclick="PPTRubricBuilder.removeRule('${group.id}', '${rule.id}')" title="Xóa luật"><i class="bi bi-trash"></i></button>
-                        </div>
+        if (rubric.length === 0) {
+            emptyState.style.display = 'block';
+            area.classList.add('d-none');
+            area.innerHTML = '';
+            return;
+        }
+
+        emptyState.style.display = 'none';
+        area.classList.remove('d-none');
+        area.innerHTML = '';
+
+        rubric.forEach((crit, cIdx) => {
+            const card = document.createElement('div');
+            card.className = 'card shadow-sm mb-3 border-success';
+
+            let isGlobal = false;
+            let loc = crit.region_definition?.locator;
+            if (loc && loc.type === 'global') isGlobal = true;
+            if (crit.anchor_locator && crit.anchor_locator.type === 'global') isGlobal = true;
+
+            let anchorHtml = '';
+            if (isGlobal) {
+                anchorHtml = `
+                    <div class="alert alert-info py-2 mb-2 small shadow-sm border-info">
+                        <i class="bi bi-globe-americas"></i> <b>Phạm vi Toàn cục (Global):</b> Tiêu chí này không cần Mỏ neo. Hệ thống sẽ quét toàn bộ file để kiểm tra (Ví dụ: Biểu đồ, Pivot Table, Sheet Name).
                     </div>
-                    <div class="input-group input-group-sm">
-                        <span class="input-group-text bg-light text-muted" style="font-size:0.75rem;">Kỳ vọng</span>
-                        <input type="text" class="form-control text-dark font-monospace" value="${rule.expected_value || rule.action}" onchange="PPTRubricBuilder.updateRule('${group.id}', '${rule.id}', 'expected_value', this.value)" title="Path: ${rule.property_to_check}">
+                `;
+            } else {
+                let headersStr = (loc && loc.required_headers) ? loc.required_headers.join(", ") : "";
+                anchorHtml = `
+                    <div class="border rounded p-2 mb-2 bg-white border-warning">
+                        <label class="form-label small fw-bold text-warning-emphasis mb-1"><i class="bi bi-geo-alt"></i> Mỏ neo (Nhận diện bảng): Các cột bắt buộc có</label>
+                        <div class="input-group input-group-sm">
+                            <input type="text" class="form-control" id="crit_${cIdx}_headers"
+                                   placeholder="VD: STT, Mã hàng, Số lượng, Đơn giá..." value="${headersStr}"
+                                   onchange="ExcelRubricBuilder.updateAnchor(${cIdx}, this.value)">
+                            <button class="btn btn-outline-warning text-dark fw-bold" type="button" 
+                                    onclick="ExcelRubricBuilder.enablePickMode('crit_${cIdx}_headers', 'Dòng tiêu đề')">
+                                <i class="bi bi-cursor-fill"></i> Chọn dòng trên lưới
+                            </button>
+                        </div>
+                        <small class="text-muted" style="font-size: 11px;">Hệ thống sẽ tự động quét file để tìm bảng chứa các cột này.</small>
+                    </div>
+                `;
+            }
+
+            let html = `
+                <div class="card-header bg-success-subtle d-flex justify-content-between align-items-center p-2">
+                    <input type="text" class="form-control form-control-sm fw-bold border-success w-50" 
+                           value="${crit.criteria_name}" placeholder="Tên tiêu chí (VD: Câu 1...)" 
+                           onchange="ExcelRubricBuilder.updateCrit(${cIdx}, 'criteria_name', this.value)">
+                    
+                    <div class="input-group input-group-sm w-25">
+                        <span class="input-group-text bg-white">Điểm</span>
+                        <input type="number" step="0.1" class="form-control text-center" 
+                               value="${crit.allocated_points}" 
+                               onchange="ExcelRubricBuilder.updateCrit(${cIdx}, 'allocated_points', parseFloat(this.value)||0)">
+                    </div>
+                    
+                    <button class="btn btn-sm btn-danger" onclick="ExcelRubricBuilder.removeCrit(${cIdx})"><i class="bi bi-trash"></i></button>
+                </div>
+                
+                <div class="card-body p-2 bg-light">
+                    ${anchorHtml}
+
+                    <div class="rules-container ps-3 border-start border-2 border-secondary" id="rules_container_${cIdx}">
+                        ${renderRules(cIdx, crit.rules)}
+                    </div>
+                    
+                    <div class="mt-3 text-end dropup">
+                        <button class="btn btn-sm btn-outline-primary dropdown-toggle" data-bs-toggle="dropdown">
+                            <i class="bi bi-plus-circle"></i> Thêm Quy tắc chấm
+                        </button>
+                        <ul class="dropdown-menu shadow border-0">
+                            <li><h6 class="dropdown-header text-primary"><i class="bi bi-table"></i> Hàm & Dữ liệu</h6></li>
+                            <li><a class="dropdown-item small" href="#" onclick="ExcelRubricBuilder.addSpecificRule(${cIdx}, 'VERIFY_COLUMN_HYBRID')"><i class="bi bi-cpu"></i> Chấm Động Toàn Cột (Hybrid)</a></li>
+                            <li><a class="dropdown-item small" href="#" onclick="ExcelRubricBuilder.addSpecificRule(${cIdx}, 'VERIFY_EXTRACTED_DATA')"><i class="bi bi-funnel"></i> Rút trích Dữ liệu (Advanced Filter)</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><h6 class="dropdown-header text-info"><i class="bi bi-pie-chart"></i> Đối tượng (Pivot/Chart)</h6></li>
+                            <li><a class="dropdown-item small" href="#" onclick="ExcelRubricBuilder.addSpecificRule(${cIdx}, 'VERIFY_PIVOT_TABLE')"><i class="bi bi-layout-split"></i> Cấu trúc Pivot Table</a></li>
+                            <li><a class="dropdown-item small" href="#" onclick="ExcelRubricBuilder.addSpecificRule(${cIdx}, 'VERIFY_CHART_TYPE')"><i class="bi bi-bar-chart"></i> Loại Biểu đồ</a></li>
+                            <li><a class="dropdown-item small" href="#" onclick="ExcelRubricBuilder.addSpecificRule(${cIdx}, 'VERIFY_CHART_SERIES_KEYWORDS')"><i class="bi bi-list-columns-reverse"></i> Dữ liệu vẽ Biểu đồ</a></li>
+                        </ul>
                     </div>
                 </div>
-            </div>`;
+            `;
+            card.innerHTML = html;
+            area.appendChild(card);
+        });
+
+        const btnSave = document.getElementById('btnSaveRubric');
+        if (btnSave) btnSave.disabled = rubric.length === 0;
+    }
+
+    function renderRules(cIdx, rules) {
+        if (!rules || rules.length === 0) return '<div class="text-muted small fst-italic">Chưa có quy tắc nào. Hệ thống sẽ bỏ qua tiêu chí này.</div>';
+
+        let html = '';
+        rules.forEach((rule, rIdx) => {
+            const btnRemove = `<button class="btn btn-sm btn-outline-danger position-absolute top-0 end-0 m-1 border-0" onclick="ExcelRubricBuilder.removeRule(${cIdx}, ${rIdx})"><i class="bi bi-x-lg"></i></button>`;
+            const scoreInput = `
+                <div class="col-md-3 col-sm-4 d-flex">
+                    <span class="input-group-text py-0 border-0 bg-transparent small fw-bold text-danger">Điểm</span>
+                    <input type="number" step="0.1" class="form-control form-control-sm border-danger" value="${rule.points || 0}"
+                           onchange="ExcelRubricBuilder.updateRule(${cIdx}, ${rIdx}, 'points', parseFloat(this.value)||0)">
+                </div>`;
+
+            if (rule.action === "VERIFY_COLUMN_HYBRID") {
+                let st = rule.strict_check || {};
+                let expVals = (st.expected_values || []).join(", ");
+                let funcs = (st.allowed_functions || []).join(", ");
+
+                html += `
+                    <div class="border rounded p-2 mb-2 bg-white position-relative rule-card">
+                        ${btnRemove}
+                        <h6 class="text-primary small fw-bold mb-2"><i class="bi bi-cpu"></i> Chấm Động (Hybrid) Toàn Cột</h6>
+                        <div class="row g-2 align-items-center mb-2">
+                            <div class="col-5">
+                                <div class="input-group input-group-sm">
+                                    <input type="text" class="form-control" id="rule_${cIdx}_${rIdx}_col" placeholder="Tên cột (VD: Thành tiền)" value="${rule.target_column || ''}"
+                                           onchange="ExcelRubricBuilder.updateRule(${cIdx}, ${rIdx}, 'target_column', this.value)">
+                                    <button class="btn btn-outline-secondary" onclick="ExcelRubricBuilder.enablePickMode('rule_${cIdx}_${rIdx}_col', 'Ô tiêu đề cột')"><i class="bi bi-cursor"></i> Pick</button>
+                                </div>
+                            </div>
+                            <div class="col-4">
+                                <div class="input-group input-group-sm">
+                                    <span class="input-group-text">Dòng tối đa</span>
+                                    <input type="number" class="form-control" value="${rule.expected_total_rows || 10}" 
+                                           onchange="ExcelRubricBuilder.updateRule(${cIdx}, ${rIdx}, 'expected_total_rows', parseInt(this.value)||1)">
+                                </div>
+                            </div>
+                            ${scoreInput}
+                        </div>
+                        <div class="row g-2 mb-1 bg-danger-subtle p-2 rounded mx-0">
+                            <div class="col-12"><span class="small fw-bold text-danger">Chấm gắt gao (Dòng đầu)</span></div>
+                            <div class="col-3">
+                                <input type="number" class="form-control form-control-sm" title="Số dòng kiểm tra kỹ" value="${st.check_limit || 4}"
+                                       onchange="ExcelRubricBuilder.updateHybridRule(${cIdx}, ${rIdx}, 'strict_check', 'check_limit', parseInt(this.value)||0)">
+                            </div>
+                            <div class="col-5">
+                                <input type="text" class="form-control form-control-sm" placeholder="Đáp án chuẩn (cách bằng phẩy)" value="${expVals}"
+                                       onchange="ExcelRubricBuilder.updateHybridRule(${cIdx}, ${rIdx}, 'strict_check', 'expected_values', this.value)">
+                            </div>
+                            <div class="col-4">
+                                <input type="text" class="form-control form-control-sm pick-formula" id="rule_${cIdx}_${rIdx}_func" 
+                                       placeholder="Hàm yêu cầu (SUM...)" value="${funcs}"
+                                       onclick="ExcelRubricBuilder.enablePickMode('rule_${cIdx}_${rIdx}_func', 'Ô chứa công thức')"
+                                       onchange="ExcelRubricBuilder.updateHybridRule(${cIdx}, ${rIdx}, 'strict_check', 'allowed_functions', this.value)">
+                            </div>
+                        </div>
+                    </div>`;
+            }
+
+            else if (rule.action === "VERIFY_PIVOT_TABLE") {
+                let isDataFld = rule.field_type === 'data';
+                html += `
+                    <div class="border rounded p-2 mb-2 bg-white position-relative rule-card border-info">
+                        ${btnRemove}
+                        <h6 class="text-info small fw-bold mb-2"><i class="bi bi-layout-split"></i> Cấu trúc Pivot Table</h6>
+                        <div class="row g-2 align-items-center">
+                            <div class="col-3">
+                                <select class="form-select form-select-sm" onchange="ExcelRubricBuilder.updateRule(${cIdx}, ${rIdx}, 'field_type', this.value); ExcelRubricBuilder.refreshUI();">
+                                    <option value="row" ${rule.field_type === 'row' ? 'selected' : ''}>Kéo vào Row</option>
+                                    <option value="col" ${rule.field_type === 'col' ? 'selected' : ''}>Kéo vào Column</option>
+                                    <option value="data" ${rule.field_type === 'data' ? 'selected' : ''}>Kéo vào Data (Values)</option>
+                                </select>
+                            </div>
+                            <div class="col-3">
+                                <input type="text" class="form-control form-control-sm" placeholder="Field ID (VD: 3 hoặc 6)" value="${rule.expected_fld || ''}"
+                                       onchange="ExcelRubricBuilder.updateRule(${cIdx}, ${rIdx}, 'expected_fld', this.value)">
+                            </div>
+                            <div class="col-3">
+                                <select class="form-select form-select-sm" onchange="ExcelRubricBuilder.updateRule(${cIdx}, ${rIdx}, 'expected_subtotal', this.value)" ${!isDataFld ? 'disabled' : ''}>
+                                    <option value="sum" ${rule.expected_subtotal === 'sum' ? 'selected' : ''}>Hàm SUM</option>
+                                    <option value="count" ${rule.expected_subtotal === 'count' ? 'selected' : ''}>Hàm COUNT</option>
+                                    <option value="average" ${rule.expected_subtotal === 'average' ? 'selected' : ''}>Hàm AVERAGE</option>
+                                </select>
+                            </div>
+                            ${scoreInput}
+                        </div>
+                    </div>`;
+            }
+
+            else if (rule.action === "VERIFY_CHART_TYPE") {
+                html += `
+                    <div class="border rounded p-2 mb-2 bg-white position-relative rule-card border-primary">
+                        ${btnRemove}
+                        <h6 class="text-primary small fw-bold mb-2"><i class="bi bi-bar-chart"></i> Phân loại Biểu đồ</h6>
+                        <div class="row g-2 align-items-center">
+                            <div class="col-9">
+                                <select class="form-select form-select-sm" onchange="ExcelRubricBuilder.updateRule(${cIdx}, ${rIdx}, 'expected_type', this.value)">
+                                    <option value="barchart" ${rule.expected_type === 'barchart' ? 'selected' : ''}>Biểu đồ Cột (Bar / Column)</option>
+                                    <option value="piechart" ${rule.expected_type === 'piechart' ? 'selected' : ''}>Biểu đồ Tròn (Pie)</option>
+                                    <option value="linechart" ${rule.expected_type === 'linechart' ? 'selected' : ''}>Biểu đồ Đường (Line)</option>
+                                    <option value="scatterchart" ${rule.expected_type === 'scatterchart' ? 'selected' : ''}>Biểu đồ Phân tán (Scatter)</option>
+                                </select>
+                            </div>
+                            ${scoreInput}
+                        </div>
+                    </div>`;
+            }
+
+            else if (rule.action === "VERIFY_CHART_SERIES_KEYWORDS") {
+                let kws = (rule.expected_series_keywords || []).join(", ");
+                html += `
+                    <div class="border rounded p-2 mb-2 bg-white position-relative rule-card border-primary">
+                        ${btnRemove}
+                        <h6 class="text-primary small fw-bold mb-2"><i class="bi bi-list-columns-reverse"></i> Dữ liệu vẽ Biểu đồ (Series / Values)</h6>
+                        <div class="row g-2 align-items-center">
+                            <div class="col-9">
+                                <input type="text" class="form-control form-control-sm" placeholder="Từ khóa trong bảng nguồn (VD: doanh thu, số lượng)" value="${kws}"
+                                       onchange="ExcelRubricBuilder.updateArrayRule(${cIdx}, ${rIdx}, 'expected_series_keywords', this.value)">
+                            </div>
+                            ${scoreInput}
+                        </div>
+                    </div>`;
+            }
+
+            else if (rule.action === "VERIFY_EXTRACTED_DATA") {
+                let fb = (rule.forbidden_values || []).join(", ");
+                html += `
+                    <div class="border rounded p-2 mb-2 bg-white position-relative rule-card border-warning">
+                        ${btnRemove}
+                        <h6 class="text-warning-emphasis small fw-bold mb-2"><i class="bi bi-funnel"></i> Lọc Trích Xuất (Advanced Filter)</h6>
+                        <div class="row g-2 align-items-center">
+                            <div class="col-5">
+                                <input type="text" class="form-control form-control-sm border-warning" placeholder="Dữ liệu bắt buộc có (VD: xăng a92)" value="${rule.expected_value || ''}"
+                                       onchange="ExcelRubricBuilder.updateRule(${cIdx}, ${rIdx}, 'expected_value', this.value)">
+                            </div>
+                            <div class="col-4">
+                                <input type="text" class="form-control form-control-sm" placeholder="Cấm chứa chữ (VD: nhớt, dầu)" value="${fb}"
+                                       onchange="ExcelRubricBuilder.updateArrayRule(${cIdx}, ${rIdx}, 'forbidden_values', this.value)">
+                            </div>
+                            ${scoreInput}
+                        </div>
+                    </div>`;
+            }
+
+            else {
+                html += `
+                    <div class="border rounded p-2 mb-2 bg-white position-relative rule-card">
+                        ${btnRemove}
+                        <div class="text-muted small">Quy tắc cơ bản: <b>${rule.action}</b></div>
+                    </div>`;
+            }
         });
         return html;
     }
 
-    function renderCart() {
-        const cartDiv = document.getElementById('selected_rules_cart');
-        if (!cartDiv) return;
-        if (currentPendingGroups.length === 0) {
-            cartDiv.innerHTML = '<div class="alert alert-secondary text-center small py-2">Trống.</div>';
-            return;
-        }
-
-        let html = '';
-        function renderGroupRecursive(group, depth) {
-            let res = '';
-            if (depth > 0) {
-                // Đã bổ sung nút XÓA KHỐI (removeGroup) trên giao diện
-                res += `<div class="mt-2 p-2 bg-light border rounded" style="margin-left: ${(depth - 1) * 20}px;">
-                            <div class="d-flex justify-content-between align-items-center mb-2">
-                                <h6 class="text-primary fw-bold mb-0" style="font-size: 0.9rem;"><i class="bi bi-box"></i> ${group.criteria_name}</h6>
-                                <div>
-                                    <button class="btn btn-sm btn-outline-success py-0 me-1" onclick="PPTRubricBuilder.addSubRule('${group.id}')" title="Thêm luật vào khối này"><i class="bi bi-plus"></i> Luật</button>
-                                    <button class="btn btn-sm btn-outline-danger py-0" onclick="PPTRubricBuilder.removeGroup('${group.id}')" title="Xóa toàn bộ khối này"><i class="bi bi-trash"></i> Xóa khối</button>
-                                </div>
-                            </div>`;
-            }
-            res += renderRulesList(group, depth);
-            if (group.sub_criteria) {
-                group.sub_criteria.forEach(sub => res += renderGroupRecursive(sub, depth + 1));
-            }
-            if (depth > 0) res += `</div>`;
-            return res;
-        }
-
-        currentPendingGroups.forEach(mainGroup => {
-            let currentTotal = mainGroup.target_points || 2.0;
-            html += `
-            <div class="d-flex justify-content-between align-items-center mt-3 mb-2 pb-2 border-bottom">
-                <h6 class="text-success fw-bold mb-0"><i class="bi bi-display"></i> Layer Cấp Cao Nhất</h6>
-                <div class="input-group input-group-sm w-auto shadow-sm">
-                    <span class="input-group-text bg-success text-white fw-bold">Tổng điểm khối này:</span>
-                    <input type="number" id="main_total_points" class="form-control text-center fw-bold text-success" style="width: 75px;" value="${currentTotal}" step="0.25" onchange="PPTRubricBuilder.updateMainPoints(this.value)">
-                </div>
-            </div>`;
-            html += renderGroupRecursive(mainGroup, 0);
+    function createGlobalCriteria() {
+        rubric.push({
+            criteria_name: "Tiêu chí Đối tượng Toàn cục (Chart/Pivot)",
+            allocated_points: 1.0,
+            region_definition: {
+                region_id: "GLOBAL_" + Date.now(),
+                locator: { type: "global" }
+            },
+            anchor_locator: { type: "global" }, 
+            rules: []
         });
-
-        cartDiv.innerHTML = html;
+        renderBuilderUI();
     }
 
-    // ==========================================
-    // LƯU DỮ LIỆU ĐỂ EXPORT (VỚI AUTO-CLEAN DỌN RÁC)
-    // ==========================================
-    function saveCurrentCriteria() {
-        if (currentPendingGroups.length === 0) return alert("Cần ít nhất 1 luật!");
-        const name = document.getElementById('criteria_name').value;
+    // --- DATA MUTATION ---
+    function createEmptyCriteria() {
+        rubric.push({
+            criteria_name: "Tiêu chí mới",
+            allocated_points: 1.0,
+            region_definition: {
+                region_id: "BANG_" + Date.now(),
+                locator: { type: "header_signature", required_headers: [] }
+            },
+            rules: []
+        });
+        renderBuilderUI();
+    }
 
-        // Đệ quy dọn dẹp ID, tính tổng điểm VÀ TỰ ĐỘNG XÓA KHỐI RỖNG
-        function cleanGroup(group) {
-            let total = group.rules.reduce((sum, r) => sum + parseFloat(r.points || 0), 0);
-            group.rules = group.rules.map(({ id, ...rest }) => rest);
+    function refreshUI() {
+        renderBuilderUI(); 
+    }
 
-            if (group.sub_criteria) {
-                let subTotal = 0;
-                let cleanedSubCriteria = [];
-                for (let sub of group.sub_criteria) {
-                    let cleanedSub = cleanGroup(sub);
-                    // CHỈ GIỮ LẠI khối nếu nó có luật, HOẶC nhóm con của nó có luật
-                    if (cleanedSub.rules.length > 0 || (cleanedSub.sub_criteria && cleanedSub.sub_criteria.length > 0)) {
-                        subTotal += cleanedSub.allocated_points;
-                        cleanedSubCriteria.push(cleanedSub);
-                    }
-                }
-                group.sub_criteria = cleanedSubCriteria;
-                group.allocated_points = total + subTotal;
+    function addSpecificRule(cIdx, ruleType) {
+        let newRule = { action: ruleType, points: 1.0 };
 
-                // Nếu mảng rỗng thì xóa luôn trường sub_criteria cho JSON gọn
-                if (group.sub_criteria.length === 0) {
-                    delete group.sub_criteria;
-                }
-            } else {
-                group.allocated_points = total;
+        if (ruleType === "VERIFY_COLUMN_HYBRID") {
+            newRule = {
+                action: "VERIFY_COLUMN_HYBRID", target_column: "", expected_total_rows: 10, points: 1.0,
+                strict_check: { check_limit: 4, expected_values: [], allowed_functions: [] },
+                loose_check: { require_dynamic_formula: true }
+            };
+        } else if (ruleType === "VERIFY_PIVOT_TABLE") {
+            newRule = { action: "VERIFY_PIVOT_TABLE", field_type: "row", source_col_header: "", expected_subtotal: "sum", points: 1.0 };
+        } else if (ruleType === "VERIFY_CHART_TYPE") {
+            newRule = { action: "VERIFY_CHART_TYPE", expected_type: "barchart", points: 0.5 };
+        } else if (ruleType === "VERIFY_CHART_SERIES_KEYWORDS") {
+            newRule = { action: "VERIFY_CHART_SERIES_KEYWORDS", expected_series_keywords: [], points: 1.0 };
+        } else if (ruleType === "VERIFY_EXTRACTED_DATA") {
+            newRule = { action: "VERIFY_EXTRACTED_DATA", expected_value: "", forbidden_values: [], points: 1.0 };
+        }
+
+        rubric[cIdx].rules.push(newRule);
+        renderBuilderUI();
+    }
+
+    function removeCrit(idx) { rubric.splice(idx, 1); renderBuilderUI(); }
+    function removeRule(cIdx, rIdx) { rubric[cIdx].rules.splice(rIdx, 1); renderBuilderUI(); }
+
+    function updateCrit(cIdx, key, val) { rubric[cIdx][key] = val; }
+    function updateRule(cIdx, rIdx, key, val) { rubric[cIdx].rules[rIdx][key] = val; }
+
+    function updateArrayRule(cIdx, rIdx, key, strVal) {
+        rubric[cIdx].rules[rIdx][key] = strVal.split(',').map(s => s.trim()).filter(s => s);
+    }
+
+    function updateAnchor(cIdx, strVal) {
+        if (!rubric[cIdx].region_definition) rubric[cIdx].region_definition = { locator: { type: "header_signature" } };
+        rubric[cIdx].region_definition.locator.required_headers = strVal.split(',').map(s => s.trim()).filter(s => s);
+    }
+
+    function updateHybridRule(cIdx, rIdx, block, key, val) {
+        let rule = rubric[cIdx].rules[rIdx];
+        if (!rule[block]) rule[block] = {};
+
+        if (key === 'expected_values' || key === 'allowed_functions') {
+            rule[block][key] = val.split(',').map(s => s.trim()).filter(s => s);
+        } else {
+            rule[block][key] = val;
+        }
+    }
+
+    // --- QUICK TOOLS ---
+    function addGlobalObjectCheck(objType) {
+        let name = objType === 'chart' ? 'Biểu đồ' : 'Pivot Table';
+        rubric.push({
+            criteria_name: `Kiểm tra Tồn tại ${name}`,
+            allocated_points: 0.5,
+            anchor_locator: { type: "global" },
+            rules: [{
+                description: `File phải có ${name}`,
+                action: "VERIFY_OBJECT_EXISTS",
+                expected_object: objType,
+                points: 0.5
+            }]
+        });
+        renderBuilderUI();
+        if (typeof showToast === 'function') showToast(`Đã thêm tiêu chí kiểm tra ${name}.`, 'success');
+    }
+
+    function getRubric() { return rubric; }
+
+    // --- MODAL, XÓA & TẢI RUBRIC (CẬP NHẬT TƯƠNG ĐỒNG POWERPOINT) ---
+    function deleteCriteria(index) {
+        if (confirm("Bạn có chắc chắn muốn xóa tiêu chí này?")) {
+            rubric.splice(index, 1);
+            showRubricModal();
+            renderBuilderUI();
+            if (rubric.length === 0 && document.getElementById('btnSaveRubric')) {
+                document.getElementById('btnSaveRubric').disabled = true;
             }
-            delete group.id;
-            return group;
         }
-
-        let finalGroup = cleanGroup(JSON.parse(JSON.stringify(currentPendingGroups[0])));
-
-        // Khối Main ngoài cùng không có luật nào thì chặn lưu
-        if (finalGroup.rules.length === 0 && !finalGroup.sub_criteria) {
-            return alert("Không thể lưu cụm tiêu chí rỗng. Vui lòng thiết lập ít nhất 1 luật!");
-        }
-
-        finalGroup.criteria_name = name;
-        globalRubric.push(finalGroup);
-
-        if (document.getElementById('btnSaveRubric')) document.getElementById('btnSaveRubric').disabled = false;
-        document.getElementById('rubric-builder-area').innerHTML = '';
-        document.getElementById('rubric-empty-state').classList.remove('d-none');
-        if (typeof showToast === 'function') showToast(`Đã lưu tiêu chí: ${name}`, "success");
     }
 
-    // Modal & Export
     function showRubricModal() {
         let tbodyHtml = '';
-        globalRubric.forEach((crit, index) => {
-            let anchorDesc = crit.anchor_locator.type === 'presentation' ? 'Toàn trang' :
-                crit.anchor_locator.type === 'slide_master' ? 'Slide Master' :
-                    `Slide ${crit.anchor_locator.properties?.slide_index || ''}`;
+        rubric.forEach((crit, index) => {
+            // Xác định mô tả Mỏ neo cho Excel
+            let isGlobal = false;
+            let loc = crit.region_definition?.locator;
+            if (loc && loc.type === 'global') isGlobal = true;
+            if (crit.anchor_locator && crit.anchor_locator.type === 'global') isGlobal = true;
 
-            let ruleCount = crit.rules.length;
+            let anchorDesc = isGlobal ? 'Toàn cục (Global)' : 'Bảng dữ liệu';
+            if (!isGlobal && loc && loc.required_headers && loc.required_headers.length > 0) {
+                anchorDesc = `Cột: ${loc.required_headers.slice(0, 3).join(", ")}...`;
+            }
+
+            let ruleCount = crit.rules ? crit.rules.length : 0;
 
             tbodyHtml += `
                 <tr>
                     <td class="fw-bold text-primary">${crit.criteria_name}</td>
                     <td><span class="badge bg-light border text-dark text-wrap text-start lh-base">${anchorDesc}</span></td>
                     <td class="text-center fw-bold text-success">${crit.allocated_points}</td>
-                    <td class="text-center">${ruleCount}+</td>
+                    <td class="text-center">${ruleCount}</td>
                     <td class="text-center">
-                        <button class="btn btn-sm btn-outline-danger" onclick="PPTRubricBuilder.deleteCriteria(${index})"><i class="bi bi-trash"></i></button>
+                        <button class="btn btn-sm btn-outline-danger" onclick="ExcelRubricBuilder.deleteCriteria(${index})"><i class="bi bi-trash"></i></button>
                     </td>
                 </tr>
             `;
         });
 
-        if (globalRubric.length === 0) tbodyHtml = `<tr><td colspan="5" class="text-center text-muted py-4">Chưa có tiêu chí nào.</td></tr>`;
+        if (rubric.length === 0) tbodyHtml = `<tr><td colspan="5" class="text-center text-muted py-4">Chưa có tiêu chí nào.</td></tr>`;
 
         let modalEl = document.getElementById('rubricViewModal');
 
-        // NẾU MODAL CHƯA TỒN TẠI -> TẠO MỚI (Lần đầu bấm Xem)
+        // NẾU MODAL CHƯA TỒN TẠI -> TẠO MỚI
         if (!modalEl) {
             const modalHtml = `
             <div class="modal fade" id="rubricViewModal" tabindex="-1" aria-hidden="true">
                 <div class="modal-dialog modal-lg modal-dialog-centered">
                     <div class="modal-content border-0 shadow-lg">
-                        <div class="modal-header bg-primary text-white">
-                            <h5 class="modal-title fw-bold"><i class="bi bi-card-checklist"></i> Danh sách Tiêu chí Rubric</h5>
+                        <div class="modal-header bg-success text-white">
+                            <h5 class="modal-title fw-bold"><i class="bi bi-card-checklist"></i> Danh sách Tiêu chí Rubric (Excel)</h5>
                             <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                         </div>
                         <div class="modal-body p-0">
                             <table class="table table-hover mb-0">
                                 <thead class="table-light">
-                                    <tr><th>Tên tiêu chí</th><th>Mốc định vị (Anchor)</th><th class="text-center">Điểm</th><th class="text-center">Luật gốc</th><th class="text-center">Xóa</th></tr>
+                                    <tr><th>Tên tiêu chí</th><th>Mốc định vị (Anchor)</th><th class="text-center">Điểm</th><th class="text-center">Số Luật</th><th class="text-center">Xóa</th></tr>
                                 </thead>
                                 <tbody id="rubricModalTbody">${tbodyHtml}</tbody>
                             </table>
                         </div>
                         <div class="modal-footer bg-light">
                             <button type="button" class="btn btn-secondary fw-bold" data-bs-dismiss="modal">Đóng</button>
-                            <button type="button" class="btn btn-success fw-bold" onclick="PPTRubricBuilder.downloadRubric()"><i class="bi bi-download"></i> Tải File JSON</button>
+                            <button type="button" class="btn btn-success fw-bold" onclick="ExcelRubricBuilder.downloadRubric()"><i class="bi bi-download"></i> Tải File JSON</button>
                         </div>
                     </div>
                 </div>
@@ -786,75 +543,48 @@ const PPTRubricBuilder = (function () {
             modalEl = document.getElementById('rubricViewModal');
             new bootstrap.Modal(modalEl).show();
         }
-        // NẾU MODAL ĐÃ MỞ RỒI -> CHỈ CẬP NHẬT LẠI DỮ LIỆU CỦA BẢNG (Khi bấm Xóa)
+        // NẾU MODAL ĐÃ MỞ RỒI -> CHỈ CẬP NHẬT LẠI DỮ LIỆU
         else {
             document.getElementById('rubricModalTbody').innerHTML = tbodyHtml;
-
-            // Đảm bảo Modal luôn ở trạng thái hiển thị
             let bsModal = bootstrap.Modal.getInstance(modalEl);
             if (!bsModal) bsModal = new bootstrap.Modal(modalEl);
             bsModal.show();
         }
     }
 
-    function deleteCriteria(index) {
-        if (confirm("Bạn có chắc chắn muốn xóa tiêu chí này?")) {
-            globalRubric.splice(index, 1);
-            showRubricModal();
-            if (globalRubric.length === 0 && document.getElementById('btnSaveRubric')) document.getElementById('btnSaveRubric').disabled = true;
-        }
-    }
-
-    // ==========================================
-    // EXPORT VÀ DOWNLOAD (VỚI FALLBACK AN TOÀN CHO SHOWTOAST)
-    // ==========================================
     async function downloadRubric() {
-        if (globalRubric.length === 0) {
-            return typeof showToast === 'function' ? 
-                showToast("Rubric đang trống! Vui lòng tạo ít nhất 1 tiêu chí.", "warning") : 
-                alert("Rubric đang trống! Vui lòng tạo ít nhất 1 tiêu chí.");
+        if (rubric.length === 0) {
+            return typeof showToast === 'function' ? showToast("Rubric đang trống! Vui lòng tạo ít nhất 1 tiêu chí.", "warning") : alert("Rubric đang trống!");
         }
 
-        const rubricBlob = new Blob([JSON.stringify(globalRubric, null, 4)], { type: "application/json" });
+        const rubricBlob = new Blob([JSON.stringify(rubric, null, 4)], { type: "application/json" });
         const url = URL.createObjectURL(rubricBlob);
         const a = document.createElement('a');
         a.href = url;
-        // Đổi tên file cho phù hợp với PowerPoint
-        a.download = "rubric_powerpoint_export.json";
+        a.download = "rubric_excel_export.json";
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
 
-        if (typeof showToast === 'function') {
-            showToast("Đã tải JSON Rubric thành công!", "success");
-        } else {
-            alert("Đã tải JSON Rubric thành công!");
-        }
+        if (typeof showToast === 'function') showToast("Đã tải JSON Rubric thành công!", "success");
     }
 
     async function exportRubric() {
         const fileInput = document.getElementById('fileInput');
 
         if (!fileInput || fileInput.files.length === 0) {
-            return typeof showToast === 'function' ? showToast(
-                "Không tìm thấy file gốc. Vui lòng tải file lên trước!",
-                "warning"
-            ) : alert("Không tìm thấy file gốc. Vui lòng tải file lên trước!");
+            return typeof showToast === 'function' ? showToast("Không tìm thấy file gốc. Vui lòng tải file lên trước!", "warning") : alert("Không tìm thấy file gốc. Vui lòng tải file lên trước!");
         }
 
-        if (globalRubric.length === 0) {
-            return typeof showToast === 'function' ? showToast(
-                "Rubric đang trống! Vui lòng tạo ít nhất 1 tiêu chí.",
-                "warning"
-            ) : alert("Rubric đang trống! Vui lòng tạo ít nhất 1 tiêu chí.");
+        if (rubric.length === 0) {
+            return typeof showToast === 'function' ? showToast("Rubric đang trống! Vui lòng tạo ít nhất 1 tiêu chí.", "warning") : alert("Rubric đang trống!");
         }
 
         const originalFile = fileInput.files[0];
 
-        // Tạo file JSON
         const rubricBlob = new Blob(
-            [JSON.stringify(globalRubric, null, 4)],
+            [JSON.stringify(rubric, null, 4)],
             { type: "application/json" }
         );
 
@@ -867,12 +597,8 @@ const PPTRubricBuilder = (function () {
         let rubricName = "";
 
         while (true) {
-            rubricName = prompt(
-                "Nhập tên rubric:",
-                rubricName
-            );
+            rubricName = prompt("Nhập tên rubric:", rubricName);
 
-            // Người dùng bấm cancel
             if (rubricName === null) {
                 return;
             }
@@ -882,8 +608,6 @@ const PPTRubricBuilder = (function () {
             if (rubricName === "") {
                 if (typeof showToast === 'function') {
                     showToast("Tên rubric không được để trống!", "warning");
-                } else {
-                    alert("Tên rubric không được để trống!");
                 }
                 continue;
             }
@@ -904,36 +628,27 @@ const PPTRubricBuilder = (function () {
 
                 const result = await response.json();
 
-                // Thành công
                 if (response.ok && result.status === "success") {
                     if (typeof showToast === 'function') {
                         showToast("Lưu rubric thành công!", "success");
-                    } else {
-                        alert("Lưu rubric thành công!");
                     }
                     console.log(result);
                     return;
                 }
 
-                // Trùng tên
                 if (result.status === "error" && result.code === "EXISTS_NAME") {
                     if (typeof showToast === 'function') {
                         showToast("Tên rubric đã tồn tại. Vui lòng nhập tên khác!", "warning");
-                    } else {
-                        alert("Tên rubric đã tồn tại. Vui lòng nhập tên khác!");
                     }
                     continue;
                 }
 
-                // Lỗi khác
                 throw new Error(result.message || "Upload thất bại");
 
             } catch (error) {
                 console.error(error);
                 if (typeof showToast === 'function') {
                     showToast(error.message || "Có lỗi xảy ra khi gửi dữ liệu!", "danger");
-                } else {
-                    alert(error.message || "Có lỗi xảy ra khi gửi dữ liệu!");
                 }
                 return;
             }
@@ -941,10 +656,25 @@ const PPTRubricBuilder = (function () {
     }
 
     return {
-        init, handleNodeClick, presetSlideCount, presetTransitionCheck, presetActionButtons, presetMatrixLayout,
-        createEmptyCriteria, addManualRule, addSubRule, updateRule, removeRule, removeGroup, saveCurrentCriteria, downloadRubric,
-        showRubricModal, deleteCriteria, exportRubric, updateMainPoints,
-        currentPendingGroups,
-        getRubric: () => globalRubric
+        init,
+        handleNodeClick,
+        enablePickMode,
+        createEmptyCriteria,
+        addSpecificRule,
+        refreshUI,
+        removeCrit,
+        removeRule,
+        updateCrit,
+        updateRule,
+        updateArrayRule,
+        updateAnchor,
+        updateHybridRule,
+        addGlobalObjectCheck,
+        getRubric,
+        exportRubric,
+        downloadRubric,
+        createGlobalCriteria,
+        showRubricModal,
+        deleteCriteria
     };
 })();
