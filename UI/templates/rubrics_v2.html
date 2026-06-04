@@ -171,7 +171,7 @@
 
         try {
             const response = await fetch(DELETE_FOLDER_URL, {
-                method: 'POST',
+                method: 'DELETE',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ path: folderPath })
             });
@@ -182,7 +182,6 @@
 
             // Giả định API trả về { status: 'success' }
             if (result.status === 'success' || result.message === 'success') {
-                alert("Xóa thư mục thành công!");
                 loadFiles(); // Tải lại cây thư mục sau khi xóa
             } else {
                 throw new Error(result.message || "Không thể xóa thư mục");

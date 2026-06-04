@@ -181,8 +181,40 @@
                     </div>
                 </div>
 
-                <button class="btn btn-warning w-100 fw-bold py-3 mt-3 shadow-sm" onclick="confirmStartGrading()"><i
-                        class="bi bi-lightning-charge-fill"></i> BẮT ĐẦU CHẤM ĐIỂM V3</button>
+                <!-- NÚT CHẤM ĐIỂM CHÍNH -->
+                <button class="btn btn-warning w-100 fw-bold py-3 mt-3 shadow-sm" onclick="confirmStartGrading()">
+                    <i class="bi bi-lightning-charge-fill"></i> CHẤM ĐIỂM
+                </button>
+
+                <hr class="my-4 text-muted">
+
+                <!-- KHU VỰC CHỨC NĂNG MỚI (AI & TẢI FILE) -->
+                <div class="row g-2">
+                    <div class="col-md-6">
+                        <div class="input-group shadow-sm">
+                            <select id="ai_subject" class="form-select border-info" style="max-width: 140px;">
+                                <option value="">- Chọn môn -</option>
+                                <option value="word">Word</option>
+                                <option value="excel">Excel</option>
+                                <option value="powerpoint">PowerPoint</option>
+                            </select>
+                            <button class="btn btn-info text-white fw-bold" onclick="submitAIReview()" id="btnAI">
+                                <i class="bi bi-robot"></i> Nhận xét AI
+                            </button>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <button class="btn btn-success w-100 fw-bold shadow-sm" onclick="downloadFile('graded')">
+                            <i class="bi bi-download"></i> Tải bài
+                        </button>
+                    </div>
+                    <div class="col-md-3">
+                        <button class="btn btn-primary w-100 fw-bold shadow-sm" onclick="downloadFile('review')">
+                            <i class="bi bi-cloud-download"></i> Tải nhận xét
+                        </button>
+                    </div>
+                </div>
+
             </div>
         </div>
     </div>
@@ -209,9 +241,25 @@
 <script>
     const GET_FILES_URL = '/api/get-rubrics';
     const GRADE_LOCAL_URL = '/api/grade-local-v3';
+    const REVIEW_API_URL = '/api/review';
 
     let globalRubricsList = [];
     const selectedZones = { word: [], excel: [], pptx: [] };
+
+
+    function showToast(message, type = 'success') {
+        let tc = document.getElementById('toast-container');
+        if (!tc) {
+            tc = document.createElement('div'); tc.id = 'toast-container'; tc.className = 'toast-container position-fixed bottom-0 end-0 p-3'; tc.style.zIndex = '1055'; document.body.appendChild(tc);
+        }
+        const bg = type === 'success' ? 'bg-success' : (type === 'danger' ? 'bg-danger' : 'bg-warning');
+        const textClass = type === 'warning' ? 'text-dark' : 'text-white';
+        const toastEl = document.createElement('div');
+        toastEl.className = `toast align-items-center ${bg} ${textClass} border-0 show shadow`;
+        toastEl.innerHTML = `<div class="d-flex"><div class="toast-body fw-medium">${message}</div><button type="button" class="btn-close ${type === 'warning' ? '' : 'btn-close-white'} me-2 m-auto" onclick="this.parentElement.parentElement.remove()"></button></div>`;
+        tc.appendChild(toastEl);
+        setTimeout(() => { if (toastEl.parentNode) toastEl.remove(); }, 3000);
+    }
 
     async function loadFiles() {
         const container = document.getElementById('file-explorer-container');
@@ -239,7 +287,6 @@
 
             populateSelectBoxes();
 
-            // Cập nhật bộ đếm (chỉ đếm file JSON)
             document.getElementById('rubric-count').innerText = `${globalRubricsList.length} File JSON`;
 
         } catch (e) {
@@ -248,7 +295,6 @@
         }
     }
 
-    // Đệ quy render cây thư mục
     function renderNode(node, parentPath = '') {
         const div = document.createElement('div');
         div.className = 'ms-3 my-1';
@@ -256,7 +302,6 @@
         const row = document.createElement('div');
         row.className = 'd-flex align-items-center py-1';
 
-        // Tạo đường dẫn đầy đủ cho node hiện tại
         const currentPath = parentPath ? `${parentPath}/${node.name}` : node.name;
 
         if (node.type === 'directory') {
@@ -265,7 +310,6 @@
             div.appendChild(row);
 
             const childrenContainer = document.createElement('div');
-            // TRUYỀN currentPath xuống cho các node con
             (node.children || []).forEach(child => childrenContainer.appendChild(renderNode(child, currentPath)));
             div.appendChild(childrenContainer);
 
@@ -283,19 +327,16 @@
             const isJson = node.name.toLowerCase().endsWith('.json');
 
             if (isJson) {
-                // SỬA Ở ĐÂY: Dùng currentPath làm ID và file_rubric thay vì node.name
                 globalRubricsList.push({ id: currentPath, name: node.name, file_rubric: currentPath });
 
                 row.className += ' draggable-rubric px-2';
                 row.draggable = true;
 
-                // SỬA Ở ĐÂY: Dùng currentPath để phân biệt khi kéo thả
                 const nodeData = JSON.stringify({ id: currentPath, name: node.name, file_rubric: currentPath });
                 row.addEventListener('dragstart', (e) => {
                     e.dataTransfer.setData('text/plain', nodeData);
                 });
 
-                // Giao diện hiển thị: Thêm title là đường dẫn đầy đủ để dễ nhìn khi hover chuột
                 row.innerHTML = `
                 <i class="bi bi-filetype-json me-2 text-success"></i> 
                 <span class="me-auto text-truncate" title="${currentPath}">${node.name}</span>
@@ -388,7 +429,7 @@
         const excelFile = document.getElementById('student_excel_file').files[0];
 
         if (!zipFile) {
-            alert("Vui lòng tải lên File bài làm sinh viên (.zip) trước khi chấm!");
+            showToast("Vui lòng tải lên File bài làm sinh viên (.zip) trước khi chấm!", "danger");
             return;
         }
 
@@ -442,16 +483,116 @@
             });
 
             if (res.ok) {
-                alert("Gửi lệnh chấm điểm v3 thành công!");
+                showToast("Gửi lệnh chấm điểm v3 thành công!", "success");
                 bootstrap.Modal.getInstance(document.getElementById('confirmModal')).hide();
             } else {
-                alert("Lỗi server: " + res.status);
+                showToast("Lỗi server: " + res.status, "danger");
             }
         } catch (e) {
-            alert("Lỗi kết nối server: " + e.message);
+            showToast("Lỗi kết nối server: " + e.message, "danger");
         } finally {
             btn.disabled = false;
             btn.innerHTML = 'Gửi Lệnh';
+        }
+    };
+
+    // --- CÁC HÀM XỬ LÝ MỚI THÊM VÀO ---
+
+    window.submitAIReview = async function () {
+        const subject = document.getElementById('ai_subject').value;
+        if (!subject) {
+            alert("Vui lòng chọn môn (Word, Excel, hoặc PowerPoint) trước khi nhận xét bằng AI!");
+            return;
+        }
+
+        const btn = document.getElementById('btnAI');
+        const originalText = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Đang xử lý...';
+
+        try {
+            const res = await fetch(REVIEW_API_URL, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ subject: subject })
+            });
+
+            if (res.ok) {
+                const blob = await res.blob();
+
+                const downloadUrl = window.URL.createObjectURL(blob);
+
+                const a = document.createElement('a');
+                a.style.display = 'none';
+                a.href = downloadUrl;
+
+                let filename = `Review_${subject.toUpperCase()}.xlsx`;
+                const disposition = res.headers.get('Content-Disposition');
+                if (disposition && disposition.indexOf('attachment') !== -1) {
+                    const matches = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/.exec(disposition);
+                    if (matches != null && matches[1]) {
+                        filename = matches[1].replace(/['"]/g, '');
+                    }
+                }
+
+                a.download = filename;
+                document.body.appendChild(a);
+
+                a.click();
+
+                document.body.removeChild(a);
+                window.URL.revokeObjectURL(downloadUrl);
+
+                showToast("Đã tải file nhận xét AI môn " + subject.toUpperCase() + " thành công!", "success");
+            } else {
+                showToast("Lỗi xử lý AI: " + res.status, "danger");
+            }
+        } catch (e) {
+            showToast("Lỗi kết nối server: " + e.message, "danger");
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = originalText;
+        }
+    };
+
+    window.downloadFile = async function (type) {
+        let url = type === 'graded' ? '/api/download-graded' : '/api/download-review';
+
+        try {
+            const res = await fetch(url); // Mặc định là GET
+            const data = await res.json(); // Parse JSON
+
+            if (data.status === 'success' && data.file) {
+                // Giả sử data.file là chuỗi base64, bạn cần chuyển nó thành Blob
+                // Tùy thuộc vào việc n8n/backend trả binary kiểu gì mà đoạn này sẽ xử lý tương ứng
+                // Nếu backend trả base64:
+                const byteCharacters = atob(data.file);
+                const byteNumbers = new Array(byteCharacters.length);
+                for (let i = 0; i < byteCharacters.length; i++) {
+                    byteNumbers[i] = byteCharacters.charCodeAt(i);
+                }
+                const byteArray = new Uint8Array(byteNumbers);
+                const blob = new Blob([byteArray]);
+
+                // Dùng trick thẻ <a> để tải
+                const downloadUrl = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.style.display = 'none';
+                a.href = downloadUrl;
+                a.download = type === 'graded' ? 'Bai_Da_Cham.zip' : 'Nhan_Xet.xlsx';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                window.URL.revokeObjectURL(downloadUrl);
+
+                showToast("Tải file thành công!", "success");
+            } else {
+                showToast("Lỗi từ server: Không có file", "danger");
+            }
+        } catch (e) {
+            showToast("Lỗi khi tải file: " + e.message, "danger");
         }
     };
 
