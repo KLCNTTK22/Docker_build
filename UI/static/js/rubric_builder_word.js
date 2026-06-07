@@ -279,7 +279,7 @@ const RubricBuilder = (function () {
                 node.children.forEach((row, rIdx) => {
                     if (row.tag !== 'w:tr' && row.type !== 'table_row') return;
 
-                    let rowScope = createRuleObj(`Chui vào Hàng ${rIdx + 1}`, "children", "", "SCOPE");
+                    let rowScope = createRuleObj(`Hàng ${rIdx + 1}`, "children", "", "SCOPE");
                     rowScope.search_mode = 'INDEX';
                     rowScope.scope_index = rIdx;
                     rowScope.nested_rules = [];
@@ -289,7 +289,7 @@ const RubricBuilder = (function () {
                         row.children.forEach((cell, cIdx) => {
                             if (cell.tag !== 'w:tc' && cell.type !== 'table_cell') return;
 
-                            let cellScope = createRuleObj(`Chui vào Ô Cột ${cIdx + 1}`, "children", "", "SCOPE");
+                            let cellScope = createRuleObj(`Cột ${cIdx + 1}`, "children", "", "SCOPE");
                             cellScope.search_mode = 'INDEX';
                             cellScope.scope_index = cIdx;
                             cellScope.nested_rules = [];
