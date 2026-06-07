@@ -573,7 +573,7 @@
             const a = document.createElement('a');
             a.style.display = 'none';
             a.href = downloadUrl;
-            a.download = type === 'graded' ? 'Bai_Da_Cham.zip' : 'Nhan_Xet.xlsx';
+            a.download = type === 'graded' ? 'Bai_Da_Cham.tar.gz' : 'Nhan_Xet.xlsx';
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
