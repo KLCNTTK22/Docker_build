@@ -166,18 +166,18 @@
                 <div class="mb-3">
                     <div class="d-flex justify-content-between align-items-center mb-1">
                         <label class="fw-bold small text-danger">Rubric PowerPoint (Chọn nhiều)</label>
-                        <select class="form-select form-select-sm w-50" id="select-ppt"
-                            onchange="handleSelectChange('ppt')">
-                            <option value="">-- Thêm Rubric PPT --</option>
+                        <select class="form-select form-select-sm w-50" id="select-pptx"
+                            onchange="handleSelectChange('pptx')">
+                            <option value="">-- Thêm Rubric PPTX --</option>
                         </select>
                     </div>
-                    <div class="dropzone" id="dropzone-ppt" ondragover="allowDrop(event)" ondragleave="dragLeave(event)"
-                        ondrop="drop(event, 'ppt')">
+                    <div class="dropzone" id="dropzone-pptx" ondragover="allowDrop(event)"
+                        ondragleave="dragLeave(event)" ondrop="drop(event, 'pptx')">
                         <div class="dz-empty-state text-center">
                             <i class="bi bi-file-earmark-slides dz-icon"></i><br><span class="small text-muted">Kéo thả
                                 các rubric vào đây</span>
                         </div>
-                        <div id="ppt-list" class="d-flex flex-wrap w-100"></div>
+                        <div id="pptx-list" class="d-flex flex-wrap w-100"></div>
                     </div>
                 </div>
 
@@ -356,7 +356,7 @@
     }
 
     function populateSelectBoxes() {
-        const zones = ['word', 'excel', 'ppt'];
+        const zones = ['word', 'excel', 'pptx'];
         zones.forEach(zone => {
             const sel = document.getElementById(`select-${zone}`);
             sel.innerHTML = `<option value="">-- Thêm Rubric ${zone.toUpperCase()} --</option>`;
@@ -435,15 +435,14 @@
 
         const warnList = document.getElementById('warning-list');
         warnList.innerHTML = `
-            <li><strong>File Bài Làm (.zip):</strong> ${zipFile.name}</li>
-            <li><strong>File Danh Sách (.xlsx):</strong> ${excelFile ? excelFile.name : '<span class="text-muted">Không có</span>'}</li>
-            <hr class="my-2">
-            <li><strong>Word:</strong> Đã chọn ${selectedZones.word.length} rubric</li>
-            <li><strong>Excel:</strong> Đã chọn ${selectedZones.excel.length} rubric</li>
-            <li><strong>PPT:</strong> Đã chọn ${selectedZones.ppt.length} rubric</li>
-        `;
+        <li><strong>File Bài Làm (.zip):</strong> ${zipFile.name}</li>
+        <li><strong>File Danh Sách (.xlsx):</strong> ${excelFile ? excelFile.name : '<span class="text-muted">Không có</span>'}</li>
+        <hr class="my-2">
+        <li><strong>Word:</strong> Đã chọn ${selectedZones.word.length} rubric</li>
+        <li><strong>Excel:</strong> Đã chọn ${selectedZones.excel.length} rubric</li>
+        <li><strong>PPTX:</strong> Đã chọn ${selectedZones.pptx.length} rubric</li> `;
 
-        if (selectedZones.word.length === 0 && selectedZones.excel.length === 0 && selectedZones.ppt.length === 0) {
+        if (selectedZones.word.length === 0 && selectedZones.excel.length === 0 && selectedZones.pptx.length === 0) {
             warnList.innerHTML += `<div class="alert alert-warning mt-2 p-2 mb-0">⚠️ Bạn chưa chọn bất kỳ rubric nào! API vẫn sẽ nhận mảng rỗng [].</div>`;
         }
 
@@ -466,7 +465,7 @@
         const rubricsPayload = {
             word: selectedZones.word.map(r => r.file_rubric),
             excel: selectedZones.excel.map(r => r.file_rubric),
-            ppt: selectedZones.ppt.map(r => r.file_rubric)
+            pptx: selectedZones.pptx.map(r => r.file_rubric)
         };
 
         const payloadData = {
