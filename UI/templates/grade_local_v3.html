@@ -561,39 +561,30 @@
 
         try {
             const res = await fetch(url); // Mặc định là GET
-            const data = await res.json(); // Parse JSON
-
-            if (data.status === 'success' && data.file) {
-                // Giả sử data.file là chuỗi base64, bạn cần chuyển nó thành Blob
-                // Tùy thuộc vào việc n8n/backend trả binary kiểu gì mà đoạn này sẽ xử lý tương ứng
-                // Nếu backend trả base64:
-                const byteCharacters = atob(data.file);
-                const byteNumbers = new Array(byteCharacters.length);
-                for (let i = 0; i < byteCharacters.length; i++) {
-                    byteNumbers[i] = byteCharacters.charCodeAt(i);
-                }
-                const byteArray = new Uint8Array(byteNumbers);
-                const blob = new Blob([byteArray]);
-
-                // Dùng trick thẻ <a> để tải
-                const downloadUrl = window.URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.style.display = 'none';
-                a.href = downloadUrl;
-                a.download = type === 'graded' ? 'Bai_Da_Cham.zip' : 'Nhan_Xet.xlsx';
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                window.URL.revokeObjectURL(downloadUrl);
-
-                showToast("Tải file thành công!", "success");
-            } else {
-                showToast("Lỗi từ server: Không có file", "danger");
+            if (!res.ok) {
+                throw new Error("Server trả về lỗi: " + res.status);
             }
+
+            // Lấy dữ liệu binary thay vì JSON
+            const blob = await res.blob();
+
+            // Tạo URL tạm để tải xuống
+            const downloadUrl = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.style.display = 'none';
+            a.href = downloadUrl;
+            a.download = type === 'graded' ? 'Bai_Da_Cham.zip' : 'Nhan_Xet.xlsx';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(downloadUrl);
+
+            showToast("Tải file thành công!", "success");
         } catch (e) {
             showToast("Lỗi khi tải file: " + e.message, "danger");
         }
     };
+
 
     document.addEventListener('DOMContentLoaded', loadFiles);
 </script>
