@@ -1,0 +1,633 @@
+{
+  "name": "Create_rubrics copy",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "9c31b673-a1f5-4f7d-95c9-c823a8c813c7",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "c79f6e37-f42a-45bd-85cc-0872634ee400",
+      "name": "Webhook",
+      "webhookId": "9c31b673-a1f5-4f7d-95c9-c823a8c813c7"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Lấy dữ liệu từ Webhook\nconst textData = $input.item.json.body || $input.item.json; \nconst binaryData = $input.item.binary || {};\nconst groupedExams = {};\n\n// 1. Quét qua các trường text\nfor (const key in textData) {\n    const match = key.match(/_(\\d+)$/);\n    if (match) {\n        const id = match[1];\n        if (!groupedExams[id]) groupedExams[id] = { json: { id: id }, binary: {} };\n\n        if (key.startsWith('ten_de_')) groupedExams[id].json.ten_de = textData[key];\n        if (key.startsWith('diem_')) groupedExams[id].json.diem_toi_da = textData[key];\n    }\n}\n\n// 2. Quét qua các file binary (GIỮ NGUYÊN TÊN KEY GỐC)\nfor (const key in binaryData) {\n    const match = key.match(/_(\\d+)$/);\n    if (match) {\n        const id = match[1];\n        if (!groupedExams[id]) groupedExams[id] = { json: { id: id }, binary: {} };\n\n        // Gán đúng tên key gốc (vd: file_de_2, file_mau_2)\n        if (key.startsWith('file_de_') && binaryData[key].fileName) {\n            groupedExams[id].binary[key] = binaryData[key]; \n        }\n        \n        if (key.startsWith('file_mau_') && binaryData[key].fileName) {\n            groupedExams[id].binary[key] = binaryData[key]; \n            groupedExams[id].json.extension = binaryData[key].fileExtension || \"\";\n        }\n    }\n}\n\n// 3. Đóng gói mảng dữ liệu\nconst returnItems = [];\nfor (const id in groupedExams) {\n    const currentItem = groupedExams[id];\n    if (Object.keys(currentItem.json).length > 1 || Object.keys(currentItem.binary).length > 0) {\n        if (Object.keys(currentItem.binary).length === 0) {\n            delete currentItem.binary;\n        }\n        returnItems.push(currentItem);\n    }\n}\n\nreturn returnItems;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        208,
+        0
+      ],
+      "id": "0fee6d9c-b914-4f77-83ee-bf4d7157487e",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "jsCode": "const diemToiDa = $('Loop Over Items').first().json.diem_toi_da;\nconst dataDe = $('Extract De').first().json.stdout;\nconst noiDungDe = JSON.parse(dataDe).text;\nconst astString = $('Parser file').first().json.stdout;\nconst fileExtension = $('Loop Over Items').first().json.extension;\n\nlet finalPrompt = \"\";\nlet isHopLe = true;\nlet jsonLoi = null;\n\n/**\n * PROMT WORD\n */\nif (['docx', 'doc'].includes(fileExtension)) {\nfinalPrompt = String.raw`Role & Context\nYou are an expert IT Assessor and a highly precise Rule-Builder for an automated grading system.\nYour task is to analyze an \"Assignment Description\" (if provided) and an \"Answer Key JSON\" (parsed from a Word document) to generate a standardized JSON Grading Rubric.\nA Python script will use this rubric as a generic rule engine to dynamically traverse and grade student submissions.\n\nScore Allocation\nThe total score must sum up exactly to ${diemToiDa} points. Break down the points logically among the identified scorable criteria and their sub-rules based on complexity.\n\nSystem Architecture & Grading Logic\nThe Python script operates on a 2-step location system:\n1. Find the Anchor (Index 'n'): Scans the document to find the first node matching the ${\"`\"}anchor_locator${\"`\"}.\n2. Apply Rules: Evaluates target nodes using ${\"`\"}n + relative_offset${\"`\"} and drills down using ${\"`\"}property_path${\"`\"}.\n\nEvaluation Flags (Fixed Enums - CRITICAL)\nYou MUST classify every rule using one of these strict uppercase flags:\n* \"STRICT\": The student's value must EXACTLY match the ${\"`\"}expected_value${\"`\"} (case-insensitive).\n* \"TOLERANT\": Use when a value can be flexible.\n    - For numerical values or dimensions (EVEN IF they appear as strings in JSON, e.g., \"1445\" or 18.0), you MUST treat them as numbers, use the \"TOLERANT\" flag, and provide an ${\"`\"}accepted_range${\"`\"} (e.g., [1900, 2000]). NEVER use \"STRICT\" for document dimensions or margins.\n    - For strings, you MUST provide ${\"`\"}accepted_values${\"`\"} (e.g., [\"left\", \"start\"]).\n    - NEVER use PRESENCE_ONLY for numeric checks.\n* \"PRESENCE_ONLY\": Use to check if a value exists anywhere inside the target node.\n  - CRITICAL: If you are only checking if a property exists (not a specific text), ${\"`\"}expected_value${\"`\"} MUST be strictly null (no quotes).\n\nAnchor & Search Strategies (BEST PRACTICES FOR STABILITY)\nTo make this rubric stable across diverse student submissions, you must follow these design patterns:\n\nPattern 1: The \"Global Scan\" for Automated Fields\nFor globally unique, machine-generated elements (e.g., TOC \\o, TOC \\c, SEQ Bảng), DO NOT guess fragile local anchors.\n-> Strategy: Set anchor_locator to {\"tag\": \"w:document\"}, use relative_offset: 0, property_path: \"\", and match_flag: \"PRESENCE_ONLY\". Let the engine recursively scan the whole document. (Note: Do NOT use this global scan for generic text or Styles like \"Caption\").\n\nPattern 2: The \"Static & Unique Landmark\"\nFor checking alignments, tabs, or table styling, ALWAYS anchor to static, human-typed text.\n-> Strategy: Pick a unique and sufficiently long phrase (e.g., \"Column ABC\", \"Row BCD\"). NEVER use a single generic word like \"Table\" as an anchor, because a student might type it in a normal paragraph, hijacking the anchor.\n*Example:* Do NOT anchor to \"Table\". If you need to find a table caption, anchor to a longer phrase like \"Table 1\" or evaluate the style globally.\n\nPattern 3: Zero-Based Array Logic\nArrays ALWAYS start at 0. If you are checking a table's structure, trace the children array meticulously. Example: The 3rd row is children.2. Do not generate out-of-bounds paths.\n\nPattern 4: Scope Alignment\nDocument-level setups (pageSize, margins) ONLY exist at the w:document level. Do not attempt to read section.margin inside a w:p or w:tbl anchor.\n\nPattern 5: Local Style Checking\nTo check if a specific style (like \"Caption\" or \"Heading 1\") is applied, anchor to the specific paragraph and check its local property (e.g., properties.pStyle with \"STRICT\" match). Never check styles globally.\n\nPattern 6: Ultra-Minimalist Substrings for PRESENCE_ONLY\nWhen checking for complex field codes (like TOC or SEQ), Word dynamically injects hidden parameters in the middle of the string (e.g., \"TOC \\h \\z \\c \\\"Bảng\\\"\").\n-> Strategy: DO NOT include the base command (like \"TOC\") if there is a risk of hidden parameters breaking the substring match. Use ONLY the most unique, uninterrupted switch/flag.\n* Good: \"\\\\c \\\"Table\\\"\" (Targets the table figure switch directly)\n* Good: \"\\\\o \\\"1-3\\\"\" (Targets the heading level switch directly)\n* Good: \"SEQ Table\"\n* Bad: \"TOC \\\\c \\\"Table\\\"\" (Will FAIL because \\h \\z might be injected in between).\n\nOutput Format Constraints\n1.Output ONLY a valid, raw JSON array starting with '[' and ending with ']'\n2. DO NOT wrap the output in arbitrary parent keys\n3. DO NOT stringify the JSON payload.\n4. DO NOT use markdown formatting blocks or backticks.\n\nJSON Schema Definition:\n[\n  {\n    \"criteria_name\": \"String - Short description\",\n    \"allocated_points\": 1.5,\n    \"anchor_locator\": {\n      \"tag\": \"String - (e.g., 'w:document', 'w:p', 'w:tbl')\",\n      \"text_contains\": \"String (Optional) - Stable text to uniquely identify this block\",\n      \"type\": \"String (Optional)\"\n    },\n    \"rules\": [\n      {\n        \"description\": \"String - What this rule checks\",\n        \"relative_offset\": \"Integer - 0 for anchor, 1 for next node\",\n        \"property_path\": \"String - Dot notation (e.g., 'layout.tabs.0.leader'). Set to \\\"\\\" if doing a deep PRESENCE_ONLY search.\",\n        \"expected_value\": \"Any - The correct value. Null if checking mere presence.\",\n        \"match_flag\": \"STRICT | TOLERANT | PRESENCE_ONLY\",\n        \"accepted_range\": [0, 100],\n        \"accepted_values\": [\"val1\", \"val2\"],\n        \"points\": 0.5\n      }\n    ]\n  }\n]\n\nPlease generate the JSON Rubric for the following Answer Key JSON.\n\n${noiDungDe}\n\n${astString}`;\n}\n/**\n * PROMT EXCEL\n */\nelse if (['xlsx', 'xls', 'csv'].includes(fileExtension)) {\nfinalPrompt = String.raw`Role & Context\nYou are an expert IT Assessor building an automated Excel Grading Rubric. The grading engine (Python) uses ratio-scoring and predefined \"Actions\". Your task is to extract requirements from an Answer Key JSON and map them to these Actions.\n\nScore Allocation\nThe total score must sum up exactly to ${diemToiDa} points.\n\n1. Anchoring Strategy (CRITICAL)\nDefine an anchor_locator for each criteria.\n\nFor table columns/row calculations: ALWAYS anchor to the Table Header Row. Use type: \"row\" and text_contains with a unique column header name (e.g., \"STT\", \"Số chứng từ\", \"Mã vật tư\"). DO NOT anchor to the data cells. The Python engine will automatically start scanning from the row directly below this header.\n\nFor worksheet features: Use type: \"worksheet\" and text_contains: \"Unique_Text\". Add \"sheet_name\" ONLY if known. Add \"enforce_sheet_name\": true ONLY if strict placement is required.\n\nFor Objects (Charts, Pivots, Images): Use type: \"global\".\n\n2. Supported Actions (MUST USE ONLY THESE)\n\n\"VERIFY_DYNAMIC_FORMULA\": Scans column. Requires: \"col_index\" (CRITICAL: MUST be a 0-based Integer like 0, 1, 2. NEVER use letters like \"A\" or \"C\"), \"expected_count\" (Integer, number of rows to check in the table).\n\n\"VERIFY_FUNCTION_NAME\": Scans column for function. Requires: \"col_index\" (Integer), \"expected_count\", \"expected_function\".\nOptional but highly recommended: Add \"expected_reference\" (String) containing the EXACT range or absolute reference expected in the formula (e.g., \"$A$20:$C$22\"). The engine uses this to award 50% partial credit if the student uses the right function but the wrong reference array.\n\n\"VERIFY_VALUE\": Checks exact cell value of the FIRST data row below the header. Used ONLY for verifying Sort operations or specific starting data cells. Requires: \"col_index\" (Integer), \"expected\". CRITICAL: NEVER use this action to verify column headers or labels.\n\n\"VERIFY_CONDITIONAL_FORMATTING\": Checks if CF exists. Requires: \"expected_value\". CRITICAL: You MUST extract the exact raw string found inside the \"formula\" field of the Answer Key JSON. DO NOT infer the logic. For example, if the requirement is \">= 400\", the JSON might store \"399\". You must output \"399\".\n\n\"VERIFY_FILTER_EXISTS\": Checks AutoFilter. No extra params.\n\n\"VERIFY_EXTRACTED_DATA\": Checks if data was cleanly extracted to a NEW sheet. Requires: \"expected_value\" (e.g., \"Xăng A92\"), and \"forbidden_values\" (CRITICAL: Array of other categories from the main table that MUST NOT appear in the new sheet, e.g., [\"Nhớt\", \"Dầu Diesel\"]). Analyze the task to find these forbidden values.\n\n\"VERIFY_PIVOT_TABLE\": Requires: \"field_type\" (\"row\", \"col\", or \"data\"), and \"expected_fld\" (CRITICAL: A String representing the exact 0-based index found in the Answer Key JSON's 'fld' field, e.g., \"3\". DO NOT use display names). If field_type is \"data\", also requires \"expected_subtotal\" (\"sum\", \"count\"). Create ONE rule per field.\n\n\"VERIFY_CHART\": Requires: \"expected_type\" (\"barChart\", \"pieChart\", etc.). Add \"expected_data_ref_contains\" ONLY if strict source checking is required.\n\n\"VERIFY_OBJECT_EXISTS\": Checks for floating objects. Requires: \"expected_object\" (e.g., \"drawing\").\n\nJSON Schema Definition:\n\nJSON\n[\n  {\n    \"criteria_name\": \"String\",\n    \"allocated_points\": 1.5,\n    \"anchor_locator\": {\n      \"type\": \"row | worksheet | global\",\n      \"text_contains\": \"String\",\n      \"sheet_name\": \"String (Optional)\",\n      \"enforce_sheet_name\": false\n    },\n    \"rules\": [\n      {\n        \"description\": \"String\",\n        \"action\": \"VERIFY_FUNCTION_NAME\",\n        \"points\": 0.5,\n        \"col_index\": 2, \n        \"expected_count\": 10,\n        \"expected_function\": \"VLOOKUP\"\n      }\n    ]\n  }\n]\nOutput Format Constraints:\n1. Output ONLY a valid, raw JSON array starting with '[' and ending with ']'.\n2. DO NOT wrap the output in arbitrary parent keys.\n3. DO NOT stringify the JSON payload.\n4. DO NOT use markdown formatting blocks or backticks.\n\n[TASK DESCRIPTION (TEXT)]:\n${noiDungDe}\n\n${astString}`;\n}\n/**\n * PROMT POWER POINT\n */\nelse if (['pptx', 'ppt'].includes(fileExtension)) {\nfinalPrompt = String.raw`**ROLE:**\nYou are an expert Automated Grading Architect specializing in AST (Abstract Syntax Tree) analysis for PowerPoint files.\n\n**TASK:**\nAnalyze the \"Input Solution JSON\" and \"Lecturer Specific Requirements\" to generate a machine-readable \"Grading Rubric JSON\". This rubric will be used by a Python engine to grade student submissions.\n\n**INPUT DATA SCHEMA REFERENCE:**\n- Root: ${\"`\"}{\"type\": \"presentation\", \"properties\": {...}, \"children\": [...]}${\"`\"}\n- Slides/Masters: Objects with ${\"`\"}type: \"slide\"${\"`\"}, ${\"`\"}type: \"slide_master\"${\"`\"}, or ${\"`\"}type: \"slide_layout\"${\"`\"}.\n- Text: Deeply nested as ${\"`\"}shape${\"`\"} -> ${\"`\"}children${\"`\"} (paragraphs) -> ${\"`\"}children${\"`\"} (text_runs) -> ${\"`\"}text${\"`\"}.\n- Styles: Located in ${\"`\"}text_run.style${\"`\"}.\n- Animations: Located in ${\"`\"}shape.properties.animations${\"`\"} (THIS IS A LIST).\n- Transitions: Located in ${\"`\"}slide.children${\"`\"} with ${\"`\"}type: \"transition\"${\"`\"}.\n\n**STRICT RULES:**\n1. **Anchor Locators:** Use ${\"`\"}anchor_locator${\"`\"} to scope the checks for a group of rules. \n   - Use ${\"`\"}type: \"slide\"${\"`\"} with ${\"`\"}text_contains${\"`\"} to target a specific slide. \n   - Use ${\"`\"}type: \"slide_master\"${\"`\"} for master layouts.\n   - Use ${\"`\"}type: \"global\"${\"`\"} for presentation-wide checks (like total slide count).\n2. **Rules and Actions:** Each criterion contains an array of ${\"`\"}rules${\"`\"}. You MUST use one of the following actions:\n   - ${\"`\"}VERIFY_PROPERTY${\"`\"}: Check specific values (fonts, IDs, transition types). Requires ${\"`\"}property_to_check${\"`\"}, ${\"`\"}expected_value${\"`\"}, and optionally ${\"`\"}match_type${\"`\"}.\n   - ${\"`\"}VERIFY_EXISTS${\"`\"}: Check if an element exists (e.g., logo, slide number).\n   - ${\"`\"}VERIFY_COUNT${\"`\"}: Check if the number of targeted elements matches ${\"`\"}expected_count${\"`\"}.\n3. **Targeting Attributes within Rules:** Use keys like ${\"`\"}element_type${\"`\"}, ${\"`\"}must_contain_text${\"`\"}, ${\"`\"}is_placeholder${\"`\"}, ${\"`\"}placeholder_type${\"`\"}, or ${\"`\"}is_action_button${\"`\"} to pinpoint the exact node inside the anchor.\n4. **Direct Property Paths:** The ${\"`\"}property_to_check${\"`\"} MUST exist in the JSON.\n   - Good: ${\"`\"}style.font_name${\"`\"}, ${\"`\"}is_placeholder${\"`\"}.\n   - List Handling: Append the key inside the object (e.g., ${\"`\"}animations.presetID${\"`\"}).\n5. **Evaluation Match Types (for VERIFY_PROPERTY):**\n   - ${\"`\"}EXACT${\"`\"}: Strict equality (fonts, specific IDs).\n   - ${\"`\"}CONTAINS${\"`\"}: Substring check (text content, transition string).\n6. **Total Score Validation:**\n   - The sum of ${\"`\"}allocated_points${\"`\"} across all criteria objects MUST be exactly ${diemToiDa}.\n   - Inside each object, the sum of ${\"`\"}points${\"`\"} in the ${\"`\"}rules${\"`\"} array MUST exactly equal its parent's ${\"`\"}allocated_points${\"`\"}.\n\n**REQUIRED SCHEMA (DO NOT ADD EXTRA KEYS):**\n[\n  {\n    \"criteria_name\": \"Group Name (e.g., Slide Setup, Master Slide, Content Formatting)\",\n    \"allocated_points\": 2.0,\n    \"anchor_locator\": {\n      \"type\": \"global|slide_master|slide\",\n      \"text_contains\": \"Anchor text to find the slide (Required if type is slide, omit otherwise)\"\n    },\n    \"rules\": [\n      {\n        \"description\": \"Human readable description of the rule\",\n        \"action\": \"VERIFY_PROPERTY|VERIFY_EXISTS|VERIFY_COUNT\",\n        \"points\": 1.0,\n        \"element_type\": \"shape|text_run|transition|picture|slide|...\",\n        \"must_contain_text\": \"Element Keyword (Optional)\",\n        \"is_placeholder\": true,\n        \"placeholder_type\": \"title|body|sldNum (Optional)\",\n        \"is_action_button\": false,\n        \"property_to_check\": \"nested.path (Required for VERIFY_PROPERTY)\",\n        \"expected_value\": \"string or number (Required for VERIFY_PROPERTY)\",\n        \"expected_count\": 4,\n        \"match_type\": \"EXACT|CONTAINS\"\n      }\n    ]\n  }\n]\n\n**OUTPUT FORMAT:**\n1. Output ONLY a valid, raw JSON array starting with '[' and ending with ']'.\n2. DO NOT wrap the output in arbitrary parent keys.\n3. DO NOT stringify the JSON payload.\n4. DO NOT use markdown formatting blocks or backticks.\n\n**LECTURER REQUIREMENTS:**\n${noiDungDe}\n\n**INPUT SOLUTION JSON:**\n${astString}`;\n}\nelse {\n    isHopLe = false;\n    jsonLoi = {\n        \"error\": `Lỗi định dạng: '.${fileExtension}'`\n    };\n}\n\nreturn {\n    json: {\n        extension_duoc_dung: fileExtension,\n        is_hop_le: isHopLe,\n        prompt_gui_ai: finalPrompt,\n        ket_qua_rubric: isHopLe ? null : jsonLoi\n    }\n};\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2128,
+        0
+      ],
+      "id": "2cbebfcd-d44e-47d6-8c8e-2549d6f7a36a",
+      "name": "Code in JavaScript1"
+    },
+    {
+      "parameters": {
+        "operation": "write",
+        "fileName": "=/shared_workspace/database/{{$binary['file_mau_' + $json.id].fileExtension}}/{{ $binary['file_de_' + $json.id].fileName }}",
+        "dataPropertyName": "={{ 'file_de_' + $json.id }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1.1,
+      "position": [
+        1072,
+        16
+      ],
+      "id": "64fe414b-f150-484e-97ab-203228c58099",
+      "name": "Write Files De",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "operation": "write",
+        "fileName": "=/shared_workspace/database/{{$binary['file_mau_' + $json.id].fileExtension}}/{{ $binary['file_mau_' + $json.id].fileName }}",
+        "dataPropertyName": "={{ 'file_mau_' + $json.id }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1.1,
+      "position": [
+        864,
+        16
+      ],
+      "id": "215ac417-7240-420b-9f9f-6de2f9a90531",
+      "name": "Write Files Mau"
+    },
+    {
+      "parameters": {
+        "command": "=python3 n8n_bridge.py extract_text \"{{ $('Write Files De').item.json.fileName }}\" && rm -f \"{{ $('Write Files De').item.json.fileName }}\""
+      },
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        1248,
+        16
+      ],
+      "id": "57a057b7-1409-4d43-b95f-3acce61ec2b1",
+      "name": "Extract De",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "command": "=python3 n8n_bridge.py parse \"{{ $('Write Files Mau').item.json.fileName }}\" && rm -f \"{{ $('Write Files Mau').item.json.fileName }}\""
+      },
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        1456,
+        16
+      ],
+      "id": "f505dc14-4f9c-4f23-aff0-39d0a193792f",
+      "name": "Parser file"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.prompt_gui_ai }}",
+        "needsFallback": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        2576,
+        -320
+      ],
+      "id": "f00836e1-0da4-47fe-8af6-3dc82038c7dc",
+      "name": "AI Agent",
+      "retryOnFail": false,
+      "waitBetweenTries": 5000,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "56c2601b-775d-430c-a40d-54692f878db0",
+              "leftValue": "={{ $json.is_hop_le }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        2336,
+        0
+      ],
+      "id": "450bc9b1-2078-44b7-9876-43ff65033ca6",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        2576,
+        -96
+      ],
+      "id": "64b530a4-16a7-4cd0-ab1a-cc91a3f27ebc",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "mSpvIkFgkLCzmXIP",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Basic LLM Chain thường trả về kết quả trong trường 'text'\nlet rawText = $input.first().json.output || \"{}\";\n\n// Dọn dẹp Markdown nếu có\nif (typeof rawText === 'string') {\n    rawText = rawText.replace(/^```json\\n?/, '').replace(/\\n?```$/, '').trim();\n} else {\n    rawText = JSON.stringify(rawText, null, 2);\n}\n\n\nreturn {\n    json: {\n        status: \"success\",\n    },\n    binary: {\n        data: {\n            data: Buffer.from(rawText, 'utf-8').toString('base64'),\n            mimeType: 'application/json',\n            fileName: \"rubric.json\",\n            fileExtension: 'json'\n        }\n    }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3072,
+        0
+      ],
+      "id": "01d48b3f-a545-4ac1-b8f5-6bdb14e6aa54",
+      "name": "Code in JavaScript2"
+    },
+    {
+      "parameters": {
+        "jsCode": "\nconst errorContent = JSON.stringify({\n    \"status\": \"error\",\n    \"message\": \"Định dạng file không được hỗ trợ để sinh Rubric\",\n    \"extension\": $input.first().json.extension_duoc_dung\n}, null, 2);\n\nreturn {\n    json: {\n        status: \"error\",\n        error: errorContent\n    }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2640,
+        176
+      ],
+      "id": "5a7927bc-3bc7-4450-80a1-dc74fd4248b2",
+      "name": "Code in JavaScript3"
+    },
+    {
+      "parameters": {
+        "model": "inclusionai/ling-2.6-1t:free",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        2736,
+        -80
+      ],
+      "id": "63195dd4-bc3b-4ac0-a193-3a36da09137a",
+      "name": "OpenRouter Chat Model",
+      "credentials": {
+        "openRouterApi": {
+          "id": "FAIknVGSamjLr0eU",
+          "name": "OpenRouter account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "amount": 10
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        4400,
+        432
+      ],
+      "id": "31b89ed0-ee7e-4270-81c4-7abde4567611",
+      "name": "Wait",
+      "webhookId": "aad5cd48-41fd-4111-b682-a8c5ff290363"
+    },
+    {
+      "parameters": {
+        "options": {
+          "responseCode": 400
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        2848,
+        176
+      ],
+      "id": "c480c509-7d85-4242-936b-120fe557bcdb",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "options": {
+          "responseCode": 400
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        3376,
+        -304
+      ],
+      "id": "ddd21218-0ec3-4afb-b013-fcd00dd096d6",
+      "name": "Respond to Webhook1"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "c9e0dfe5-ebc2-4654-be39-2163e0f03ef2",
+              "name": "status",
+              "value": "error",
+              "type": "string"
+            },
+            {
+              "id": "303acd84-dc16-437c-9b15-de14868f1a38",
+              "name": "error",
+              "value": "Lỗi khi gọi LLM",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        3200,
+        -304
+      ],
+      "id": "ce460d93-87eb-4114-af89-1732f05c8431",
+      "name": "Edit Fields1"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        1008,
+        -272
+      ],
+      "id": "9535a483-9862-40bf-aea0-c45032e0df3e",
+      "name": "Respond to Webhook2"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "bc6ddc3c-df81-4290-b122-c298ebf9773e",
+              "name": "status",
+              "value": "successs",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        736,
+        -240
+      ],
+      "id": "e076f340-3ffa-4841-9e82-4764a0b23412",
+      "name": "Edit Fields2"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        416,
+        0
+      ],
+      "id": "02379b28-ac19-4687-8a93-81a28f2169ae",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {
+        "command": "=mkdir /shared_workspace/database/{{$binary['file_mau_' + $json.id].fileExtension}}/{{$('Loop Over Items').item.json.ten_de}}"
+      },
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        704,
+        16
+      ],
+      "id": "3c9759bb-d834-4ef8-820b-d2686c9048df",
+      "name": "Execute Command1"
+    },
+    {
+      "parameters": {
+        "operation": "write",
+        "fileName": "=/shared_workspace/database/{{$binary['file_mau_' + $json.id].fileExtension}}/rubric.json",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1.1,
+      "position": [
+        3584,
+        32
+      ],
+      "id": "520c3210-a535-487a-977b-6acdf5ad1d23",
+      "name": "Read/Write Files from Disk"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript1": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Write Files De": {
+      "main": [
+        [
+          {
+            "node": "Extract De",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Write Files Mau": {
+      "main": [
+        [
+          {
+            "node": "Write Files De",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract De": {
+      "main": [
+        [
+          {
+            "node": "Parser file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parser file": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code in JavaScript3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript2": {
+      "main": [
+        [
+          {
+            "node": "Read/Write Files from Disk",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript3": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenRouter Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Respond to Webhook": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields1": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields2": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Execute Command1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute Command1": {
+      "main": [
+        [
+          {
+            "node": "Write Files Mau",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read/Write Files from Disk": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "7ae6c507-a179-4bb2-8b3f-dfd07e912ad2",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "6033e60f6e8cb25a67e8bc5056992c5ace84e1c0d4567e43c861139c9b767255"
+  },
+  "nodeGroups": [],
+  "id": "NGm2ZjjEammCHV5D",
+  "tags": []
+}

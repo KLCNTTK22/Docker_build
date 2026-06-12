@@ -1,0 +1,208 @@
+{
+  "name": "Parser file",
+  "nodes": [
+    {
+      "parameters": {
+        "operation": "write",
+        "fileName": "=/shared_workspace/tmp/{{ $binary.file.fileName }}",
+        "dataPropertyName": "file",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1.1,
+      "position": [
+        208,
+        0
+      ],
+      "id": "84903781-6d0e-47c2-99e7-54eec401e18d",
+      "name": "Read/Write Files from Disk",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "parser_file",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "bf64ee2f-f1cb-4620-a729-f1534d3ecadb",
+      "name": "Webhook",
+      "webhookId": "26d3454a-71ec-4d62-ae3f-f9af5f3d645b"
+    },
+    {
+      "parameters": {
+        "command": "=python3 n8n_bridge.py parse \"{{$json.fileName}}\" && rm -f \"{{$json.fileName}}\""
+      },
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        416,
+        0
+      ],
+      "id": "6cbbc8ec-ad53-44a0-a936-206b042785cb",
+      "name": "Execute Command",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a134774d-c2e6-430a-98f4-8158ae472983",
+              "name": "status",
+              "value": "success",
+              "type": "string"
+            },
+            {
+              "id": "8d70bdaa-292e-41ec-8f9a-428ba4896836",
+              "name": "data",
+              "value": "={{ $json.stdout }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        624,
+        -48
+      ],
+      "id": "064a6ee4-e143-4915-be90-43139cb40bce",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        832,
+        0
+      ],
+      "id": "7a3851dd-2bb3-4f5a-aced-95540d58f7a1",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "900feb96-5e59-4b2d-8879-fda3693eb355",
+              "name": "status",
+              "value": "error",
+              "type": "string"
+            },
+            {
+              "id": "0099780a-0c82-449d-9475-0d3080b28500",
+              "name": "error",
+              "value": "={{$json.error}}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        608,
+        160
+      ],
+      "id": "8219277e-4b62-41e9-867c-7ea1a4e5a0ea",
+      "name": "Edit Fields1"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Read/Write Files from Disk",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read/Write Files from Disk": {
+      "main": [
+        [
+          {
+            "node": "Execute Command",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute Command": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields1": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "7f7bd5be-63bc-4432-a163-ff93045aebd5",
+  "meta": {
+    "instanceId": "6033e60f6e8cb25a67e8bc5056992c5ace84e1c0d4567e43c861139c9b767255"
+  },
+  "nodeGroups": [],
+  "id": "17lliMbooj52EOM7",
+  "tags": []
+}

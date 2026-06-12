@@ -484,6 +484,29 @@
             if (res.ok) {
                 showToast("Gửi lệnh chấm điểm v3 thành công!", "success");
                 bootstrap.Modal.getInstance(document.getElementById('confirmModal')).hide();
+
+                try {
+
+                    const blob = await res.blob();
+
+                    const url = window.URL.createObjectURL(blob);
+
+                    const a = document.createElement('a');
+                    a.style.display = 'none';
+                    a.href = url;
+
+                    a.download = 'result.tar.gz';
+
+                    document.body.appendChild(a);
+                    a.click();
+                    window.URL.revokeObjectURL(url);
+                    document.body.removeChild(a);
+                } catch (err) {
+                    console.error("Lỗi khi xử lý file tải về:", err);
+                    showToast("Lỗi khi tải file kết quả!", "danger");
+                }
+                // ----------------------------------------
+
             } else {
                 showToast("Lỗi server: " + res.status, "danger");
             }

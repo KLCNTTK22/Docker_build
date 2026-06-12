@@ -1,0 +1,348 @@
+{
+  "name": "check_rubric",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "check_rurbic",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "e39b3a8e-b208-4c9a-b3e9-13369ff7dbc1",
+      "name": "Webhook",
+      "webhookId": "422420ff-e3bb-4752-a23b-ed9ef7c506f6"
+    },
+    {
+      "parameters": {
+        "operation": "write",
+        "fileName": "=/shared_workspace/tmp/test.{{$binary.file.fileExtension}}",
+        "dataPropertyName": "file",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1.1,
+      "position": [
+        576,
+        0
+      ],
+      "id": "eb421976-5f1d-4c7c-8e00-fe6a5ed27ffa",
+      "name": "Read/Write Files from Disk"
+    },
+    {
+      "parameters": {
+        "operation": "write",
+        "fileName": "/shared_workspace/tmp/test_rubric.json",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1.1,
+      "position": [
+        1152,
+        0
+      ],
+      "id": "2eb5211b-1a7b-4ece-8fae-595d4233747e",
+      "name": "Read/Write Files from Disk1"
+    },
+    {
+      "parameters": {
+        "command": "=python n8n_bridge.py grade \"{{ $('Read/Write Files from Disk').item.json.fileName }}\" \"{{ $json.fileName }}\""
+      },
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        1456,
+        0
+      ],
+      "id": "dc60b186-b147-4df1-908d-bc9210632e26",
+      "name": "Execute Command"
+    },
+    {
+      "parameters": {
+        "fileSelector": "={{ $json.file_path }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1.1,
+      "position": [
+        1808,
+        0
+      ],
+      "id": "7a38adc4-ec95-4f16-a2b5-2b0b7adbc276",
+      "name": "Read/Write Files from Disk2",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "return $input.all().map(item => {\n    try {\n        const parsedData = JSON.parse(item.json.stdout);\n        return { json: parsedData };\n    } catch (error) {\n        return { json: item.json }; \n    }\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1664,
+        0
+      ],
+      "id": "27cf872b-48a3-4192-a3fb-81d172ae6a54",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "2be28b55-f07a-4dab-9cce-54ae59aab296",
+              "name": "status",
+              "value": "success",
+              "type": "string"
+            },
+            {
+              "id": "8d5287a4-b22a-4bcd-9bb0-f3cbc9af738a",
+              "name": "data",
+              "value": "={{ $json }}",
+              "type": "object"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2416,
+        -192
+      ],
+      "id": "d2bacdd1-2faf-45ed-a191-d00db9909cb6",
+      "name": "Edit Fields2"
+    },
+    {
+      "parameters": {
+        "command": "=rm -f \"{{ $('Read/Write Files from Disk').item.json.fileName }}\" \"{{ $('Read/Write Files from Disk1').item.json.fileName }}\""
+      },
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        3264,
+        -32
+      ],
+      "id": "4805065f-d186-4ad0-9c2d-6f106a424c82",
+      "name": "Execute Command1"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        2944,
+        -32
+      ],
+      "id": "2fa28207-abd2-4213-939e-c40387c20624",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "23ee8ee6-bcae-41e3-b6fa-43b9f7985bdf",
+              "name": "status",
+              "value": "error",
+              "type": "string"
+            },
+            {
+              "id": "4fbe81f0-3a99-4d03-bbbc-7de81846ff26",
+              "name": "error",
+              "value": "={{$json.error.message}}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2256,
+        96
+      ],
+      "id": "b213af76-6abf-4f63-9125-1a13d2301b7f",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Giả sử chuỗi JSON nằm ở items[0].json.data\nconst jsonString = $('Webhook').first().json.body.rubric;\nconst buffer = Buffer.from(jsonString, 'utf-8');\n\nreturn [{\n  binary: {\n    data: {\n      data: buffer.toString('base64'),\n      mimeType: 'application/json',\n      fileName: 'data.json'\n    }\n  }\n}];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        928,
+        16
+      ],
+      "id": "932ecc7b-b30b-4f02-bd03-eb7bec27c799",
+      "name": "Code in JavaScript1"
+    },
+    {
+      "parameters": {
+        "operation": "fromJson",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1.1,
+      "position": [
+        2096,
+        -144
+      ],
+      "id": "df5521b9-9b33-4f43-93d6-3b72ee1e7507",
+      "name": "Extract from File"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Read/Write Files from Disk",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read/Write Files from Disk": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read/Write Files from Disk1": {
+      "main": [
+        [
+          {
+            "node": "Execute Command",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute Command": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Read/Write Files from Disk2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read/Write Files from Disk2": {
+      "main": [
+        [
+          {
+            "node": "Extract from File",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields2": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Respond to Webhook": {
+      "main": [
+        [
+          {
+            "node": "Execute Command1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript1": {
+      "main": [
+        [
+          {
+            "node": "Read/Write Files from Disk1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from File": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "98dd97ad-25f6-458a-be8b-8a95dd1a0699",
+  "meta": {
+    "instanceId": "6033e60f6e8cb25a67e8bc5056992c5ace84e1c0d4567e43c861139c9b767255"
+  },
+  "nodeGroups": [],
+  "id": "LlwBuCWD4cKlO6kx",
+  "tags": []
+}
